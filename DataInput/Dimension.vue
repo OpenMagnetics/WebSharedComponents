@@ -83,6 +83,18 @@ export default {
             type: String,
             default: 'col-xs-8 col-md-5'
         },
+        labelBgColor: {
+            type: String,
+            default: "bg-dark",
+        },
+        inputBgColor: {
+            type: String,
+            default: "bg-light",
+        },
+        textColor: {
+            type: String,
+            default: "text-white",
+        },
     },
     data() {
         const localData = {
@@ -231,12 +243,27 @@ export default {
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex" ref="container">
         <div class="row">
-            <label v-if="replaceTitle == null" :data-cy="dataTestLabel + '-title'" :class="styleClass + ' ' + labelStyleClass" class="rounded-2 ">{{shortenedName}}</label>
+            <label v-if="replaceTitle == null" :data-cy="dataTestLabel + '-title'" :class="styleClass + ' ' + labelStyleClass + ' ' + labelBgColor + ' ' + textColor" class="rounded-2 ">{{shortenedName}}</label>
             <label v-if="replaceTitle != null && replaceTitle != ''"  :data-cy="dataTestLabel + '-title'" :class="styleClass + ' ' + labelStyleClass" class="rounded-2">{{replaceTitle}}</label>
             <div v-if="localData.scaledValue != null" class="row m-0 px-0" :class="justifyContent? 'd-flex justify-content-end ' + dimensionStyleClass : dimensionStyleClass">
-                <input :disabled="disabled" :data-cy="dataTestLabel + '-number-input'" type="number" :class="styleClassInput" class="bg-light text-white" @change="changeScaledValue($event.target.value)" :value="removeTrailingZeroes(localData.scaledValue * visualScale, numberDecimals)" ref="inputRef">
-                <DimensionUnit :disabled="disabled" :data-cy="dataTestLabel + '-DimensionUnit-input'" :min="min" :max="max" v-if="unit != null" :unit="unit" v-model="localData.multiplier" class="m-0 px-0 col-4 bg-light" @update:modelValue="changeMultiplier"/>
-                <label :data-cy="dataTestLabel + '-DimensionUnit-text'" v-if="unit == null" class="px-2 pt-1 px-0 " :class="unit == null && justifyContent? 'col-0':'col-4'">{{altUnit}}</label>
+                <input :disabled="disabled" :data-cy="dataTestLabel + '-number-input'" type="number" :class="styleClassInput + ' ' + inputBgColor + ' ' + textColor" class="" @change="changeScaledValue($event.target.value)" :value="removeTrailingZeroes(localData.scaledValue * visualScale, numberDecimals)" ref="inputRef">
+                <DimensionUnit
+                    v-if="unit != null"
+                    v-model="localData.multiplier"
+                    :disabled="disabled"
+                    :data-cy="dataTestLabel + '-DimensionUnit-input'"
+                    :min="min"
+                    :max="max"
+                    :unit="unit"
+                    :inputBgColor="inputBgColor"
+                    :textColor="textColor"
+                    class="m-0 px-0 col-4"
+                    @update:modelValue="changeMultiplier"/>
+                <label
+                    v-if="unit == null" class="px-2 pt-1 px-0 "
+                    :data-cy="dataTestLabel + '-DimensionUnit-text'"
+                    :class="unit == null && justifyContent? 'col-0':'col-4'"
+                >{{altUnit}}</label>
             </div>
         </div>
         <div class="row">

@@ -33,7 +33,7 @@ export default {
         allowMissing: {
             type: Boolean,
             default: false,
-        },
+        }
     },
     data() {
         var localData = "";
@@ -133,7 +133,7 @@ export default {
         <div class="row">
             <label v-if="replaceTitle == null" :data-cy="dataTestLabel + '-title'" :for="name + '-text-input'" class="rounded-2 fs-5 m-0 col-8">{{toTitleCase(name)}}</label>
             <label v-if="replaceTitle != null" :data-cy="dataTestLabel + '-title'" :for="name + '-text-input'" class="rounded-2 fs-5 m-0 col-8">{{replaceTitle}}</label>
-            <input :data-cy="dataTestLabel + '-text-input'" type="text" class="m-0 px-0 col-4 bg-light text-white" :id="name + '-text-input'" @change="changeText($event.target.value)" :value="localData">
+            <input :data-cy="dataTestLabel + '-text-input'" type="text" class="m-0 px-0 col-4" :id="name + '-text-input'" @change="changeText($event.target.value)" :value="localData">
             <label class="text-danger text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
         </div>
     </div>

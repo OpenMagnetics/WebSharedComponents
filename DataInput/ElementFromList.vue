@@ -51,6 +51,18 @@ export default {
             type: String,
             default: "col-8",
         },
+        labelBgColor: {
+            type: String,
+            default: "bg-dark",
+        },
+        inputBgColor: {
+            type: String,
+            default: "bg-light",
+        },
+        textColor: {
+            type: String,
+            default: "text-white",
+        },
     },
     data() {
         var localData = this.assignLocalData(this.options)
@@ -164,14 +176,14 @@ export default {
 <template>
     <div :data-cy="dataTestLabel + '-container'" v-tooltip="styleTooltip" class="container-flex">
         <div v-tooltip="tooltipsMagneticSynthesisDesignRequirements['changeNameWindings']" class="row">
-            <input :data-cy="dataTestLabel + '-alt-title-label'" v-if="altText != null && !titleSameRow" type="text" class="rounded-2 fs-5 ms-3 bg-dark text-white col-11 p-0 mb-2 border-0" @change="$emit('changeText', $event.target.value)" :value="altText">
+            <input :data-cy="dataTestLabel + '-alt-title-label'" v-if="altText != null && !titleSameRow" type="text" :class="labelStyleClass + ' ' + labelBgColor + ' ' + textColor" class="rounded-2 fs-5 ms-3  col-11 p-0 mb-2 border-0" @change="$emit('changeText', $event.target.value)" :value="altText">
             <label :data-cy="dataTestLabel + '-title'" v-if="altText == null && !titleSameRow" class="rounded-2 fs-5 ms-3">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}</label>
         </div>
         <div class="row" :class="justifyContent? 'd-flex justify-content-between' : ''">
-            <label :data-cy="dataTestLabel + '-same-row-label'" v-if="titleSameRow" :class="labelStyleClass" class="rounded-2 fs-5">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}</label>
+            <label :data-cy="dataTestLabel + '-same-row-label'" v-if="titleSameRow" :class="labelStyleClass + ' ' + labelBgColor + ' ' + textColor" class="rounded-2 fs-5">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}</label>
             <div  v-if="!titleSameRow" class=" col-sm-0 col-md-2">
             </div>
-            <select :disabled="disabled" :data-cy="dataTestLabel + '-select'"  :class="selectStyleClass" class="form-select py-1 px-2 bg-light text-white m-0 mt-1"  @change="changeOption" style="width:auto; max-height: 3em;" :value="localData" >
+            <select :disabled="disabled" :data-cy="dataTestLabel + '-select'"  :class="selectStyleClass + ' ' + inputBgColor + ' ' + textColor" class="form-select py-1 px-2 m-0 mt-1 pe-5"  @change="changeOption" style="width:auto; max-height: 3em;" :value="localData" >
 
                 <option :disabled="optionsToDisable.includes(value)" v-for="value in computedOptions">
                     {{value}}

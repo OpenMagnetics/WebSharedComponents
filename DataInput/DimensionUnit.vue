@@ -31,6 +31,14 @@ export default {
             type: Boolean,
             default: false,
         },
+        inputBgColor: {
+            type: String,
+            default: "bg-light",
+        },
+        textColor: {
+            type: String,
+            default: "text-white",
+        },
     },
     data() {
         const multipliersLabel = {
@@ -88,7 +96,7 @@ export default {
 
 
 <template>
-    <select class="form-select bg-light text-white m-0 p-0 text-center unit-select" :class="styleClass" :value="modelValueInRange" @change="$emit('update:modelValue', Number($event.target.value))" style="width:auto;" :disabled="readOnly || disabled">
+    <select class="form-select m-0 p-0 text-center unit-select" :class="styleClass + ' ' + inputBgColor + ' ' + textColor " :value="modelValueInRange" @change="$emit('update:modelValue', Number($event.target.value))" style="width:auto;" :disabled="readOnly || disabled">
         <option v-for="value, label in multipliersLabel" :value="value">
             {{label + unit}}
         </option>

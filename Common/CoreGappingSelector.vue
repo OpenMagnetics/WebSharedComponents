@@ -36,6 +36,18 @@ export default {
             type: Number,
             default: 1000,
         },
+        labelBgColor: {
+            type: String,
+            default: "bg-dark",
+        },
+        inputBgColor: {
+            type: String,
+            default: "bg-light",
+        },
+        textColor: {
+            type: String,
+            default: "text-white",
+        },
     },
     data() {
         var localData = guessBasicGappingParameters(this.core, 1);
@@ -161,6 +173,9 @@ export default {
                     :titleSameRow="true"
                     v-model="localData"
                     :options="gapTypes"
+                    :labelBgColor="labelBgColor"
+                    :inputBgColor="inputBgColor"
+                    :textColor="textColor"
                     @update="update"
                 />
 
@@ -178,6 +193,9 @@ export default {
                     :dataTestLabel="dataTestLabel + '-GapLength'"
                     :allowNegative="false"
                     :modelValue="localData"
+                    :labelBgColor="labelBgColor"
+                    :inputBgColor="inputBgColor"
+                    :textColor="textColor"
                     @update="update"
                 />
 
@@ -194,6 +212,9 @@ export default {
                     :dataTestLabel="dataTestLabel + '-NumberGaps'"
                     :allowNegative="false"
                     :modelValue="localData"
+                    :labelBgColor="labelBgColor"
+                    :inputBgColor="inputBgColor"
+                    :textColor="textColor"
                     @update="update"
                 />
             </div>

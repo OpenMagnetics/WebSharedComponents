@@ -56,6 +56,18 @@ export default {
             type: Boolean,
             default: false
         },
+        labelBgColor: {
+            type: String,
+            default: "bg-dark",
+        },
+        inputBgColor: {
+            type: String,
+            default: "bg-light",
+        },
+        textColor: {
+            type: String,
+            default: "text-white",
+        },
     },
     data() {
         const errorMessages = "";
@@ -166,6 +178,9 @@ export default {
                                 styleClassInput="m-0 px-0 col-8"
                                 labelStyleClass="col-4 p-0"
                                 dimensionStyleClass="col-8 p-0"
+                                :labelBgColor="labelBgColor"
+                                :inputBgColor="inputBgColor"
+                                :textColor="textColor"
                                 @update="update"
                             />
                         </div>

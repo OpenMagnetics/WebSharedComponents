@@ -62,7 +62,7 @@ export default {
         },
         dimensionUnitStyleClass:{
             type: String,
-            default: 'bg-dark border-0 my-0 py-0'
+            default: 'border-0 my-0 py-0'
         },
         dimensionStyleClass:{
             type: String,
@@ -70,11 +70,23 @@ export default {
         },
         inputStyleClass:{
             type: String,
-            default: 'col-7 text-white'
+            default: 'col-7'
         },
         useTitleCase:{
             type: Boolean,
             default: true
+        },
+        labelBgColor: {
+            type: String,
+            default: "bg-dark",
+        },
+        inputBgColor: {
+            type: String,
+            default: "bg-light",
+        },
+        textColor: {
+            type: String,
+            default: "text-white",
         },
     },
     data() {
@@ -157,11 +169,23 @@ export default {
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex" ref="container">
         <div class="row">
-            <label :data-cy="dataTestLabel + '-title'" class="rounded-2 pe-0" :class="styleClass + ' ' + labelStyleClass">{{shortenedName}}<sub>{{subscriptName}}</sub> </label>
+            <label :data-cy="dataTestLabel + '-title'" class="rounded-2 pe-0" :class="styleClass + ' ' + labelStyleClass + ' ' + labelBgColor + ' ' + textColor">{{shortenedName}}<sub>{{subscriptName}}</sub> </label>
             <div v-if="localData.scaledValue != null" :class="dimensionStyleClass" class="container m-0 px-0">
                 <div class="row m-0 px-0 ">
-                    <input :disabled="true" :data-cy="dataTestLabel + '-number-label'" type="number" class="m-0 px-0 bg-transparent text-end border-0" :class="inputStyleClass" :value="visuallyScaledValue" ref="inputRef">
-                    <DimensionUnit :styleClass="dimensionUnitStyleClass" :readOnly="true" :data-cy="dataTestLabel + '-DimensionUnit-input'" :min="min" :max="max" v-if="unit != null" :unit="unit" v-model="localData.multiplier" class="m-0 px-0 col-2"/>
+                    <input :disabled="true" :data-cy="dataTestLabel + '-number-label'" type="number" class="m-0 px-0 text-end border-0" :class="inputStyleClass + ' ' + inputBgColor + ' ' + textColor" :value="visuallyScaledValue" ref="inputRef">
+                    <DimensionUnit
+                        v-if="unit != null"
+                        v-model="localData.multiplier"
+                        :styleClass="dimensionUnitStyleClass + ' ' + inputBgColor + ' ' + textColor"
+                        :readOnly="true"
+                        :data-cy="dataTestLabel + '-DimensionUnit-input'"
+                        :min="min"
+                        :max="max"
+                        :inputBgColor="inputBgColor"
+                        :textColor="textColor"
+                        :unit="unit"
+                        class="m-0 px-0 col-2"
+                    />
                     <label :data-cy="dataTestLabel + '-DimensionUnit-text'" v-if="unit == null" class="ms-2 pt-1 px-0 col-2" >{{altUnit}}</label>
                 </div>
             </div>
