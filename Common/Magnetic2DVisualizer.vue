@@ -41,6 +41,10 @@ export default {
             type: Boolean,
             default: true,
         },
+        backgroundColor: {
+            type: String,
+            default: "dark",
+        },
     },
     data() {
         const style = getComputedStyle(document.body);
@@ -122,13 +126,13 @@ export default {
                     }
 
 
-                    this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replace(regex, `class="bg-dark" width="${clientWidth}" height="${clientHeight}" viewBox=`);
-                    this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.theme.dark}" d="M0.00,`);
+                    this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replace(regex, `class="" width="${clientWidth}" height="${clientHeight}" viewBox=`);
+                    this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.theme[this.cleanBackgroundColor]}" d="M0.00,`);
                     if ("zoomPlotView" in this.$refs) {
                         this.$refs.zoomPlotView.innerHTML = response.data
                         this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(`<svg`, `<svg class="h-100 w-100"`);
-                        this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.theme.dark}" d="M0.00,`);
-                        this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(regex, `class="bg-dark" width="${clientWidth}" height="${clientHeight}" viewBox=`);
+                        this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.theme[this.cleanBackgroundColor]}" d="M0.00,`);
+                        this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(regex, `class="" width="${clientWidth}" height="${clientHeight}" viewBox=`);
                     }
                     this.posting = false;
                 })
@@ -172,13 +176,13 @@ export default {
                         clientHeight = clientWidth / originalProportion;
                     }
 
-                    this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replace(regex, `class="bg-dark" width="${clientWidth}" height="${clientHeight}" viewBox=`);
-                    this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.theme.dark}" d="M0.00,`);
+                    this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replace(regex, `class="" width="${clientWidth}" height="${clientHeight}" viewBox=`);
+                    this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.theme[this.cleanBackgroundColor]}" d="M0.00,`);
                     if ("zoomPlotView" in this.$refs) {
                         this.$refs.zoomPlotView.innerHTML = response.data
                         this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(`<svg`, `<svg class="h-100 w-100"`);
-                        this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(regex, `class="bg-dark" width="${clientWidth}" height="${clientHeight}" viewBox=`);
-                        this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.theme.dark}" d="M0.00,`);
+                        this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(regex, `class="" width="${clientWidth}" height="${clientHeight}" viewBox=`);
+                        this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.theme[this.cleanBackgroundColor]}" d="M0.00,`);
                     }
                     this.posting = false;
                 })
@@ -227,6 +231,12 @@ export default {
         },
     },
     computed: {
+        cleanBackgroundColor() {
+            if (this.backgroundColor.includes("bg-")) {
+                return this.backgroundColor.replace("bg-", "");
+            }
+            return this.backgroundColor;
+        }
     },
     mounted() {
         setTimeout(() => {this.plot();}, 10);
@@ -254,7 +264,7 @@ export default {
         <div v-if="enableZoom" v-show="zoomingPlot" class="row mx-1" style="height: 100%;">
             <button class="btn" @click="zoomOut()">
                 <label class="col-12 text-info fw-lighter" >(Click on image to go back)</label>
-                <div data-cy="MagneticAdvise-core-field-plot-zoom-image" ref="zoomPlotView" :class="showFieldPlot? 'bg-dark' : ''" class="m-0" style="width: 100%;" />
+                <div data-cy="MagneticAdvise-core-field-plot-zoom-image" ref="zoomPlotView" :class="showFieldPlot? '' : ''" class="m-0" style="width: 100%;" />
             </button>
         </div>
 
@@ -265,9 +275,9 @@ export default {
                 <div>
                     <button v-if="enableZoom" class="btn" @click="zoomIn()">
                         <label  class="col-12 text-info fw-lighter">(Click on image to zoom in)</label>
-                        <div data-cy="MagneticAdvise-core-field-plot-image" ref="plotView" :class="showFieldPlot? 'bg-dark' : ''" class="col-12 mt-2" style="height: 100%;" />
+                        <div data-cy="MagneticAdvise-core-field-plot-image" ref="plotView" :class="showFieldPlot? '' : ''" class="col-12 mt-2" style="height: 100%;" />
                     </button>
-                    <div v-else data-cy="MagneticAdvise-core-field-plot-zoom-image" ref="plotView" :class="showFieldPlot? 'bg-dark' : ''" class="m-0 " style="height: 100%" />
+                    <div v-else data-cy="MagneticAdvise-core-field-plot-zoom-image" ref="plotView" :class="showFieldPlot? '' : ''" class="m-0 " style="height: 100%" />
                 </div>
                 <div class="text-center">
                     <button  v-if="enableOptions && modelValue.magnetic.coil.turnsDescription != null" class="btn btn-primary mt-1" @click="swapFieldPlot()">{{showFieldPlot? 'Hide H field' : 'Show H field'}}</button>
