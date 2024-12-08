@@ -30,6 +30,10 @@ export default {
             type: String,
             default: "/images/loading.gif",
         },
+        backgroundColor: {
+            type: String,
+            default: "dark",
+        },
     },
     components: {
         Camera,
@@ -288,14 +292,22 @@ export default {
     mounted() {
         this.tryToSend();
     },
+    computed: {
+        cleanBackgroundColor() {
+            if (this.backgroundColor.includes("bg-")) {
+                return this.backgroundColor.replace("bg-", "");
+            }
+            return this.backgroundColor;
+        }
+    },
 };
 </script>
 
 <template>
     <img data-cy="CoreShapeArtisanVisualizer-loading" v-if="updating" class="mx-auto d-block col-12" alt="loading" style="height: auto;" :src="loadingGif">
-    <Renderer  data-cy="CoreShapeArtisanVisualizer-canvas" ref="renderer" resize=true :orbit-ctrl="{ enableDamping: true, dampingFactor: 0.05, autoRotate : true }" shadow class="p-0 m-0 bg-dark">
+    <Renderer  data-cy="CoreShapeArtisanVisualizer-canvas" ref="renderer" resize=true :orbit-ctrl="{ enableDamping: true, dampingFactor: 0.05, autoRotate : true }" shadow class="p-0 m-0">
         <Camera ref="camera" />
-        <Scene ref="scene" :background="theme['dark']">
+        <Scene ref="scene" :background="theme[cleanBackgroundColor]">
             <SpotLight :color="theme['white']" :intensity="50" :position="{ y: 150, z: 100 }" :cast-shadow="true" :shadow-map-size="{ width: 1024, height: 1024 }" />
             <SpotLight :color="theme['white']" :intensity="50" :position="{ y: -150, z: 100 }" :cast-shadow="true" :shadow-map-size="{ width: 1024, height: 1024 }" />
             <SpotLight :color="theme['white']" :intensity="50" :position="{ x: 150, z: 100 }" :cast-shadow="true" :shadow-map-size="{ width: 1024, height: 1024 }" />
