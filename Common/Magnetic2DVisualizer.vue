@@ -152,6 +152,10 @@ export default {
 
                 this.$axios.post(url, {magnetic: this.modelValue.magnetic, operatingPoint: this.modelValue.inputs.operatingPoints[0]})
                 .then(response => {
+                    if (this.$refs.Magnetic2DVisualizerContainer == null) {
+                        this.posting = false;
+                        return;
+                    }
                     var clientWidth = this.$refs.Magnetic2DVisualizerContainer.clientWidth;
                     var clientHeight = this.$refs.Magnetic2DVisualizerContainer.clientHeight * 0.90;
                     const regex = /width="\d+" height="\d+" viewBox=/i;
