@@ -160,7 +160,7 @@ export default {
 </script>
 
 <template>
-    <div class="mt-2 bg-dark wire2DPlotViewer text-center mx-auto" ref="wire2DPlotViewContainer">
+    <div class="mt-2 wire2DPlotViewer text-center mx-auto" ref="wire2DPlotViewContainer">
         <img :data-cy="dataTestLabel + 'Wire2DVisualizer-loading'" v-if="posting" class="mx-auto d-block col-12" alt="loading" style="width: 60%; height: auto;" :src="loadingGif">
         <div :data-cy="dataTestLabel + 'Wire2DVisualizer-core-field-plot-image'" v-show="!posting" ref="wire2DPlotView" />
     </div>
