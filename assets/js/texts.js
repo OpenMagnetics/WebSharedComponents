@@ -2,6 +2,7 @@ export const tooltipsMagneticSynthesisDesignRequirements = {
     "name": "Reference name for this document",
     "numberWindings": "Number of windings that our magnetic component is going to have",
     "magnetizingInductance": "Magnetizing inductance as seen from the primary",
+    "minimumImpedance": "List of minimum impedances that the filter has to reach",
     "turnsRatios": "List of turns ratios, one for each secondary, each one referred to the primary",
     "leakageInductance": "List of leakage inductances, with tolerance, one for each secondary, each one referred to the primary",
     "strayCapacitance": "List of stray capacitances, with tolerance, one for each secondary, each one referred to the primary",
