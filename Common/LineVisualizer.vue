@@ -245,7 +245,6 @@ export default {
 
             options.series[0].data = [];
             options.series[0].data = this.processData();
-            console.warn(options)
         },
         onClick(event) {
             this.$emit('click', event);

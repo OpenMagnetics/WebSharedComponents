@@ -70,8 +70,6 @@ export default {
     },
     watch: {
         modelValue(newValue, oldValue) {
-            console.log("this.modelValue")
-            console.log(this.modelValue)
             if (this.modelValue[this.names[0]] != null) {
                 this.localData[this.names[0]] = this.modelValue[this.names[0]];
             }
@@ -87,12 +85,8 @@ export default {
     },
     methods: {
         dimensionUpdated(value, dimension) {
-            console.log("dimensionUpdated")
-            console.log(value)
-            console.log(dimension)
-            console.log(this.modelValue)
-            console.log(this.names[dimension])
             this.modelValue[this.names[dimension]] = value
+            this.$emit("update", {value: value, dimension: this.names[dimension]})
         },
     }
 }

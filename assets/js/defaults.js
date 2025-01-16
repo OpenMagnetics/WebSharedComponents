@@ -89,7 +89,8 @@ export const filterMas = {
             "magnetizingInductance": {
                 "nominal": 100e-6
             },
-            "turnsRatios": [],
+            "minimumImpedance": [{"frequency": 100000, "impedance": {"magnitude": 1000}}],
+            "turnsRatios": [{"nominal": 1}],
         },
         "operatingPoints": [],
     },
@@ -161,7 +162,7 @@ export const defaultDesignRequirements = {
         {"maximum": 3e-6}
     ],
     "minimumImpedance": [
-        {"frequency": 100000, "impedance": 1000}
+        {"frequency": 100000, "impedance": {"magnitude": 1000}}
     ],
     "strayCapacitance": [
         {"maximum": 50e-12}
