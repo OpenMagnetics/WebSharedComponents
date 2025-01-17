@@ -244,7 +244,7 @@ export default {
     <div :data-cy="dataTestLabel + '-container'" class="container-flex" ref="container">
         <div class="row">
             <label v-if="replaceTitle == null" :data-cy="dataTestLabel + '-title'" :class="styleClass + ' ' + labelStyleClass + ' ' + labelBgColor + ' ' + textColor" class="rounded-2 ">{{shortenedName}}</label>
-            <label v-if="replaceTitle != null && replaceTitle != ''"  :data-cy="dataTestLabel + '-title'" :class="styleClass + ' ' + labelStyleClass" class="rounded-2">{{replaceTitle}}</label>
+            <label v-if="replaceTitle != null && replaceTitle != ''"  :data-cy="dataTestLabel + '-title'" :class="styleClass + ' ' + labelStyleClass + ' ' + labelBgColor" class="rounded-2">{{replaceTitle}}</label>
             <div v-if="localData.scaledValue != null" class="row m-0 px-0" :class="justifyContent? 'd-flex justify-content-end ' + dimensionStyleClass : dimensionStyleClass">
                 <input :disabled="disabled" :data-cy="dataTestLabel + '-number-input'" type="number" :class="styleClassInput + ' ' + inputBgColor + ' ' + textColor" class="" @change="changeScaledValue($event.target.value)" :value="removeTrailingZeroes(localData.scaledValue * visualScale, numberDecimals)" ref="inputRef">
                 <DimensionUnit

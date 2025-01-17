@@ -1,6 +1,5 @@
 <script setup>
-import { toTitleCase } from '/src/assets/js/utils.js'
-import Dimension from '/WebSharedComponents/DataInput/Dimension.vue';
+import { toTitleCase } from '../assets/js/utils.js'
 import VueDatePicker from '@vuepic/vue-datepicker';
 </script>
 

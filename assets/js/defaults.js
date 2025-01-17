@@ -89,7 +89,8 @@ export const filterMas = {
             "magnetizingInductance": {
                 "nominal": 100e-6
             },
-            "turnsRatios": [],
+            "minimumImpedance": [{"frequency": 100000, "impedance": {"magnitude": 1000}}],
+            "turnsRatios": [{"nominal": 1}],
         },
         "operatingPoints": [],
     },
@@ -138,6 +139,7 @@ export const isolationSideOrdered = [
 export const designRequirementsOrdered = [
     "numberWindings",
     "magnetizingInductance",
+    "minimumImpedance",
     "turnsRatios",
     "insulation",
     "leakageInductance",
@@ -158,6 +160,9 @@ export const defaultDesignRequirements = {
     "turnsRatios": [],
     "leakageInductance": [
         {"maximum": 3e-6}
+    ],
+    "minimumImpedance": [
+        {"frequency": 100000, "impedance": {"magnitude": 1000}}
     ],
     "strayCapacitance": [
         {"maximum": 50e-12}
@@ -254,6 +259,7 @@ export const minimumMaximumScalePerParameter = {
     "weight": {"min": 0.001, "max": 1e6},
     "altitude": {"min": 1, "max": 10000},
     "inductance": {"min": 1e-9, "max": 1},
+    "impedance": {"min": 1e-3, "max": 1e9},
     "leakageInductance": {"min": 1e-9, "max": 1e-6},
     "strayCapacitance": {"min": 1e-12, "max": 1e-6},
     "voltage": {"min": 1e-6, "max": 1e5},
