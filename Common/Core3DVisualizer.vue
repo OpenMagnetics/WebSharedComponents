@@ -1,9 +1,10 @@
 <script setup>
-import { Object3D, MathUtils, MeshBasicMaterial, Mesh, BoxGeometry, MeshStandardMaterial, LoadingManager, TextureLoader, PointLight, Box3, Vector3} from 'three';
+import { FileLoader, MeshPhysicalMaterial, Object3D, MathUtils, MeshBasicMaterial, Mesh, BoxGeometry, MeshStandardMaterial, LoadingManager, TextureLoader, PointLight, Box3, Vector3} from 'three';
 import {Camera, EffectComposer, InstancedMesh, PhongMaterial, Renderer, RenderPass, SphereGeometry, SpotLight, Scene, UnrealBloomPass, AmbientLight} from 'troisjs';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clean, deepCopy, hexToRgb } from '../assets/js/utils.js'
-
+import parseSTL  from '../assets/js/parseSTL.js'
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
 </script>
 
 <script>
@@ -91,6 +92,14 @@ export default {
         }
     },
     methods: {
+        base64ToArrayBuffer(base64) {
+            var binaryString = atob(base64);
+            var bytes = new Uint8Array(binaryString.length);
+            for (var i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        },
         removeObject3D(object3D) {
             if (!(object3D instanceof Object3D)) return false;
 
@@ -112,38 +121,37 @@ export default {
         getPiece(sourceObject) {            
             const scene = this.$refs.scene.scene;
             const camera = this.$refs.camera.camera;
+            const loader = new STLLoader()
 
-            const object = new OBJLoader().parse( sourceObject );
-            object.traverse( function ( child, index ) {
-                if ( child.isMesh ) {
-                    const color = hexToRgb("#7b7c7d")
-                    child.material.color.r = color.r / 255
-                    child.material.color.g = color.g / 255
-                    child.material.color.b = color.b / 255
-                    child.material.specular.r = 0.2
-                    child.material.specular.g = 0.2
-                    child.material.specular.b = 0.2
-                }
-            } );
+            const geometry = loader.parse(this.base64ToArrayBuffer(sourceObject));
+            const color = hexToRgb("#7b7c7d")
+            const material = new MeshPhysicalMaterial()
+            material.color.r = color.r / 255
+            material.color.g = color.g / 255
+            material.color.b = color.b / 255
+            material.specularColor.r = 0.2
+            material.specularColor.g = 0.2
+            material.specularColor.b = 0.2
+            const mesh = new Mesh(geometry, material)
+            mesh.rotation.x = -Math.PI / 2
+            mesh.rotation.y = 0
+            mesh.rotation.z = 0
 
-            object.rotation.x = -Math.PI / 2
-            object.rotation.y = 0
-            object.rotation.z = 0
-
-            scene.add( object );
-            this.current3dObject = object
+            scene.add(mesh)
+            this.current3dObject = mesh
             if (this.fullCoreModel) {
-                this.fitCameraToCenteredObject(camera, object, this.offset, 1.5)
+                this.fitCameraToCenteredObject(camera, mesh, this.offset, 1.5)
             }
             else {
 
                 if (this.core['functionalDescription']['shape']['family'] == 't') {
-                    this.fitCameraToCenteredObject(camera, object, 1, 1.5)
+                    this.fitCameraToCenteredObject(camera, mesh, 1, 1.5)
                 }
                 else {
-                    this.fitCameraToCenteredObject(camera, object, 1, 3)
+                    this.fitCameraToCenteredObject(camera, mesh, 1, 3)
                 }
             }
+
         },
         fitCameraToCenteredObject(camera, object, offset, offsetY, orbitControls) {
             const boundingBox = new Box3();
@@ -260,6 +268,7 @@ export default {
                         this.posting = false
                         this.updating = false
                         this.hasFreeCADError = true
+                        console.error(error);
                     });
 
                 }).catch(error => {
