@@ -3,7 +3,6 @@ import { FileLoader, MeshPhysicalMaterial, Object3D, MathUtils, MeshBasicMateria
 import {Camera, EffectComposer, InstancedMesh, PhongMaterial, Renderer, RenderPass, SphereGeometry, SpotLight, Scene, UnrealBloomPass, AmbientLight} from 'troisjs';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clean, deepCopy, hexToRgb } from '../assets/js/utils.js'
-import parseSTL  from '../assets/js/parseSTL.js'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
 </script>
 
