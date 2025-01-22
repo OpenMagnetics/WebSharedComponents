@@ -75,6 +75,13 @@ export default {
             },
             deep: true
         },
+        'operatingPoint': {
+            handler(newValue, oldValue) {
+                this.$userStore.wire2DVisualizerPlotCurrentViews[this.windingIndex] = null;
+                this.tryToSend();
+            },
+            deep: true
+        },
     },
     methods: {
         computeWire() {

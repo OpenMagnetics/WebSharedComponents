@@ -45,6 +45,10 @@ export default {
             type: String,
             default: "dark",
         },
+        operatingPointIndex: {
+            type: Number,
+            default: 0,
+        },
     },
     data() {
         const style = getComputedStyle(document.body);
@@ -84,6 +88,20 @@ export default {
             },
           deep: true
         },
+        'operatingPointIndex': {
+            handler(newValue, oldValue) {
+                if (!this.blockingRebounds) {
+                    this.blockingRebounds = true;
+                    this.zoomingPlot = false;
+                    this.showFieldPlot = this.showFieldPlotInit;
+                    this.includeFringing = this.includeFringingInit;
+                    this.zoomOut();
+                    setTimeout(() => {this.plot();}, 10);
+                    setTimeout(() => this.blockingRebounds = false, 20);
+                }
+            },
+          deep: true
+        },
         'showFieldPlotInit': {
             handler(newValue, oldValue) {
                 this.showFieldPlot = this.showFieldPlotInit;
@@ -107,7 +125,7 @@ export default {
                 if ("zoomPlotView" in this.$refs) {
                     this.$refs.zoomPlotView.innerHTML = ""
                 }
-                this.$axios.post(url, {magnetic: this.modelValue.magnetic, operatingPoint: this.modelValue.inputs.operatingPoints[0], includeFringing: this.includeFringing})
+                this.$axios.post(url, {magnetic: this.modelValue.magnetic, operatingPoint: this.modelValue.inputs.operatingPoints[this.operatingPointIndex], includeFringing: this.includeFringing})
                 .then(response => {
                     var clientWidth = this.$refs.Magnetic2DVisualizerContainer.clientWidth;
                     var clientHeight = this.$refs.Magnetic2DVisualizerContainer.clientHeight * 0.90;
@@ -154,7 +172,7 @@ export default {
                 this.posting = true;
                 const url = import.meta.env.VITE_API_ENDPOINT + '/plot_core'
 
-                this.$axios.post(url, {magnetic: this.modelValue.magnetic, operatingPoint: this.modelValue.inputs.operatingPoints[0]})
+                this.$axios.post(url, {magnetic: this.modelValue.magnetic, operatingPoint: this.modelValue.inputs.operatingPoints[this.operatingPointIndex]})
                 .then(response => {
                     if (this.$refs.Magnetic2DVisualizerContainer == null) {
                         this.posting = false;
