@@ -183,7 +183,7 @@ export default {
             <label :data-cy="dataTestLabel + '-same-row-label'" v-if="titleSameRow" :class="labelStyleClass + ' ' + labelBgColor + ' ' + textColor" class="rounded-2 fs-5">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}</label>
             <div  v-if="!titleSameRow" class=" col-sm-0 col-md-2">
             </div>
-            <select :disabled="disabled" :data-cy="dataTestLabel + '-select'"  :class="selectStyleClass + ' ' + inputBgColor + ' ' + textColor" class="form-select py-1 px-2 m-0 mt-1 pe-5"  @change="changeOption" style="width:auto; max-height: 3em;" :value="localData" >
+            <select :disabled="disabled" :data-cy="dataTestLabel + '-select'"  :class="selectStyleClass + ' ' + (disabled? labelBgColor : inputBgColor) + ' ' + textColor + ' ' + (disabled? 'border-0 text-end':'')" class="form-select py-1 px-2 m-0 mt-1 pe-5"  @change="changeOption" style="width:auto; max-height: 3em;" :value="localData" >
 
                 <option :disabled="optionsToDisable.includes(value)" v-for="value in computedOptions">
                     {{value}}

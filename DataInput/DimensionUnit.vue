@@ -96,7 +96,7 @@ export default {
 
 
 <template>
-    <select class="form-select m-0 p-0 text-center unit-select" :class="styleClass + ' ' + inputBgColor + ' ' + textColor " :value="modelValueInRange" @change="$emit('update:modelValue', Number($event.target.value))" style="width:auto;" :disabled="readOnly || disabled">
+    <select class="form-select m-0 p-0 text-center unit-select" :class="styleClass + ' ' + inputBgColor + ' ' + textColor + ' ' + (disabled? 'border-0':'')" :value="modelValueInRange" @change="$emit('update:modelValue', Number($event.target.value))" style="width:auto;" :disabled="readOnly || disabled">
         <option v-for="value, label in multipliersLabel" :value="value">
             {{label + unit}}
         </option>

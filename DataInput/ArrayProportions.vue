@@ -68,6 +68,10 @@ export default {
             type: String,
             default: "text-white",
         },
+        disabled: {
+            type: Boolean,
+            default: false,
+        },
     },
     data() {
         const errorMessages = "";
@@ -166,6 +170,7 @@ export default {
                         <div class=" m-0 p-0">
                             <Dimension :dataTestLabel="dataTestLabel + '-' + index"
                                 :allowNegative="allowNegative"
+                                :disabled="disabled"
                                 :min="min"
                                 :max="max"
                                 :defaultValue="defaultValue"
