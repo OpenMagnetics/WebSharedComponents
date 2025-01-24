@@ -11,6 +11,7 @@ export default {
         },
         unit:{
             type: String,
+            default: null,
             required: false
         },
         modelValue:{
@@ -111,13 +112,24 @@ export default {
         }
 
         if (this.modelValue[this.name] != null) {
-            const aux = getMultiplier(this.modelValue[this.name], 0.001);
-            localData.scaledValue = removeTrailingZeroes(aux.scaledValue, this.numberDecimals);
+            var aux;
+            if (this.unit != null) {
+                aux = getMultiplier(this.modelValue[this.name], 0.001);
+                localData.scaledValue = removeTrailingZeroes(aux.scaledValue, this.numberDecimals);
+            }
+            else {
+                localData.scaledValue = removeTrailingZeroes(this.modelValue[this.name], this.numberDecimals);
+            }
             if (this.modelValue[this.name] == 0) {
                 localData.multiplier = this.max;
             }
             else {
-                localData.multiplier = aux.multiplier;
+                if (this.unit != null) {
+                    localData.multiplier = aux.multiplier;
+                }
+                else {
+                    localData.multiplier = 1;
+                }
             }
         }
 
