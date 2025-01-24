@@ -152,6 +152,16 @@ export const designRequirementsOrdered = [
     "market",
 ]
 
+export const catalogDesignRequirementsOrdered = [
+    "numberWindings",
+    "magnetizingInductance",
+    "minimumImpedance",
+    "turnsRatios",
+    "insulation",
+    "operatingTemperature",
+    "maximumDimensions",
+]
+
 export const defaultDesignRequirements = {
     "name": "My Design Requirements",
     "magnetizingInductance": {
