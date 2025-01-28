@@ -49,6 +49,10 @@ export default {
             type: Number,
             default: 0,
         },
+        loadingGif: {
+            type: String,
+            default: "/images/loading.gif",
+        },
     },
     data() {
         const style = getComputedStyle(document.body);
@@ -287,7 +291,7 @@ export default {
         </div>
 
         <div v-show="!zoomingPlot">
-            <img data-cy="CorePublish-loading" v-if="posting" class="mx-auto d-block container" alt="loading" style="height: auto;" src="/images/loading.gif">
+            <img data-cy="CorePublish-loading" v-if="posting" class="mx-auto d-block container" alt="loading" style="height: auto;" :src="loadingGif">
 
             <div v-show="!posting">
                 <div>

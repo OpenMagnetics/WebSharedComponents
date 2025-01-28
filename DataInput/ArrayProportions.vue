@@ -77,6 +77,7 @@ export default {
         const errorMessages = "";
         const localData = {};
         const forceUpdate = 1;
+        const blockingRebounds = false;
 
         this.modelValue.forEach((elem, index) => {
             localData[String(index)] = elem * 100;
@@ -86,6 +87,7 @@ export default {
             errorMessages,
             localData,
             forceUpdate,
+            blockingRebounds,
         }
     },
     computed: {    },
@@ -136,13 +138,16 @@ export default {
                 total += value;
             }
 
-            if (total != this.max || force) {
+            // if (total != this.max || force) {
+            if (total > this.max || force || !this.blockingRebounds) {
                 const fixedValue = this.localData[updatedIndex];
                 const remaining = Math.max(this.min, this.max - fixedValue);
 
-                for (var index = 0; index < this.modelValue.length; index++) {
-                    if (index != updatedIndex) {
-                        this.localData[index] = remaining / (this.modelValue.length - 1);
+                if (total > this.max) {
+                    for (var index = 0; index < this.modelValue.length; index++) {
+                        if (index != updatedIndex) {
+                            this.localData[index] = remaining / (this.modelValue.length - 1);
+                        }
                     }
                 }
 
@@ -150,6 +155,8 @@ export default {
                 for (var index = 0; index < this.modelValue.length; index++) {
                     this.modelValue[index] = this.localData[index] / 100;
                 }
+                this.blockingRebounds = true;
+                setTimeout(() => this.blockingRebounds = false, 100);
                 this.$emit('update');
             }
 

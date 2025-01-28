@@ -87,7 +87,7 @@ export const filterMas = {
         "designRequirements": {
             "name": "My Design Requirements",
             "magnetizingInductance": {
-                "nominal": 100e-6
+                "minimum": 100e-6
             },
             "minimumImpedance": [{"frequency": 100000, "impedance": {"magnitude": 1000}}],
             "turnsRatios": [{"nominal": 1}],

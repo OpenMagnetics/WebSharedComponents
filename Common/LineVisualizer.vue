@@ -38,6 +38,10 @@ export default {
         data: {
             type: Array,
         },
+        points: {
+            type: Array,
+            default: []
+        },
         xAxisOptions: {
             type: Object,
         },
@@ -86,12 +90,24 @@ export default {
                     type: 'cross'
                 },
                 formatter: (params) => {
-                    const xDatum = this.data[params.seriesIndex].data.x[params.dataIndex];
-                    const yDatum = this.data[params.seriesIndex].data.y[params.dataIndex];
-                    const xAux = formatUnit(xDatum, "Hz");
-                    const yAux = formatUnit(yDatum, this.data[params.seriesIndex].unit);
 
-                    return `${removeTrailingZeroes(yAux.label, 2)} ${yAux.unit} @ ${removeTrailingZeroes(xAux.label, 2)} ${xAux.unit}`;
+                    if (params.seriesIndex < this.data.length) {
+                        const xDatum = this.data[params.seriesIndex].data.x[params.dataIndex];
+                        const yDatum = this.data[params.seriesIndex].data.y[params.dataIndex];
+                        const xAux = formatUnit(xDatum, "Hz");
+                        const yAux = formatUnit(yDatum, this.data[params.seriesIndex].unit);
+
+                        return `${removeTrailingZeroes(yAux.label, 2)} ${yAux.unit} @ ${removeTrailingZeroes(xAux.label, 2)} ${xAux.unit}`;
+                    }
+                    else {
+                        const newIndex = params.seriesIndex - this.data.length;
+                        const xDatum = this.points[newIndex].data.x;
+                        const yDatum = this.points[newIndex].data.y;
+                        const xAux = formatUnit(xDatum, "Hz");
+                        const yAux = formatUnit(yDatum, this.points[newIndex].unit);
+
+                        return `Requirement: ${removeTrailingZeroes(yAux.label, 2)} ${yAux.unit} @ ${removeTrailingZeroes(xAux.label, 2)} ${xAux.unit}`;
+                    }
                 },
             },
             toolbox: {
@@ -124,7 +140,6 @@ export default {
                     fontSize: 13,
                     color: theme['white'],
 
-
                     margin: 0,
                     formatter: (value) => {
                         const aux = formatUnit(value, this.data[0].unit);
@@ -138,30 +153,6 @@ export default {
                 right:  '5%',
             },
 
-            // dataZoom: [
-            //     {
-            //         type: 'inside'
-            //     },
-            //     {
-            //         type: 'slider',
-            //         showDataShadow: false,
-            //         handleIcon:
-            //         'path://M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
-            //         handleSize: '80%'
-            //     },
-            //     {
-            //         type: 'inside',
-            //         orient: 'vertical'
-            //     },
-            //     {
-            //         type: 'slider',
-            //         orient: 'vertical',
-            //         showDataShadow: false,
-            //         handleIcon:
-            //         'path://M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
-            //         handleSize: '80%'
-            //     }
-            // ],
             animation: false,
             series: [
                 {
@@ -191,16 +182,18 @@ export default {
         },
     },
     mounted() {
+        console.log(this.points)
+        console.log(this.points)
     },
     created() {
     },
     computed: {
     },
     methods: {
-        processData() {
+        processData(index) {
             const data = [];
-            this.data[0].data.x.forEach((_, index) => {
-                const aux = [this.data[0].data.x[index], this.data[0].data.y[index]];
+            this.data[index].data.x.forEach((_, pointIndex) => {
+                const aux = [this.data[index].data.x[pointIndex], this.data[index].data.y[pointIndex]];
                 data.push(aux);
             });
             return data;
@@ -219,10 +212,18 @@ export default {
                 xMaximum = Math.max(xMaximum, elem);
                 xMinimum = Math.min(xMinimum, elem);
             })
+            this.points.forEach((elem) => {
+                xMaximum = Math.max(xMaximum, elem.data.x);
+                xMinimum = Math.min(xMinimum, elem.data.x);
+            })
 
             this.data[0].data.y.forEach((elem) => {
                 yMaximum = Math.max(yMaximum, elem);
                 yMinimum = Math.min(yMinimum, elem);
+            })
+            this.points.forEach((elem) => {
+                xMaximum = Math.max(xMaximum, elem.data.y);
+                xMinimum = Math.min(xMinimum, elem.data.y);
             })
 
             limits.xAxis = {
@@ -243,8 +244,28 @@ export default {
             options.yAxis.min = limits.yAxis.min;
             options.yAxis.max = limits.yAxis.max * 1.1;
 
-            options.series[0].data = [];
-            options.series[0].data = this.processData();
+            options.series = []
+            this.data.forEach((datum, index) => {
+                options.series.push(
+                    {
+                        data: this.processData(index),
+                        type: 'line',
+                        color: this.theme[datum.colorLabel],
+                    }
+                );
+
+            })
+
+            this.points.forEach((point) => {
+                options.series.push(
+                    {
+                        symbolSize: 20,
+                        data: [[point.data.x, point.data.y]],
+                        type: 'scatter',
+                        color: this.theme[point.colorLabel],
+                    }
+                );
+            })
         },
         onClick(event) {
             this.$emit('click', event);

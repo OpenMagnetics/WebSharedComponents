@@ -234,7 +234,11 @@ export default {
                         aux['functionalDescription']['shape'] = JSON.parse(this.$mkf.get_shape_data(aux['functionalDescription']['shape']));
 
                     }
-                    aux['functionalDescription']['shape']['familySubtype'] = String(aux['functionalDescription']['shape']['familySubtype']);
+
+
+                    if ('familySubtype' in aux['functionalDescription']['shape']){
+                        aux['functionalDescription']['shape']['familySubtype'] = String(aux['functionalDescription']['shape']['familySubtype']);
+                    }
                     var core = JSON.parse(this.$mkf.calculate_core_data(JSON.stringify(aux), false));
                     this.posting = true;
 
@@ -316,10 +320,10 @@ export default {
     <Renderer  data-cy="CoreShapeArtisanVisualizer-canvas" ref="renderer" resize=true :orbit-ctrl="{ enableDamping: true, dampingFactor: 0.05, autoRotate : true }" shadow class="p-0 m-0">
         <Camera ref="camera" />
         <Scene ref="scene" :background="theme[cleanBackgroundColor]">
-            <SpotLight :color="theme['white']" :intensity="50" :position="{ y: 150, z: 100 }" :cast-shadow="true" :shadow-map-size="{ width: 1024, height: 1024 }" />
-            <SpotLight :color="theme['white']" :intensity="50" :position="{ y: -150, z: 100 }" :cast-shadow="true" :shadow-map-size="{ width: 1024, height: 1024 }" />
-            <SpotLight :color="theme['white']" :intensity="50" :position="{ x: 150, z: 100 }" :cast-shadow="true" :shadow-map-size="{ width: 1024, height: 1024 }" />
-            <SpotLight :color="theme['white']" :intensity="50" :position="{ x: -150, z: 100 }" :cast-shadow="true" :shadow-map-size="{ width: 1024, height: 1024 }" />
+            <SpotLight :color="'white'" :intensity="50" :position="{ y: 150, z: 100 }" :cast-shadow="true" :shadow-map-size="{ width: 1024, height: 1024 }" />
+            <SpotLight :color="'white'" :intensity="50" :position="{ y: -150, z: 100 }" :cast-shadow="true" :shadow-map-size="{ width: 1024, height: 1024 }" />
+            <SpotLight :color="'white'" :intensity="50" :position="{ x: 150, z: 100 }" :cast-shadow="true" :shadow-map-size="{ width: 1024, height: 1024 }" />
+            <SpotLight :color="'white'" :intensity="50" :position="{ x: -150, z: 100 }" :cast-shadow="true" :shadow-map-size="{ width: 1024, height: 1024 }" />
         </Scene>
     </Renderer>
 </template>
