@@ -98,11 +98,11 @@ export default {
         if (this.value != null) {
             var aux;
             if (this.unit != null) {
-                aux = getMultiplier(this.value, 0.001);
+                aux = getMultiplier(Number(this.value), 0.001);
                 localData.scaledValue = removeTrailingZeroes(aux.scaledValue, this.numberDecimals);
             }
             else {
-                localData.scaledValue = removeTrailingZeroes(this.value, this.numberDecimals);
+                localData.scaledValue = removeTrailingZeroes(Number(this.value), this.numberDecimals);
             }
             if (this.value == 0) {
                 localData.multiplier = this.max;
@@ -189,7 +189,7 @@ export default {
     <div :data-cy="dataTestLabel + '-container'" class="container-flex" ref="container">
         <div class="row">
             <label :data-cy="dataTestLabel + '-title'" class="rounded-2 pe-0" :class="styleClass + ' ' + labelStyleClass + ' ' + labelBgColor + ' ' + textColor">{{shortenedName}}<sub>{{subscriptName}}</sub> </label>
-            <div v-if="localData.scaledValue != null" :class="dimensionStyleClass" class="container m-0 px-0">
+            <div v-show="localData.scaledValue != null" :class="dimensionStyleClass" class="container m-0 px-0">
                 <div class="row m-0 px-0 ">
                     <input :disabled="true" :data-cy="dataTestLabel + '-number-label'" type="number" class="m-0 px-0 text-end border-0" :class="inputStyleClass + ' ' + inputBgColor + ' ' + textColor" :value="visuallyScaledValue" ref="inputRef">
                     <DimensionUnit
