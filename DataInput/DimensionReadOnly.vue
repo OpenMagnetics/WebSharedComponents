@@ -95,9 +95,28 @@ export default {
             scaledValue: null
         };
 
-        const aux = getMultiplier(this.value, 0.001, false, this.power);
-        localData.scaledValue = removeTrailingZeroes(aux.scaledValue, this.numberDecimals);
-        localData.multiplier = aux.multiplier;
+        if (this.value != null) {
+            var aux;
+            if (this.unit != null) {
+                aux = getMultiplier(this.value, 0.001);
+                localData.scaledValue = removeTrailingZeroes(aux.scaledValue, this.numberDecimals);
+            }
+            else {
+                localData.scaledValue = removeTrailingZeroes(this.value, this.numberDecimals);
+            }
+            if (this.value == 0) {
+                localData.multiplier = this.max;
+            }
+            else {
+                if (this.unit != null) {
+                    localData.multiplier = aux.multiplier;
+                }
+                else {
+                    localData.multiplier = 1;
+                }
+            }
+        }
+
 
         var shortenedName = this.name;
 
