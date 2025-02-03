@@ -119,19 +119,19 @@ export default {
                 coreShapeTable['effectiveLength'].value = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
             }
             {
-                const aux = formatUnit(data.magnetic.core.processedDescription.effectiveParameters.effectiveArea, 'm²');
+                const aux = formatUnit(data.magnetic.core.processedDescription.effectiveParameters.effectiveArea, 'm²', 2);
                 coreShapeTable['effectiveArea'] = {}
                 coreShapeTable['effectiveArea'].text = 'Effective area';
                 coreShapeTable['effectiveArea'].value = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
             }
             {
-                const aux = formatUnit(data.magnetic.core.processedDescription.effectiveParameters.effectiveVolume, 'm³');
+                const aux = formatUnit(data.magnetic.core.processedDescription.effectiveParameters.effectiveVolume, 'm³', 3);
                 coreShapeTable['effectiveVolume'] = {}
                 coreShapeTable['effectiveVolume'].text = 'Effective volume';
                 coreShapeTable['effectiveVolume'].value = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
             }
             {
-                const aux = formatUnit(data.magnetic.core.processedDescription.effectiveParameters.minimumArea, 'm²');
+                const aux = formatUnit(data.magnetic.core.processedDescription.effectiveParameters.minimumArea, 'm²', 2);
                 coreShapeTable['minimumArea'] = {}
                 coreShapeTable['minimumArea'].text = 'Minimum Area';
                 coreShapeTable['minimumArea'].value = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;

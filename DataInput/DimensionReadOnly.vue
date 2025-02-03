@@ -98,7 +98,7 @@ export default {
         if (this.value != null) {
             var aux;
             if (this.unit != null) {
-                aux = getMultiplier(Number(this.value), 0.001);
+                aux = getMultiplier(Number(this.value), 0.001, false, this.power);
                 localData.scaledValue = removeTrailingZeroes(aux.scaledValue, this.numberDecimals);
             }
             else {

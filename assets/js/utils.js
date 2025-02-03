@@ -94,51 +94,62 @@ export function roundValue(chart, datasetIndex, index, value, xPrecision, yPreci
     chart.data.datasets[datasetIndex].data[index] = value
 }
 
-export function formatUnit(valueRaw, unitRaw) {
+export function formatUnit(valueRaw, unitRaw, power=1, precision=0.001) {
     var base
     var unit
     var label
-    if (Math.abs(valueRaw) < 0.000000001 && Math.abs(valueRaw) != 0) {
+    if (Math.abs(valueRaw) < Math.pow(0.000000001, power) && Math.abs(valueRaw) != 0) {
         base = 0.000000000001
         unit = "p" + unitRaw
     }
-    else if (Math.abs(valueRaw) < 0.000001 && Math.abs(valueRaw) != 0) {
+    else if (Math.abs(valueRaw) < Math.pow(0.000001, power) && Math.abs(valueRaw) != 0) {
         base = 0.000000001
         unit = "n" + unitRaw
     }
-    else if (Math.abs(valueRaw) < 0.001 && Math.abs(valueRaw) != 0) {
+    else if (Math.abs(valueRaw) < Math.pow(0.001, power) && Math.abs(valueRaw) != 0) {
         base = 0.000001
         unit = "μ" + unitRaw
     }
-    else if (Math.abs(valueRaw) < 0.1 && Math.abs(valueRaw) != 0) {
+    else if (Math.abs(valueRaw) < Math.pow(0.1, power) && Math.abs(valueRaw) != 0) {
         base = 0.001
         unit = "m" + unitRaw
     }
-    else if (Math.abs(valueRaw) < 1000) {
+    else if (Math.abs(valueRaw) < Math.pow(1000, power)) {
         base = 1
         unit = unitRaw
     }
-    else if (Math.abs(valueRaw) >= 1000 && Math.abs(valueRaw) < 1000000) {
+    else if (Math.abs(valueRaw) < Math.pow(1000000, power)) {
         base = 1000
         unit = "k" + unitRaw
     }
-    else if (Math.abs(valueRaw) >= 1000000 && Math.abs(valueRaw) < 1000000000) {
+    else if (Math.abs(valueRaw) < Math.pow(1000000000, power)) {
         base = 1000000
         unit = "M" + unitRaw
     }
-    else if (Math.abs(valueRaw) >= 1000000000 && Math.abs(valueRaw) < 1000000000000) {
+    else if (Math.abs(valueRaw) < Math.pow(1000000000000, power)) {
         base = 1000000000
         unit = "G" + unitRaw
     }
-    else if (Math.abs(valueRaw) >= 1000000000000 && Math.abs(valueRaw) < 1000000000000000) {
+    else if (Math.abs(valueRaw) < Math.pow(1000000000000000, power)) {
         base = 1000000000000
         unit = "T" + unitRaw
     }
-    else if (Math.abs(valueRaw) >= 1000000000000000 && Math.abs(valueRaw) < 1000000000000000000) {
+    else if (Math.abs(valueRaw) < Math.pow(1000000000000000000, power)) {
         base = 1000000000000000
         unit = "P" + unitRaw
     }
-    label = valueRaw / base
+    if (power > 1) {
+        console.log("power")
+        console.log(power)
+        console.log("valueRaw")
+        console.log(valueRaw)
+        console.log("base")
+        console.log(base)
+        console.log("unit")
+        console.log(unit)
+    }
+    label = roundWithDecimals(valueRaw / Math.pow(base, power), precision);
+    // label = valueRaw / base
     return {label, unit}
 }
 
@@ -590,19 +601,19 @@ export function processCoreTexts(data) {
             localTexts.effectiveParametersTable['effectiveLength'].value = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
         }
         {
-            const aux = formatUnit(data.magnetic.core.processedDescription.effectiveParameters.effectiveArea, 'm²');
+            const aux = formatUnit(data.magnetic.core.processedDescription.effectiveParameters.effectiveArea, 'm²', 2);
             localTexts.effectiveParametersTable['effectiveArea'] = {}
             localTexts.effectiveParametersTable['effectiveArea'].text = 'Effective area';
             localTexts.effectiveParametersTable['effectiveArea'].value = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
         }
         {
-            const aux = formatUnit(data.magnetic.core.processedDescription.effectiveParameters.effectiveVolume, 'm³');
+            const aux = formatUnit(data.magnetic.core.processedDescription.effectiveParameters.effectiveVolume, 'm³', 3);
             localTexts.effectiveParametersTable['effectiveVolume'] = {}
             localTexts.effectiveParametersTable['effectiveVolume'].text = 'Effective volume';
             localTexts.effectiveParametersTable['effectiveVolume'].value = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
         }
         {
-            const aux = formatUnit(data.magnetic.core.processedDescription.effectiveParameters.minimumArea, 'm²');
+            const aux = formatUnit(data.magnetic.core.processedDescription.effectiveParameters.minimumArea, 'm²', 2);
             localTexts.effectiveParametersTable['minimumArea'] = {}
             localTexts.effectiveParametersTable['minimumArea'].text = 'Minimum Area';
             localTexts.effectiveParametersTable['minimumArea'].value = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
