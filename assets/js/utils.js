@@ -138,16 +138,6 @@ export function formatUnit(valueRaw, unitRaw, power=1, precision=0.001) {
         base = 1000000000000000
         unit = "P" + unitRaw
     }
-    if (power > 1) {
-        console.log("power")
-        console.log(power)
-        console.log("valueRaw")
-        console.log(valueRaw)
-        console.log("base")
-        console.log(base)
-        console.log("unit")
-        console.log(unit)
-    }
     label = roundWithDecimals(valueRaw / Math.pow(base, power), precision);
     // label = valueRaw / base
     return {label, unit}

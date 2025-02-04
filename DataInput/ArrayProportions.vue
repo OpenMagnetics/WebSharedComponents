@@ -187,7 +187,7 @@ export default {
                                 :forceUpdate="forceUpdate" 
                                 v-model="localData" 
                                 class="col-12"
-                                styleClassInput="m-0 px-0 col-8"
+                                inputStyleClass="m-0 px-0 col-8"
                                 labelStyleClass="col-4 p-0"
                                 dimensionStyleClass="col-8 p-0"
                                 :labelBgColor="labelBgColor"

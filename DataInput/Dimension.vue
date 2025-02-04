@@ -72,7 +72,7 @@ export default {
             type: String,
             default: 'fs-5'
         },
-        styleClassInput: {
+        inputStyleClass: {
             type: String,
             default: "m-0 px-0 col-6",
         },
@@ -262,7 +262,7 @@ export default {
                     ref="inputRef"
                     :disabled="disabled"
                     :data-cy="dataTestLabel + '-number-input'"
-                    :class="styleClassInput + ' ' + (disabled? labelBgColor : inputBgColor) + ' ' + textColor  + ' ' + (disabled? 'border-0' : '')"
+                    :class="inputStyleClass + ' ' + (disabled? labelBgColor : inputBgColor) + ' ' + textColor  + ' ' + (disabled? 'border-0' : '')"
                     class=""
                     @change="changeScaledValue($event.target.value)"
                     :value="removeTrailingZeroes(localData.scaledValue * visualScale, numberDecimals)"
