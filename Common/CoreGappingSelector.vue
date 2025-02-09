@@ -37,15 +37,15 @@ export default {
             default: 1000,
         },
         labelBgColor: {
-            type: String,
+            type: [String, Object],
             default: "bg-dark",
         },
-        inputBgColor: {
-            type: String,
+        valueBgColor: {
+            type: [String, Object],
             default: "bg-light",
         },
         textColor: {
-            type: String,
+            type: [String, Object],
             default: "text-white",
         },
     },
@@ -174,7 +174,7 @@ export default {
                     v-model="localData"
                     :options="gapTypes"
                     :labelBgColor="labelBgColor"
-                    :inputBgColor="inputBgColor"
+                    :valueBgColor="valueBgColor"
                     :textColor="textColor"
                     @update="update"
                 />
@@ -194,7 +194,7 @@ export default {
                     :allowNegative="false"
                     :modelValue="localData"
                     :labelBgColor="labelBgColor"
-                    :inputBgColor="inputBgColor"
+                    :valueBgColor="valueBgColor"
                     :textColor="textColor"
                     @update="update"
                 />
@@ -213,7 +213,7 @@ export default {
                     :allowNegative="false"
                     :modelValue="localData"
                     :labelBgColor="labelBgColor"
-                    :inputBgColor="inputBgColor"
+                    :valueBgColor="valueBgColor"
                     :textColor="textColor"
                     @update="update"
                 />

@@ -1,5 +1,5 @@
 <script setup>
-import { toTitleCase, getMultiplier } from '../assets/js/utils.js'
+import { toTitleCase, getMultiplier, combinedStyle, combinedClass } from '../assets/js/utils.js'
 import * as Utils from '../assets/js/utils.js'
 </script>
 
@@ -34,16 +34,24 @@ export default {
             type: Boolean,
             default: false,
         },
+        valueFontSize: {
+            type: [String, Object],
+            default: 'fs-6'
+        },
+        labelFontSize:{
+            type: [String, Object],
+            default: 'fs-6'
+        },
         labelBgColor: {
-            type: String,
+            type: [String, Object],
             default: "bg-dark",
         },
-        inputBgColor: {
-            type: String,
+        valueBgColor: {
+            type: [String, Object],
             default: "bg-light",
         },
         textColor: {
-            type: String,
+            type: [String, Object],
             default: "text-white",
         },
         disabled: {
@@ -147,9 +155,39 @@ export default {
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex">
         <div class="row">
-            <label v-if="replaceTitle == null" :data-cy="dataTestLabel + '-title'" :for="name + '-text-input'" :class="labelBgColor + ' ' + textColor" class="rounded-2 fs-5 m-0 col-8">{{toTitleCase(name)}}</label>
-            <label v-if="replaceTitle != null" :data-cy="dataTestLabel + '-title'" :for="name + '-text-input'" :class="labelBgColor + ' ' + textColor" class="rounded-2 fs-5 m-0 col-8">{{replaceTitle}}</label>
-            <input :data-cy="dataTestLabel + '-text-input'" type="text" :disabled="disabled" :class="inputBgColor + ' ' + textColor" class="m-0 px-0 col-4" :id="name + '-text-input'" @change="changeText($event.target.value)" :value="localData">
+            <label
+                :style="combinedStyle([labelBgColor, textColor, labelFontSize])"
+                v-if="replaceTitle == null"
+                :data-cy="dataTestLabel + '-title'"
+                :for="name + '-text-input'"
+                :class="combinedClass([labelBgColor, textColor, labelFontSize])"
+                class="rounded-2 fs-5 m-0 col-8"
+            >
+                {{toTitleCase(name)}}
+            </label>
+            <label
+                :style="combinedStyle([labelBgColor, textColor, labelFontSize])"
+                v-if="replaceTitle != null"
+                :data-cy="dataTestLabel + '-title'"
+                :for="name + '-text-input'"
+                :class="combinedClass([labelBgColor, textColor, labelFontSize])"
+                class="rounded-2 fs-5 m-0 col-8"
+            >
+                {{replaceTitle}}
+            </label>
+            
+
+            <input
+                :style="combinedStyle([valueBgColor, textColor, valueFontSize])"
+                :data-cy="dataTestLabel + '-text-input'"
+                type="text"
+                :disabled="disabled"
+                :class="combinedClass([valueBgColor, textColor, valueFontSize])"
+                lass="m-0 px-0 col-4"
+                :id="name + '-text-input'"
+                @change="changeText($event.target.value)"
+                :value="localData"
+            >
             <label class="text-danger text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
         </div>
     </div>

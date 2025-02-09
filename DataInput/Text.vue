@@ -1,19 +1,19 @@
 <script setup>
-import { toTitleCase } from '/src/assets/js/utils.js'
+import { toTitleCase, combinedStyle, combinedClass } from '../assets/js/utils.js'
 </script>
 
 <script>
 export default {
     props: {
-        name:{
+        name: {
             type: String,
             required: true
         },
-        modelValue:{
+        modelValue: {
             type: Object,
             required: true
         },
-        defaultValue:{
+        defaultValue: {
             type: String,
             default: '',
         },
@@ -25,25 +25,37 @@ export default {
             type: Boolean,
             default: true,
         },
+        valueFontSize: {
+            type: [String, Object],
+            default: 'fs-6'
+        },
+        labelFontSize: {
+            type: [String, Object],
+            default: 'fs-6'
+        },
         labelBgColor: {
-            type: String,
+            type: [String, Object],
             default: "bg-dark",
         },
-        inputBgColor: {
-            type: String,
+        valueBgColor: {
+            type: [String, Object],
             default: "bg-light",
         },
         textColor: {
-            type: String,
+            type: [String, Object],
             default: "text-white",
         },
-        labelStyleClass:{
+        labelWidthProportionClass: {
             type: String,
             default: 'col-4'
         },
-        inputStyleClass: {
+        valueWidthProportionClass: {
             type: String,
-            default: "m-0 px-0 col-8",
+            default: " col-8",
+        },
+        extraStyleClass:{
+            type: String,
+            default: ''
         },
     },
     data() {
@@ -95,8 +107,26 @@ export default {
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex">
         <div class="row">
-            <label :data-cy="dataTestLabel + '-title'" :for="name + '-text-input'" :class="labelStyleClass + ' ' + labelBgColor + ' ' + textColor" class="rounded-2 fs-5 ">{{toTitleCase(name)}}</label>
-            <input :data-cy="dataTestLabel + '-text-input'" type="text" :class="inputStyleClass + ' ' + inputBgColor + ' ' + textColor" class="m-0 px-0" :id="name + '-text-input'" @change="changeText($event.target.value)" :value="localData">
+            <label
+                v-if="labelWidthProportionClass != 'col-0'"
+                :style="combinedStyle([labelWidthProportionClass, labelBgColor, textColor])"
+                :data-cy="dataTestLabel + '-title'"
+                :for="name + '-text-input'"
+                :class="combinedClass([labelWidthProportionClass, labelBgColor, textColor])"
+                class="rounded-2 fs-5 "
+            >
+                {{toTitleCase(name)}}
+            </label>
+            <input
+                :style="combinedStyle([valueWidthProportionClass, valueBgColor, textColor, extraStyleClass])"
+                :data-cy="dataTestLabel + '-text-input'"
+                type="text"
+                :class="combinedClass([valueWidthProportionClass, valueBgColor, textColor, extraStyleClass])"
+                class="m-0 px-0 "
+                :id="name + '-text-input'"
+                @change="changeText($event.target.value)"
+                :value="localData"
+            >
             <label class="text-danger text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
         </div>
     </div>

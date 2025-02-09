@@ -43,6 +43,38 @@ export default {
             type: String,
             default: '',
         },
+        labelWidthProportionClass:{
+            type: String,
+            default: 'col-xs-12 col-md-7'
+        },
+        valueWidthProportionClass:{
+            type: String,
+            default: 'col-xs-8 col-md-5'
+        },
+        valueFontSize: {
+            type: [String, Object],
+            default: 'fs-6'
+        },
+        labelFontSize: {
+            type: [String, Object],
+            default: 'fs-6'
+        },
+        labelBgColor: {
+            type: [String, Object],
+            default: "bg-dark",
+        },
+        valueBgColor: {
+            type: [String, Object],
+            default: "bg-light",
+        },
+        textColor: {
+            type: [String, Object],
+            default: "text-white",
+        },
+        unitExtraStyleClass:{
+            type: String,
+            default: ''
+        },
     },
     data() {
         var localData = {};
@@ -109,11 +141,14 @@ export default {
                 :allowZeros="allowZeros[0]"
                 :modelValue="localData"
                 @update="dimensionUpdated($event, 0)"
-                :labelStyleClass="'col-xs-12 col-md-5'"
-                :dimensionStyleClass="'col-xs-8 col-md-7'"
-                :labelBgColor="$settingsStore.labelBgColor"
-                :inputBgColor="$settingsStore.inputBgColor"
-                :textColor="$settingsStore.textColor"
+                :valueFontSize='valueFontSize'
+                :labelFontSize='labelFontSize'
+                :labelWidthProportionClass='labelWidthProportionClass'
+                :valueWidthProportionClass='valueWidthProportionClass'
+                :labelBgColor='labelBgColor'
+                :valueBgColor='valueBgColor'
+                :textColor='textColor'
+                :unitExtraStyleClass='unitExtraStyleClass'
             />
             <Dimension class="col-5 offset-1 mb-1 text-start"
                 :name="names[1]"
@@ -128,11 +163,14 @@ export default {
                 :allowZeros="allowZeros[1]"
                 :modelValue="localData"
                 @update="dimensionUpdated($event, 1)"
-                :labelStyleClass="'col-xs-12 col-md-5'"
-                :dimensionStyleClass="'col-xs-8 col-md-7'"
-                :labelBgColor="$settingsStore.labelBgColor"
-                :inputBgColor="$settingsStore.inputBgColor"
-                :textColor="$settingsStore.textColor"
+                :valueFontSize='valueFontSize'
+                :labelFontSize='labelFontSize'
+                :labelWidthProportionClass='labelWidthProportionClass'
+                :valueWidthProportionClass='valueWidthProportionClass'
+                :labelBgColor='labelBgColor'
+                :valueBgColor='valueBgColor'
+                :textColor='textColor'
+                :unitExtraStyleClass='unitExtraStyleClass'
             />
         </div>
     </div>

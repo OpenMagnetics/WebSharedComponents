@@ -1,5 +1,5 @@
 <script setup>
-import { toTitleCase, getMultiplier, removeTrailingZeroes } from '../assets/js/utils.js'
+import { toTitleCase, getMultiplier, removeTrailingZeroes, combinedStyle, combinedClass } from '../assets/js/utils.js'
 import DimensionUnit from './DimensionUnit.vue'
 </script>
 <script>
@@ -68,33 +68,37 @@ export default {
             type: Boolean,
             default: false,
         },
-        styleClass:{
-            type: String,
-            default: 'fs-5'
+        valueFontSize: {
+            type: [String, Object],
+            default: 'fs-6'
         },
-        styleClassInput: {
-            type: String,
-            default: "m-0 px-0 col-6",
+        labelFontSize: {
+            type: [String, Object],
+            default: 'fs-6'
         },
-        labelStyleClass:{
+        labelWidthProportionClass:{
             type: String,
             default: 'col-xs-12 col-md-7'
         },
-        dimensionStyleClass:{
+        valueWidthProportionClass:{
             type: String,
             default: 'col-xs-8 col-md-5'
         },
         labelBgColor: {
-            type: String,
+            type: [String, Object],
             default: "bg-dark",
         },
-        inputBgColor: {
-            type: String,
+        valueBgColor: {
+            type: [String, Object],
             default: "bg-light",
         },
         textColor: {
-            type: String,
+            type: [String, Object],
             default: "text-white",
+        },
+        unitExtraStyleClass:{
+            type: String,
+            default: ''
         },
     },
     data() {
@@ -121,7 +125,7 @@ export default {
                 localData.scaledValue = removeTrailingZeroes(this.modelValue[this.name], this.numberDecimals);
             }
             if (this.modelValue[this.name] == 0) {
-                localData.multiplier = this.max;
+                localData.multiplier = 1;
             }
             else {
                 if (this.unit != null) {
@@ -132,6 +136,7 @@ export default {
                 }
             }
         }
+
 
         var shortenedName = this.name;
 
@@ -221,16 +226,18 @@ export default {
 
             actualValue = Number(actualValue);
 
-            if (this.unit != null) {
-                const aux = getMultiplier(actualValue, 0.001);
-                this.$refs.inputRef.value = removeTrailingZeroes(aux.scaledValue, this.numberDecimals)
-                this.localData.scaledValue = aux.scaledValue;
-                this.localData.multiplier = aux.multiplier;
-            }
-            else {
-                this.$refs.inputRef.value = removeTrailingZeroes(actualValue, this.numberDecimals)
-                this.localData.scaledValue = removeTrailingZeroes(actualValue, this.numberDecimals);
-                this.localData.multiplier = 1;
+            if (this.$refs.inputRef != null) {
+                if (this.unit != null) {
+                    const aux = getMultiplier(actualValue, 0.001);
+                    this.$refs.inputRef.value = removeTrailingZeroes(aux.scaledValue, this.numberDecimals)
+                    this.localData.scaledValue = aux.scaledValue;
+                    this.localData.multiplier = aux.multiplier;
+                }
+                else {
+                    this.$refs.inputRef.value = removeTrailingZeroes(actualValue, this.numberDecimals)
+                    this.localData.scaledValue = removeTrailingZeroes(actualValue, this.numberDecimals);
+                    this.localData.multiplier = 1;
+                }
             }
 
             const hasError = this.checkErrors();
@@ -250,20 +257,35 @@ export default {
     }
 }
 </script>
-
-
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex" ref="container">
-        <div class="row">
-            <label v-if="replaceTitle == null" :data-cy="dataTestLabel + '-title'" :class="styleClass + ' ' + labelStyleClass + ' ' + labelBgColor + ' ' + textColor" class="rounded-2 ">{{shortenedName}}</label>
-            <label v-if="replaceTitle != null && replaceTitle != ''"  :data-cy="dataTestLabel + '-title'" :class="styleClass + ' ' + labelStyleClass + ' ' + labelBgColor" class="rounded-2">{{replaceTitle}}</label>
-            <div v-if="localData.scaledValue != null" class="row m-0 px-0" :class="justifyContent? 'd-flex justify-content-end ' + dimensionStyleClass : dimensionStyleClass">
+        <div class="row align-items-center ">
+            <label
+                :style="combinedStyle([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
+                v-if="replaceTitle == null"
+                :data-cy="dataTestLabel + '-title'"
+                :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
+                class="rounded-2 p p-0 "
+            >
+                {{shortenedName}}
+            </label>
+            <label
+                :style="combinedStyle([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
+                v-if="replaceTitle != null && replaceTitle != ''"
+                :data-cy="dataTestLabel + '-title'"
+                :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
+                class="rounded-2 p-0"
+            >
+                {{replaceTitle}}
+            </label>
+            <div v-if="localData.scaledValue != null" class="row m-0 px-0 align-items-center " :class="justifyContent? 'd-flex justify-content-end ' + valueWidthProportionClass : valueWidthProportionClass">
                 <input type="number"
+                    :style="combinedStyle([disabled? labelBgColor : valueBgColor, textColor, valueFontSize])"
                     ref="inputRef"
                     :disabled="disabled"
                     :data-cy="dataTestLabel + '-number-input'"
-                    :class="styleClassInput + ' ' + (disabled? labelBgColor : inputBgColor) + ' ' + textColor  + ' ' + (disabled? 'border-0' : '')"
-                    class=""
+                    :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, disabled? 'border-0' : ''])"
+                    class="col-8 m-0 pe-0 ps-1"
                     @change="changeScaledValue($event.target.value)"
                     :value="removeTrailingZeroes(localData.scaledValue * visualScale, numberDecimals)"
                 >
@@ -275,12 +297,16 @@ export default {
                     :min="min"
                     :max="max"
                     :unit="unit"
-                    :inputBgColor="inputBgColor"
+                    :extraStyleClass="unitExtraStyleClass"
+                    :valueBgColor="valueBgColor"
+                    :valueFontSize="valueFontSize"
                     :textColor="textColor"
                     class="m-0 px-0 col-4"
                     @update:modelValue="changeMultiplier"/>
                 <label
-                    v-if="unit == null" class="px-2 pt-1 px-0 "
+                    :style="combinedStyle([labelBgColor, textColor, valueFontSize, unitExtraStyleClass])"
+                    v-if="unit == null"
+                    class="px-2 pt-1 px-0 "
                     :data-cy="dataTestLabel + '-DimensionUnit-text'"
                     :class="unit == null && justifyContent? 'col-0':'col-4'"
                 >{{altUnit}}</label>

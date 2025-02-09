@@ -1,5 +1,5 @@
 <script setup>
-import { toTitleCase, getMultiplier } from '../assets/js/utils.js'
+import { toTitleCase, getMultiplier, combinedStyle, combinedClass } from '../assets/js/utils.js'
 import Dimension from './Dimension.vue'
 import { isolationSideOrdered } from '../assets/js/defaults.js'
 </script>
@@ -57,15 +57,15 @@ export default {
             default: false
         },
         labelBgColor: {
-            type: String,
+            type: [String, Object],
             default: "bg-dark",
         },
-        inputBgColor: {
-            type: String,
+        valueBgColor: {
+            type: [String, Object],
             default: "bg-light",
         },
         textColor: {
-            type: String,
+            type: [String, Object],
             default: "text-white",
         },
         disabled: {
@@ -165,12 +165,25 @@ export default {
 }
 </script>
 
-
 <template>
     <div class="container-flex">
         <div class="row">
-            <label v-if="replaceTitle == null" :data-cy="dataTestLabel + '-title'" class="rounded-2 fs-5 m-0 text-start" :class="maximumNumberElements != null? 'col-lg-6 col-md-12' : 'col-12'">{{toTitleCase(name)}}</label>
-            <label v-if="replaceTitle != null" :data-cy="dataTestLabel + '-title'" class="rounded-2 fs-5 m-0 text-start" :class="maximumNumberElements != null? 'col-lg-6 col-md-12' : 'col-12'">{{replaceTitle}}</label>
+            <label
+                v-if="replaceTitle == null"
+                :data-cy="dataTestLabel + '-title'"
+                class="rounded-2 fs-5 m-0 text-start"
+                :class="maximumNumberElements != null? 'col-lg-6 col-md-12' : 'col-12'"
+            >
+                {{toTitleCase(name)}}
+            </label>
+            <label
+                v-if="replaceTitle != null"
+                :data-cy="dataTestLabel + '-title'"
+                class="rounded-2 fs-5 m-0 text-start"
+                :class="maximumNumberElements != null? 'col-lg-6 col-md-12' : 'col-12'"
+            >
+                {{replaceTitle}}
+            </label>
             <div class="col-lg-6 col-md-12">
                 <div class="row m-0 p-0">
                     <div :data-cy="dataTestLabel + '-' + index + '-container'" class="col-6 " v-for="_, index in modelValue">
@@ -187,11 +200,11 @@ export default {
                                 :forceUpdate="forceUpdate" 
                                 v-model="localData" 
                                 class="col-12"
-                                styleClassInput="m-0 px-0 col-8"
-                                labelStyleClass="col-4 p-0"
-                                dimensionStyleClass="col-8 p-0"
+                                inputStyleClass="m-0 px-0 col-8"
+                                labelWidthProportionClass="col-4 p-0"
+                                valueWidthProportionClass="col-8 p-0"
                                 :labelBgColor="labelBgColor"
-                                :inputBgColor="inputBgColor"
+                                :valueBgColor="valueBgColor"
                                 :textColor="textColor"
                                 @update="update"
                             />

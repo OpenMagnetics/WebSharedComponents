@@ -1,5 +1,5 @@
 <script setup>
-import { toTitleCase } from '../assets/js/utils.js'
+import { toTitleCase, combinedStyle, combinedClass } from '../assets/js/utils.js'
 import VueDatePicker from '@vuepic/vue-datepicker';
 </script>
 
@@ -23,18 +23,18 @@ export default {
             default: '',
         },
         labelBgColor: {
-            type: String,
+            type: [String, Object],
             default: "bg-dark",
         },
-        inputBgColor: {
-            type: String,
+        valueBgColor: {
+            type: [String, Object],
             default: "bg-light",
         },
         textColor: {
-            type: String,
+            type: [String, Object],
             default: "text-white",
         },
-        labelStyleClass:{
+        labelWidthProportionClass:{
             type: String,
             default: 'col-4'
         },
@@ -91,16 +91,23 @@ export default {
 }
 </script>
 
-
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex">
         <div class="row">
-            <label :data-cy="dataTestLabel + '-title'" :for="name + '-date-input'" :class="labelStyleClass + ' ' + labelBgColor + ' ' + textColor" class="rounded-2 fs-5 col-3 ">{{toTitleCase(name)}}</label>
+            <label
+                :style="combinedStyle([labelWidthProportionClass, labelBgColor, textColor])"
+                :data-cy="dataTestLabel + '-title'"
+                :for="name + '-date-input'"
+                :class="combinedClass([labelWidthProportionClass, labelBgColor, textColor])"
+                class="rounded-2 fs-5 col-3 "
+            >
+                {{toTitleCase(name)}}
+            </label>
             <div :class="inputStyleClass">
                 <VueDatePicker
                     v-model="modelValue[name]"
                     auto-apply
-                    :class="inputBgColor + ' ' + textColor" class="m-0 p-0" :id="name + '-date-input'"
+                    :class="valueBgColor + ' ' + textColor" class="m-0 p-0" :id="name + '-date-input'"
                     format='dd/MM/yyyy'
                     />
             </div>

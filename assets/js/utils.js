@@ -138,16 +138,6 @@ export function formatUnit(valueRaw, unitRaw, power=1, precision=0.001) {
         base = 1000000000000000
         unit = "P" + unitRaw
     }
-    if (power > 1) {
-        console.log("power")
-        console.log(power)
-        console.log("valueRaw")
-        console.log(valueRaw)
-        console.log("base")
-        console.log(base)
-        console.log("unit")
-        console.log(unit)
-    }
     label = roundWithDecimals(valueRaw / Math.pow(base, power), precision);
     // label = valueRaw / base
     return {label, unit}
@@ -1026,4 +1016,39 @@ export function isMobile() {
     else {
         return false;
     }
+}
+
+export function ordinalSuffixOf(i) {
+    let j = i % 10,
+        k = i % 100;
+    if (j === 1 && k !== 11) {
+        return i + "st";
+    }
+    if (j === 2 && k !== 12) {
+        return i + "nd";
+    }
+    if (j === 3 && k !== 13) {
+        return i + "rd";
+    }
+    return i + "th";
+}
+
+export function combinedStyle(styles) {
+    var combinedSettings = {};
+    styles.forEach((style) => {
+        if (typeof(style) === 'object') {
+            combinedSettings = { ...combinedSettings, ...style };
+        }
+    })
+    return combinedSettings;
+}
+
+export function combinedClass(classes) {
+    var combinedSettings = '';
+    classes.forEach((style) => {
+        if (typeof(style) === 'string') {
+            combinedSettings += ' ' + style;
+        }
+    })
+    return combinedSettings;
 }

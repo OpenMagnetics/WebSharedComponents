@@ -1,4 +1,5 @@
 <script setup>
+import { combinedStyle, combinedClass } from '../assets/js/utils.js'
 </script>
 <script>
 export default {
@@ -23,7 +24,7 @@ export default {
             type: Boolean,
             default: false
         },
-        styleClass:{
+        extraStyleClass:{
             type: String,
             default: ''
         },
@@ -31,12 +32,16 @@ export default {
             type: Boolean,
             default: false,
         },
-        inputBgColor: {
-            type: String,
+        valueFontSize: {
+            type: [String, Object],
+            default: 'fs-6'
+        },
+        valueBgColor: {
+            type: [String, Object],
             default: "bg-light",
         },
         textColor: {
-            type: String,
+            type: [String, Object],
             default: "text-white",
         },
     },
@@ -96,17 +101,31 @@ export default {
 
 
 <template>
-    <select class="form-select m-0 p-0 text-center unit-select" :class="styleClass + ' ' + inputBgColor + ' ' + textColor + ' ' + (disabled? 'border-0':'')" :value="modelValueInRange" @change="$emit('update:modelValue', Number($event.target.value))" style="width:auto;" :disabled="readOnly || disabled">
-        <option v-for="value, label in multipliersLabel" :value="value" :class="inputBgColor">
-            {{label + unit}}
-        </option>
-    </select>
+    <div>
+        <select
+            :style="combinedStyle([valueFontSize, extraStyleClass, valueBgColor, textColor])"
+            class="form-select m-0 p-0 text-center unit-select"
+            :class="combinedClass([valueFontSize, extraStyleClass, valueBgColor, textColor, disabled? 'border-0':''])"
+            :value="modelValueInRange"
+            @change="$emit('update:modelValue', Number($event.target.value))"
+            style="width:auto;"
+            :disabled="readOnly || disabled">
+            <option
+                :style="combinedStyle([valueBgColor, valueFontSize])"
+                v-for="value, label in multipliersLabel"
+                :value="value"
+                :class="combinedClass([valueBgColor, valueFontSize])"
+            >
+                {{label + unit}}
+            </option>
+        </select>
+    </div>
 </template>
 
-<style type="text/css">
+<!-- <style type="text/css">
     .unit-select {
         background-image: none !important;
         background: none !important;
  }
 </style>
-
+ -->

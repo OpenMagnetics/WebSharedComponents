@@ -1,5 +1,5 @@
 <script setup>
-import { toTitleCase, getMultiplier, removeTrailingZeroes } from '../assets/js/utils.js'
+import { toTitleCase, getMultiplier, removeTrailingZeroes, combinedStyle, combinedClass } from '../assets/js/utils.js'
 import DimensionUnit from './DimensionUnit.vue'
 </script>
 <script>
@@ -52,19 +52,19 @@ export default {
             type: Boolean,
             default: false
         },
-        styleClass:{
-            type: String,
+        useTitleCase:{
+            type: Boolean,
+            default: true
+        },
+        valueFontSize: {
+            type: [String, Object],
             default: 'fs-6'
         },
-        labelStyleClass:{
+        labelWidthProportionClass:{
             type: String,
             default: 'col-5'
         },
-        dimensionUnitStyleClass:{
-            type: String,
-            default: 'border-0 my-0 py-0'
-        },
-        dimensionStyleClass:{
+        valueWidthProportionClass:{
             type: String,
             default: 'col-7'
         },
@@ -72,20 +72,16 @@ export default {
             type: String,
             default: 'col-7'
         },
-        useTitleCase:{
-            type: Boolean,
-            default: true
-        },
         labelBgColor: {
-            type: String,
+            type: [String, Object],
             default: "bg-dark",
         },
-        inputBgColor: {
-            type: String,
+        valueBgColor: {
+            type: [String, Object],
             default: "bg-light",
         },
         textColor: {
-            type: String,
+            type: [String, Object],
             default: "text-white",
         },
     },
@@ -184,28 +180,51 @@ export default {
 }
 </script>
 
-
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex" ref="container">
-        <div class="row">
-            <label :data-cy="dataTestLabel + '-title'" class="rounded-2 pe-0" :class="styleClass + ' ' + labelStyleClass + ' ' + labelBgColor + ' ' + textColor">{{shortenedName}}<sub>{{subscriptName}}</sub> </label>
-            <div v-show="localData.scaledValue != null" :class="dimensionStyleClass" class="container m-0 px-0">
+        <div class="row align-items-center ">
+            <label
+                :style="combinedStyle([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
+                :data-cy="dataTestLabel + '-title'"
+                class="rounded-2 pe-0"
+                :class="combinedClass([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
+            >
+                {{shortenedName}}<sub>{{subscriptName}}</sub>
+            </label>
+            <div v-show="localData.scaledValue != null" :class="valueWidthProportionClass" class="container m-0 px-0">
                 <div class="row m-0 px-0 ">
-                    <input :disabled="true" :data-cy="dataTestLabel + '-number-label'" type="number" class="m-0 px-0 text-end border-0" :class="inputStyleClass + ' ' + inputBgColor + ' ' + textColor" :value="visuallyScaledValue" ref="inputRef">
+                    <input 
+                        :style="combinedStyle([valueFontSize, labelBgColor, textColor])"
+                        :disabled="true"
+                        :data-cy="dataTestLabel + '-number-label'"
+                        type="number"
+                        class="m-0 px-0 text-end border-0 col-8"
+                        :class="combinedClass([valueFontSize, labelBgColor, textColor])"
+                        :value="visuallyScaledValue"
+                        ref="inputRef"
+                    >
                     <DimensionUnit
                         v-if="unit != null"
                         v-model="localData.multiplier"
-                        :styleClass="dimensionUnitStyleClass + ' ' + inputBgColor + ' ' + textColor"
+                        :disabled="true"
                         :readOnly="true"
                         :data-cy="dataTestLabel + '-DimensionUnit-input'"
                         :min="min"
                         :max="max"
-                        :inputBgColor="inputBgColor"
+                        :valueFontSize="valueFontSize"
+                        :valueBgColor="labelBgColor"
                         :textColor="textColor"
                         :unit="unit"
-                        class="m-0 px-0 col-2"
+                        class="m-0 py-0 px-0 col-4 border-0"
                     />
-                    <label :data-cy="dataTestLabel + '-DimensionUnit-text'" v-if="unit == null" class="ms-2 pt-1 px-0 col-2" >{{altUnit}}</label>
+                    <label
+                        :style="combinedStyle([labelBgColor, textColor, valueFontSize])"
+                        :data-cy="dataTestLabel + '-DimensionUnit-text'"
+                        v-if="unit == null"
+                        class="ms-2 pt-1 px-0 col-2"
+                    >
+                        {{altUnit}}
+                    </label>
                 </div>
             </div>
         </div>

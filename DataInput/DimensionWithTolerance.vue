@@ -1,5 +1,5 @@
 <script setup>
-import { toTitleCase, getMultiplier } from '../assets/js/utils.js'
+import { toTitleCase, getMultiplier, combinedStyle, combinedClass } from '../assets/js/utils.js'
 import DimensionUnit from './DimensionUnit.vue'
 import { tooltipsMagneticSynthesisDesignRequirements } from '../assets/js/texts.js'
 </script>
@@ -46,6 +46,10 @@ export default {
             type: Boolean,
             default: false
         },
+        disabled: {
+            type: Boolean,
+            default: false,
+        },
         allowNegative:{
             type: Boolean,
             default: false
@@ -57,6 +61,38 @@ export default {
         dataTestLabel: {
             type: String,
             default: '',
+        },
+        addButtonStyle: {
+            type: Object,
+            default: {},
+        },
+        removeButtonBgColor: {
+            type: String,
+            default: "bg-danger",
+        },
+        valueFontSize: {
+            type: [String, Object],
+            default: 'fs-6'
+        },
+        titleFontSize: {
+            type: [String, Object],
+            default: 'fs-6'
+        },
+        labelBgColor: {
+            type: [String, Object],
+            default: "bg-dark",
+        },
+        valueBgColor: {
+            type: [String, Object],
+            default: "bg-light",
+        },
+        textColor: {
+            type: [String, Object],
+            default: "text-white",
+        },
+        unitExtraStyleClass:{
+            type: String,
+            default: ''
         },
     },
     data() {
@@ -305,36 +341,169 @@ export default {
 <template>
     <div v-tooltip="styleTooltip" class="container-flex">
         <div class="row">
-            <input :data-cy="dataTestLabel + '-title'" v-tooltip="tooltipsMagneticSynthesisDesignRequirements['changeNameWindings']" v-if="varText" type="text" class="rounded-2 fs-5 ms-3 bg-dark text-white col-6 p-0 mb-2 border-0"  @change="$emit('changeText', $event.target.value)" :value="name">
-            <label :data-cy="dataTestLabel + '-title'" v-if="!varText" class="rounded-2 fs-5 ms-3">{{toTitleCase(name)}}</label> 
-        <div class="row">
+            <input
+                :style="combinedStyle([labelBgColor, textColor, titleFontSize])"
+                v-tooltip="tooltipsMagneticSynthesisDesignRequirements['changeNameWindings']"
+                v-if="varText"
+                :data-cy="dataTestLabel + '-title'"
+                type="text"
+                class="rounded-2 ms-3 col-6 p-0 mb-2 border-0"
+                :class="combinedClass([labelBgColor, textColor, titleFontSize])"
+                @change="$emit('changeText', $event.target.value)"
+                :value="name">
+            <label
+                :style="combinedStyle([labelBgColor, textColor, titleFontSize])"
+                v-if="!varText"
+                :data-cy="dataTestLabel + '-title'"
+                :class="combinedClass([labelBgColor, textColor, titleFontSize])"
+                class="rounded-2 ms-3">
+                {{toTitleCase(name)}}
+            </label> 
         </div>
+        <div class="row"></div>
+        <div class="row">
             <div v-if="!halfSize" class=" col-sm-0 col-md-2"></div>
-            <div v-if="localData.minimum.scaledValue != null" :class="halfSize? 'ms-sm-4 col-md-4' : 'col-md-3 '" class=" col-xs-12 row m-0 px-0">
-                <button :data-cy="dataTestLabel + '-minimum-remove-button'" :for="name + 'minimum-input'" class="remove-button m-0 px-0 col-4 col-form-label text-center btn text-white" @click="removeField('minimum')" style="max-height: 2.3em;"> <span class="normal-text" >Min.</span> <i class="fa-solid fa-xmark icon" ></i>  </button>
-                <input :data-cy="dataTestLabel + '-minimum-number-input'" type="number" class="m-0 px-0 col-4 bg-light text-white" :id="name + 'minimum-input'" @change="changeScaledValue($event.target.value, 'minimum')" :value="localData.minimum.scaledValue">
-                <DimensionUnit :data-cy="dataTestLabel + '-minimum-DimensionUnit-input'" :min="min" :max="max" v-if="unit != null" :unit="unit" v-model="localData.minimum.multiplier" class="m-0 ms-1 px-0 col-4" @update:modelValue="changeMultiplier('minimum')"/>
+            <div v-if="localData.minimum.scaledValue != null" :class="halfSize? 'col-md-4' : 'col-md-3 '" class=" col-xs-12 row m-0 px-0 align-items-center ">
+                <button
+                    :style="combinedStyle([valueFontSize, labelBgColor, textColor])"
+                    :data-cy="dataTestLabel + '-minimum-remove-button'"
+                    :for="name + 'minimum-input'"
+                    :class="combinedClass([valueFontSize, labelBgColor, textColor])"
+                    class="remove-button m-0 px-0 col-4 col-form-label text-center btn"
+                    @click="removeField('minimum')"
+                    style="max-height: 2.3em;">
+                        <span class="normal-text" >Min.</span> <i class="fa-solid fa-xmark icon" ></i>
+                </button>
+                <input
+                    :style="combinedStyle([disabled? labelBgColor : valueBgColor, textColor, valueFontSize])"
+                    :data-cy="dataTestLabel + '-minimum-number-input'"
+                    type="number"
+                    class="m-0 px-0 col-4"
+                    :id="name + 'minimum-input'"
+                    :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, disabled? 'border-0' : ''])"
+                    @change="changeScaledValue($event.target.value, 'minimum')"
+                    value="localData.minimum.scaledValue"
+                />
+                <DimensionUnit
+                    :data-cy="dataTestLabel + '-minimum-DimensionUnit-input'"
+                    :min="min"
+                    :max="max"
+                    v-if="unit != null"
+                    :unit="unit"
+                    v-model="localData.minimum.multiplier"
+                    :extraStyleClass="unitExtraStyleClass"
+                    :valueBgColor="valueBgColor"
+                    :valueFontSize="valueFontSize"
+                    :textColor="textColor"
+                    class="m-0 col-4"
+                    @update:modelValue="changeMultiplier('minimum')"
+                />
             </div>
             <div v-if="localData.minimum.scaledValue == null" class="col-md-3 row m-0 px-xl-3 px-md-0">
-                <button :data-cy="dataTestLabel + '-minimum-add-button'" :class="halfSize? 'mx-0 px-0' : ''" class="btn btn-primary float-end"  style="max-height: 2.5em" @click="add('minimum')">{{shortenedButtonLabels.minimum}}</button>
+                <button
+                    :style="addButtonStyle"
+                    :data-cy="dataTestLabel + '-minimum-add-button'"
+                    :class="(halfSize? 'mx-0 px-0' : '') + ' ' + valueFontSize"
+                    class="btn float-end"
+                    style="max-height: 2.5em"
+                    @click="add('minimum')"
+                >
+                    {{shortenedButtonLabels.minimum}}
+                </button>
             </div>
 
-            <div v-if="localData.nominal.scaledValue != null" :class="halfSize? 'col-md-4' : 'col-md-3 '" class="col-xs-12 row m-0 px-0">
-                <button :data-cy="dataTestLabel + '-nominal-remove-button'" :for="name + 'nominal-input'" class="remove-button m-0 px-0 col-4 col-form-label text-center btn text-white" @click="removeField('nominal')" style="max-height: 2.3em;"> <span class="normal-text" >Nom.</span> <i class="fa-solid fa-xmark icon" ></i>  </button>
-                <input :data-cy="dataTestLabel + '-nominal-number-input'" type="number" class="m-0 px-0 col-4 bg-light text-white" :id="name + 'nominal-input'" @change="changeScaledValue($event.target.value, 'nominal')"  :value="localData.nominal.scaledValue">
-                <DimensionUnit :data-cy="dataTestLabel + '-nominal-DimensionUnit-input'" :min="min" :max="max" v-if="unit != null" :unit="unit" v-model="localData.nominal.multiplier" class="m-0 ms-1 px-0 col-4" @update:modelValue="changeMultiplier('nominal')"/>
+            <div v-if="localData.nominal.scaledValue != null" :class="halfSize? 'col-md-4' : 'col-md-3 '" class="col-xs-12 row m-0 px-0 align-items-center ">
+                <button
+                    :style="combinedStyle([valueFontSize, labelBgColor, textColor])"
+                    :data-cy="dataTestLabel + '-nominal-remove-button'"
+                    :for="name + 'nominal-input'"
+                    class="remove-button m-0 px-0 col-4 col-form-label text-center btn"
+                    :class="combinedClass([valueFontSize, labelBgColor, textColor])"
+                    @click="removeField('nominal')"
+                    style="max-height: 2.3em;">
+                        <span class="normal-text" >Nom.</span> <i class="fa-solid fa-xmark icon" ></i>
+                </button>
+                <input
+                    :style="combinedStyle([disabled? labelBgColor : valueBgColor, textColor, valueFontSize])"
+                    :data-cy="dataTestLabel + '-nominal-number-input'"
+                    type="number"
+                    class="m-0 px-0 col-4"
+                    :id="name + 'nominal-input'"
+                    :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, disabled? 'border-0' : ''])"
+                    @change="changeScaledValue($event.target.value, 'nominal')"
+                    :value="localData.nominal.scaledValue"
+                />
+                <DimensionUnit
+                    :data-cy="dataTestLabel + '-nominal-DimensionUnit-input'"
+                    :min="min"
+                    :max="max"
+                    v-if="unit != null"
+                    :unit="unit"
+                    v-model="localData.nominal.multiplier"
+                    :extraStyleClass="unitExtraStyleClass"
+                    :valueBgColor="valueBgColor"
+                    :valueFontSize="valueFontSize"
+                    :textColor="textColor"
+                    class="m-0 col-4"
+                    @update:modelValue="changeMultiplier('nominal')"
+                />
             </div>
             <div v-if="localData.nominal.scaledValue == null" class="col-md-3 row m-0 px-xl-3 px-md-0">
-                <button :data-cy="dataTestLabel + '-nominal-add-button'" :class="halfSize? 'mx-0 px-0' : ''" class="btn btn-primary float-end" style="max-height: 2.5em" @click="add('nominal')">{{shortenedButtonLabels.nominal}}</button>
+                <button
+                    :style="addButtonStyle"
+                    :data-cy="dataTestLabel + '-nominal-add-button'"
+                    :class="(halfSize? 'mx-0 px-0' : '') + ' ' + valueFontSize"
+                    class="btn float-end"
+                    style="max-height: 2.5em"
+                    @click="add('nominal')">{{shortenedButtonLabels.nominal}}
+                </button>
             </div>
 
-            <div v-if="localData.maximum.scaledValue != null" :class="halfSize? 'col-md-4' : 'col-md-3 '" class="col-xs-12 row m-0 px-0">
-                <button :data-cy="dataTestLabel + '-maximum-remove-button'" :for="name + 'maximum-input'" class="remove-button m-0 px-0 col-4 col-form-label text-center btn text-white" @click="removeField('maximum')" style="max-height: 2.3em;"> <span class="normal-text">Max.</span> <i class="fa-solid fa-xmark icon" ></i>  </button>
-                <input :data-cy="dataTestLabel + '-maximum-number-input'" type="number" class="m-0 px-0 col-4 bg-light text-white" :id="name + 'maximum-input'" @change="changeScaledValue($event.target.value, 'maximum')" :value="localData.maximum.scaledValue">
-                <DimensionUnit :data-cy="dataTestLabel + '-maximum-DimensionUnit-input'" :min="min" :max="max" v-if="unit != null" :unit="unit" v-model="localData.maximum.multiplier" class="m-0 ms-1 px-0 col-4" @update:modelValue="changeMultiplier('maximum')"/>
+            <div v-if="localData.maximum.scaledValue != null" :class="halfSize? 'col-md-4' : 'col-md-3 '" class="col-xs-12 row m-0 px-0 align-items-center ">
+                <button
+                    :style="combinedStyle([valueFontSize, labelBgColor, textColor])"
+                    :data-cy="dataTestLabel + '-maximum-remove-button'"
+                    :for="name + 'maximum-input'"
+                    class="remove-button m-0 px-0 col-4 col-form-label text-center btn"
+                    :class="combinedClass([valueFontSize, labelBgColor, textColor])"
+                    @click="removeField('maximum')"
+                    style="max-height: 2.3em;">
+                        <span class="normal-text">Max.</span> <i class="fa-solid fa-xmark icon" ></i>
+                </button>
+                <input
+                    :style="combinedStyle([disabled? labelBgColor : valueBgColor, textColor, valueFontSize])"
+                    :data-cy="dataTestLabel + '-maximum-number-input'"
+                    type="number"
+                    class="m-0 px-0 col-4"
+                    :id="name + 'maximum-input'"
+                    :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, disabled? 'border-0' : ''])"
+                    @change="changeScaledValue($event.target.value, 'maximum')"
+                    value="localData.maximum.scaledValue"
+                />
+                <DimensionUnit
+                    :data-cy="dataTestLabel + '-maximum-DimensionUnit-input'"
+                    :min="min"
+                    :max="max"
+                    v-if="unit != null"
+                    :unit="unit"
+                    v-model="localData.maximum.multiplier"
+                    :extraStyleClass="unitExtraStyleClass"
+                    :valueBgColor="valueBgColor"
+                    :valueFontSize="valueFontSize"
+                    :textColor="textColor"                    
+                    class="m-0 col-4"
+                    @update:modelValue="changeMultiplier('maximum')"
+                />
             </div>
             <div v-if="localData.maximum.scaledValue == null" class="col-md-3 row m-0 px-xl-3 px-md-0">
-                <button :data-cy="dataTestLabel + '-maximum-add-button'" :class="halfSize? 'mx-0 px-0' : ''" class="btn btn-primary float-end " style="max-height: 2.5em" @click="add('maximum')">{{shortenedButtonLabels.maximum}}</button>
+                <button
+                    :style="addButtonStyle"
+                    :data-cy="dataTestLabel + '-maximum-add-button'"
+                    :class="(halfSize? 'mx-0 px-0' : '') + ' ' + valueFontSize"
+                    class="btn float-end "
+                    style="max-height: 2.5em"
+                    @click="add('maximum')">{{shortenedButtonLabels.maximum}}
+                </button>
             </div>
         </div>
         <div class="row">
@@ -352,7 +521,7 @@ export default {
   display: none;
 }
 .remove-button:hover {
-  background-color: var(--bs-danger);
+  background-color: var(--bs-danger) !important;
 }
 
 .remove-button .icon {opacity:0;}

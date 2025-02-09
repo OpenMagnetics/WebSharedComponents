@@ -264,6 +264,23 @@ export const defaultOperatingPointExcitation = {
     }
 }
 
+export const defaultOperatingPointExcitationWithHarmonics = {  
+    "name": "Primary winding excitation",
+    "frequency": 100000,
+    "current": {
+        "harmonics": {
+            "amplitudes": [0, 10],
+            "frequencies": [0, 100000]
+        }
+    },
+    "voltage": {
+        "harmonics": {
+            "amplitudes": [0, 100],
+            "frequencies": [0, 100000]
+        }
+    }
+}
+
 export const minimumMaximumScalePerParameter = {
     "dimension": {"min": 0.001, "max":1},
     "weight": {"min": 0.001, "max": 1e6},
@@ -508,19 +525,6 @@ export const defaultCoreSaveConfiguration = {
 export const defaultGapType = "Ungapped";
 export const defaultGapLength = 5e-6;
 export const defaultNumberGaps = 1;
-
-
-export function titleColor(electricalParameter){
-    if (electricalParameter == "current") {
-        return "text-info"
-    }
-    else if (electricalParameter == "power") {
-        return "text-white"
-    }
-    else {
-        return "text-primary"
-    }
-}
 
 export const coreLossesModelDefault = 'iGSE';
 export const coreTemperatureModelDefault = 'Maniktala';

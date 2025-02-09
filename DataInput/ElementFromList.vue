@@ -1,5 +1,5 @@
 <script setup>
-import { toTitleCase, getMultiplier, isString } from '../assets/js/utils.js'
+import { toTitleCase, getMultiplier, isString, combinedStyle, combinedClass } from '../assets/js/utils.js'
 import DimensionUnit from './DimensionUnit.vue'
 import { tooltipsMagneticSynthesisDesignRequirements } from '../assets/js/texts.js'
 
@@ -43,24 +43,32 @@ export default {
             type: Boolean,
             default: false,
         },
-        labelStyleClass: {
+        labelWidthProportionClass: {
             type: String,
             default: "col-4",
+        },
+        valueFontSize: {
+            type: [String, Object],
+            default: 'fs-6'
+        },
+        labelFontSize: {
+            type: [String, Object],
+            default: 'fs-6'
         },
         selectStyleClass: {
             type: String,
             default: "col-8",
         },
         labelBgColor: {
-            type: String,
+            type: [String, Object],
             default: "bg-dark",
         },
-        inputBgColor: {
-            type: String,
+        valueBgColor: {
+            type: [String, Object],
             default: "bg-light",
         },
         textColor: {
-            type: String,
+            type: [String, Object],
             default: "text-white",
         },
     },
@@ -172,19 +180,46 @@ export default {
 }
 </script>
 
-
 <template>
     <div :data-cy="dataTestLabel + '-container'" v-tooltip="styleTooltip" class="container-flex">
         <div v-tooltip="tooltipsMagneticSynthesisDesignRequirements['changeNameWindings']" class="row">
-            <input :data-cy="dataTestLabel + '-alt-title-label'" v-if="altText != null && !titleSameRow" type="text" :class="labelStyleClass + ' ' + labelBgColor + ' ' + textColor" class="rounded-2 fs-5 ms-3  col-11 p-0 mb-2 border-0" @change="$emit('changeText', $event.target.value)" :value="altText">
-            <label :data-cy="dataTestLabel + '-title'" v-if="altText == null && !titleSameRow" class="rounded-2 fs-5 ms-3">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}</label>
+            <input
+                :style="combinedStyle([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
+                v-if="altText != null && !titleSameRow"
+                :data-cy="dataTestLabel + '-alt-title-label'"
+                type="text"
+                :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
+                class="rounded-2 ms-3 col-11 p-0 mb-2 border-0"
+                @change="$emit('changeText', $event.target.value)"
+                :value="altText">
+            <label
+                :style="combinedStyle([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
+                v-if="altText == null && !titleSameRow"
+                :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
+                :data-cy="dataTestLabel + '-title'"
+                class="rounded-2 ms-3">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
+            </label>
         </div>
         <div class="row" :class="justifyContent? 'd-flex justify-content-between' : ''">
-            <label :data-cy="dataTestLabel + '-same-row-label'" v-if="titleSameRow" :class="labelStyleClass + ' ' + labelBgColor + ' ' + textColor" class="rounded-2 fs-5">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}</label>
+            <label
+                :style="combinedStyle([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
+                :data-cy="dataTestLabel + '-same-row-label'"
+                v-if="titleSameRow"
+                :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
+                class="rounded-2">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
+            </label>
             <div  v-if="!titleSameRow" class=" col-sm-0 col-md-2">
             </div>
-            <select :disabled="disabled" :data-cy="dataTestLabel + '-select'"  :class="selectStyleClass + ' ' + (disabled? labelBgColor : inputBgColor) + ' ' + textColor + ' ' + (disabled? 'border-0 text-end':'')" class="form-select py-1 px-2 m-0 mt-1 pe-5"  @change="changeOption" style="width:auto; max-height: 3em;" :value="localData" >
-
+            <select
+                :style="combinedStyle([selectStyleClass, valueFontSize, disabled? labelBgColor : valueBgColor, textColor])"
+                :disabled="disabled"
+                :data-cy="dataTestLabel + '-select'"
+                :class="combinedClass([selectStyleClass, valueFontSize, disabled? labelBgColor : valueBgColor, textColor, disabled? 'border-0 text-end':''])"
+                class="form-select py-1 px-2 m-0 mt-1 pe-5"
+                @change="changeOption"
+                style="width:auto; max-height: 3em;"
+                :value="localData"
+            >
                 <option :disabled="optionsToDisable.includes(value)" v-for="value in computedOptions">
                     {{value}}
                 </option>
