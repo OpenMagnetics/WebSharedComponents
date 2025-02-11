@@ -33,7 +33,7 @@ export default {
         },
         backgroundColor: {
             type: String,
-            default: "dark",
+            default: "#1a1a1a",
         },
     },
     data() {
@@ -41,23 +41,10 @@ export default {
         const recentChange = false
         const tryingToSend = false
         const style = getComputedStyle(document.body);
-
-        const theme = {
-          primary: style.getPropertyValue('--bs-primary'),
-          secondary: style.getPropertyValue('--bs-secondary'),
-          success: style.getPropertyValue('--bs-success'),
-          info: style.getPropertyValue('--bs-info'),
-          warning: style.getPropertyValue('--bs-warning'),
-          danger: style.getPropertyValue('--bs-danger'),
-          light: style.getPropertyValue('--bs-light'),
-          dark: style.getPropertyValue('--bs-dark'),
-          white: style.getPropertyValue('--bs-white'),
-        };
         return {
             posting,
             recentChange,
             tryingToSend,
-            theme,
         }
     },
     watch: {
@@ -112,7 +99,7 @@ export default {
                         this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`<svg`, `<svg class="h-100 w-100"`);
                         this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`width="300" height="300"`,
                             `width="${this.$refs.wire2DPlotViewContainer.clientWidth}" height="${this.$refs.wire2DPlotViewContainer.clientHeight}"`);
-                        this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.theme[this.cleanBackgroundColor]}" d="M0.00,`);
+                        this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
                         this.$userStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = this.$refs.wire2DPlotView.innerHTML;
                     })
                     .catch(error => {
@@ -156,12 +143,6 @@ export default {
         this.tryToSend();
     },
     computed: {
-        cleanBackgroundColor() {
-            if (this.backgroundColor.includes("bg-")) {
-                return this.backgroundColor.replace("bg-", "");
-            }
-            return this.backgroundColor;
-        }
     },
 };
 </script>

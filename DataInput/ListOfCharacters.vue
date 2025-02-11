@@ -161,7 +161,7 @@ export default {
                 :data-cy="dataTestLabel + '-title'"
                 :for="name + '-text-input'"
                 :class="combinedClass([labelBgColor, textColor, labelFontSize])"
-                class="rounded-2 fs-5 m-0 col-8"
+                class="rounded-2 m-0 col-8"
             >
                 {{toTitleCase(name)}}
             </label>
@@ -171,11 +171,10 @@ export default {
                 :data-cy="dataTestLabel + '-title'"
                 :for="name + '-text-input'"
                 :class="combinedClass([labelBgColor, textColor, labelFontSize])"
-                class="rounded-2 fs-5 m-0 col-8"
+                class="rounded-2 m-0 col-8"
             >
                 {{replaceTitle}}
             </label>
-            
 
             <input
                 :style="combinedStyle([valueBgColor, textColor, valueFontSize])"
@@ -183,7 +182,7 @@ export default {
                 type="text"
                 :disabled="disabled"
                 :class="combinedClass([valueBgColor, textColor, valueFontSize])"
-                lass="m-0 px-0 col-4"
+                class="m-0 px-0 col-4"
                 :id="name + '-text-input'"
                 @change="changeText($event.target.value)"
                 :value="localData"

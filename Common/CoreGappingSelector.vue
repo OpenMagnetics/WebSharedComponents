@@ -1,5 +1,5 @@
 <script setup>
-import { guessBasicGappingParameters } from '../assets/js/utils.js'
+import { guessBasicGappingParameters, combinedStyle } from '../assets/js/utils.js'
 import { gapTypes } from '../assets/js/defaults.js'
 import ElementFromList from '../DataInput/ElementFromList.vue'
 import Dimension from '../DataInput/Dimension.vue'
@@ -172,9 +172,10 @@ export default {
     <div :data-cy="dataTestLabel + '-container'" class="container-flex" ref="container">
         <div class="row" v-tooltip="styleTooltip">
             <label
+                :style="combinedStyle([labelFontSize, labelBgColor, textColor])"
                 v-tooltip="tooltipsMagneticBuilder.coreGapping"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 fs-5 col-12">
+                class="rounded-2 col-12">
                 {{title}}
             </label>
             <div class="offset-1 col-11">
