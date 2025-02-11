@@ -278,7 +278,7 @@ export default {
             >
                 {{replaceTitle}}
             </label>
-            <div v-if="localData.scaledValue != null" class="row m-0 px-0 align-items-center " :class="justifyContent? 'd-flex justify-content-end ' + valueWidthProportionClass : valueWidthProportionClass">
+            <div v-if="localData.scaledValue != null" class="row m-0 px-0 align-items-center " :class="(justifyContent? 'd-flex justify-content-end ' : '') +  valueWidthProportionClass">
                 <input type="number"
                     :style="combinedStyle([disabled? labelBgColor : valueBgColor, textColor, valueFontSize])"
                     ref="inputRef"
@@ -305,7 +305,7 @@ export default {
                     @update:modelValue="changeMultiplier"/>
                 <label
                     :style="combinedStyle([labelBgColor, textColor, valueFontSize, unitExtraStyleClass])"
-                    v-if="unit == null"
+                    v-if="unit == null && altUnit != ''"
                     class="px-2 pt-1 px-0 "
                     :data-cy="dataTestLabel + '-DimensionUnit-text'"
                     :class="unit == null && justifyContent? 'col-0':'col-4'"

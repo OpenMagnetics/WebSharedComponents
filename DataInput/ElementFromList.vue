@@ -206,7 +206,7 @@ export default {
                 :data-cy="dataTestLabel + '-same-row-label'"
                 v-if="titleSameRow"
                 :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
-                class="rounded-2">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
+                class="rounded-2 m-0 p-0">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
             </label>
             <div  v-if="!titleSameRow" class=" col-sm-0 col-md-2">
             </div>

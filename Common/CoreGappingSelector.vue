@@ -36,6 +36,22 @@ export default {
             type: Number,
             default: 1000,
         },
+        valueFontSize: {
+            type: [String, Object],
+            default: 'fs-6'
+        },
+        labelFontSize: {
+            type: [String, Object],
+            default: 'fs-6'
+        },
+        labelWidthProportionClass:{
+            type: String,
+            default: 'col-xs-12 col-md-4'
+        },
+        valueWidthProportionClass:{
+            type: String,
+            default: 'col-xs-8 col-md-8'
+        },
         labelBgColor: {
             type: [String, Object],
             default: "bg-dark",
@@ -164,15 +180,19 @@ export default {
             <div class="offset-1 col-11">
                 <ElementFromList
                     v-tooltip="tooltipsMagneticBuilder.coreGappingType"
-                    class="col-12 text-start"
+                    class="col-12 text-start m-0 p-0"
                     :dataTestLabel="dataTestLabel + '-GapType'"
                     :name="'gapType'"
                     :replaceTitle="'Type'"
                     :disabled="disabled"
-                    :justifyContent="true"
+                    :justifyContent="false"
                     :titleSameRow="true"
                     v-model="localData"
                     :options="gapTypes"
+                    :valueFontSize="valueFontSize"
+                    :labelFontSize="labelFontSize"
+                    :labelWidthProportionClass="'col-5'"
+                    :valueWidthProportionClass="'col-6'"
                     :labelBgColor="labelBgColor"
                     :valueBgColor="valueBgColor"
                     :textColor="textColor"
@@ -188,11 +208,15 @@ export default {
                     :max="0.1"
                     :disabled="disabled"
                     :forceUpdate="forceUpdate"
-                    :justifyContent="true"
+                    :justifyContent="false"
                     :unit="'m'"
                     :dataTestLabel="dataTestLabel + '-GapLength'"
                     :allowNegative="false"
                     :modelValue="localData"
+                    :valueFontSize="valueFontSize"
+                    :labelFontSize="labelFontSize"
+                    :labelWidthProportionClass="'col-7'"
+                    :valueWidthProportionClass="'col-5'"
                     :labelBgColor="labelBgColor"
                     :valueBgColor="valueBgColor"
                     :textColor="textColor"
@@ -202,16 +226,21 @@ export default {
                 <Dimension class="col-12 text-start"
                     v-tooltip="tooltipsMagneticBuilder.coreGappingNumberGaps"
                     :name="'numberGaps'"
+                    :replaceTitle="'No. Gaps'"
                     v-if="localData.gapType == 'Distributed'"
                     :unit="null"
                     :disabled="disabled"
                     :forceUpdate="forceUpdate"
-                    :justifyContent="true"
+                    :justifyContent="false"
                     :min="1"
                     :max="100"
                     :dataTestLabel="dataTestLabel + '-NumberGaps'"
                     :allowNegative="false"
                     :modelValue="localData"
+                    :valueFontSize="valueFontSize"
+                    :labelFontSize="labelFontSize"
+                    :labelWidthProportionClass="'col-7'"
+                    :valueWidthProportionClass="'col-5'"
                     :labelBgColor="labelBgColor"
                     :valueBgColor="valueBgColor"
                     :textColor="textColor"
