@@ -91,6 +91,7 @@ export const tooltipsMagneticBuilder = {
     "effectivePermeability": "Effective permeability. Weighted valueof the permeability of all the elements in the magnetic circuit, core pieces and gaps",
     "permeance": "AL value, AL factor, inductance factor or permeance. The increment of inductance in this core produced by one extra turn",
     "saturatingMagneticFluxDensity": "Magnetic flux density at which this material saturates at given temperature",
+    "saturationProportion": "How close the core is to full saturation (100%)",
     "magneticFluxDensityPeak": "Peak reached by the magnetic flux density in current core with given excitation",
     "magneticFluxDensityAcPeak": "Peak reached by the AC componenent of the magnetic flux density in current core with given excitation",
     "magnetizingInductance": "Magnetizing inductance of this core with the selected number of turns of primary",

@@ -104,7 +104,7 @@ export default {
     <div>
         <select
             :style="combinedStyle([valueFontSize, extraStyleClass, valueBgColor, textColor])"
-            class="form-select m-0 p-0 text-center unit-select"
+            class="form-select m-0 p-0 text-start unit-select"
             :class="combinedClass([valueFontSize, extraStyleClass, valueBgColor, textColor, disabled? 'border-0':''])"
             :value="modelValueInRange"
             @change="$emit('update:modelValue', Number($event.target.value))"
