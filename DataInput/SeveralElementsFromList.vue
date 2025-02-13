@@ -97,12 +97,12 @@ export default {
 
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex ">
-        <div class="row">
+        <div class="row" :class="justifyContent? 'text-start ms-0 ps-0' : 'm-0 ps-3'">
             <label
                 :style="combinedStyle([labelBgColor, textColor, labelFontSize])"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 fs-5 "
-                :class="combinedClass([justifyContent? 'text-start ms-0' : 'ms-3', labelBgColor, textColor, labelFontSize])"
+                class="rounded-2 "
+                :class="combinedClass([labelBgColor, textColor, labelFontSize])"
             >
                 {{toTitleCase(name)}}
             </label>

@@ -104,8 +104,8 @@ export default {
     <div>
         <select
             :style="combinedStyle([valueFontSize, extraStyleClass, valueBgColor, textColor])"
-            class="form-select m-0 p-0 text-start unit-select"
-            :class="combinedClass([valueFontSize, extraStyleClass, valueBgColor, textColor, disabled? 'border-0':''])"
+            class="form-select m-0 p-0 unit-select"
+            :class="combinedClass([valueFontSize, extraStyleClass, valueBgColor, textColor, disabled? 'border-0':'', extraStyleClass==''? ' text-center p-1 ': ''])"
             :value="modelValueInRange"
             @change="$emit('update:modelValue', Number($event.target.value))"
             style="width:auto;"
@@ -121,11 +121,11 @@ export default {
         </select>
     </div>
 </template>
-
-<!-- <style type="text/css">
+<!-- 
+<style type="text/css">
     .unit-select {
         background-image: none !important;
         background: none !important;
  }
-</style>
- -->
+</style> -->
+

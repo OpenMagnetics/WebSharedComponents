@@ -143,6 +143,13 @@ export default {
             localData.maximum.scaledValue = aux.scaledValue;
             localData.maximum.multiplier = aux.multiplier;
         }
+
+        console.log(this.name)
+        console.log(this.name)
+        console.log(this.name)
+        console.log(localData)
+        console.log(localData)
+        console.log(localData)
         return {
             localData,
             buttonLabels,
@@ -340,14 +347,14 @@ export default {
 
 <template>
     <div v-tooltip="styleTooltip" class="container-flex">
-        <div class="row">
+        <div class="row m-0 ps-3">
             <input
                 :style="combinedStyle([labelBgColor, textColor, titleFontSize])"
                 v-tooltip="tooltipsMagneticSynthesisDesignRequirements['changeNameWindings']"
                 v-if="varText"
                 :data-cy="dataTestLabel + '-title'"
                 type="text"
-                class="rounded-2 ms-3 col-6 p-0 mb-2 border-0"
+                class="rounded-2 col-6 p-0 mb-2 border-0"
                 :class="combinedClass([labelBgColor, textColor, titleFontSize])"
                 @change="$emit('changeText', $event.target.value)"
                 :value="name">
@@ -356,7 +363,7 @@ export default {
                 v-if="!varText"
                 :data-cy="dataTestLabel + '-title'"
                 :class="combinedClass([labelBgColor, textColor, titleFontSize])"
-                class="rounded-2 ms-3">
+                class="rounded-2">
                 {{toTitleCase(name)}}
             </label> 
         </div>
@@ -382,7 +389,7 @@ export default {
                     :id="name + 'minimum-input'"
                     :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, disabled? 'border-0' : ''])"
                     @change="changeScaledValue($event.target.value, 'minimum')"
-                    value="localData.minimum.scaledValue"
+                    :value="localData.minimum.scaledValue"
                 />
                 <DimensionUnit
                     :data-cy="dataTestLabel + '-minimum-DimensionUnit-input'"
@@ -395,7 +402,7 @@ export default {
                     :valueBgColor="valueBgColor"
                     :valueFontSize="valueFontSize"
                     :textColor="textColor"
-                    class="m-0 col-4"
+                    class="m-0 col-4 ps-1"
                     @update:modelValue="changeMultiplier('minimum')"
                 />
             </div>
@@ -444,7 +451,7 @@ export default {
                     :valueBgColor="valueBgColor"
                     :valueFontSize="valueFontSize"
                     :textColor="textColor"
-                    class="m-0 col-4"
+                    class="m-0 col-4 ps-1"
                     @update:modelValue="changeMultiplier('nominal')"
                 />
             </div>
@@ -474,11 +481,11 @@ export default {
                     :style="combinedStyle([disabled? labelBgColor : valueBgColor, textColor, valueFontSize])"
                     :data-cy="dataTestLabel + '-maximum-number-input'"
                     type="number"
-                    class="m-0 px-0 col-4"
+                    class="m-0 px-0 col-4 ps-1"
                     :id="name + 'maximum-input'"
                     :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, disabled? 'border-0' : ''])"
                     @change="changeScaledValue($event.target.value, 'maximum')"
-                    value="localData.maximum.scaledValue"
+                    :value="localData.maximum.scaledValue"
                 />
                 <DimensionUnit
                     :data-cy="dataTestLabel + '-maximum-DimensionUnit-input'"

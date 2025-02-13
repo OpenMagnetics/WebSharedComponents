@@ -48,6 +48,18 @@ export default {
         title: {
             type: String,
         },
+        textColor: {
+            type: String,
+        },
+        bgColor: {
+            type: String,
+        },
+        lineColor: {
+            type: String,
+        },
+        pointsColor: {
+            type: String,
+        },
         forceUpdate:{
             type: Number,
             default: 0
@@ -58,30 +70,18 @@ export default {
     ],
     data() {
         const limits = this.processLimits()
-        const style = getComputedStyle(document.body);
 
-        const theme = {
-          primary: style.getPropertyValue('--bs-primary'),
-          secondary: style.getPropertyValue('--bs-secondary'),
-          success: style.getPropertyValue('--bs-success'),
-          info: style.getPropertyValue('--bs-info'),
-          warning: style.getPropertyValue('--bs-warning'),
-          danger: style.getPropertyValue('--bs-danger'),
-          light: style.getPropertyValue('--bs-light'),
-          dark: style.getPropertyValue('--bs-dark'),
-          white: style.getPropertyValue('--bs-white'),
-        };
         var options = {
             title: {
                 left: 'center',
                 text: this.title,
                 textStyle: {
                     fontSize: 25,
-                    color: theme['white'],
+                    color: this.textColor,
                 },
                 subtextStyle: {
                     fontSize: 17,
-                    color: theme['white'],
+                    color: this.textColor,
                 }
             },
             tooltip: {
@@ -123,7 +123,7 @@ export default {
                 type: this.xAxisOptions.type,
                 axisLabel: {
                     fontSize: 13,
-                    color: theme['white'],
+                    color: this.textColor,
 
                     formatter: (value) => {
                         const aux = formatUnit(value, this.xAxisOptions.unit);
@@ -138,7 +138,7 @@ export default {
                 type: this.data[0].type,
                 axisLabel: {
                     fontSize: 13,
-                    color: theme['white'],
+                    color: this.textColor,
 
                     margin: 0,
                     formatter: (value) => {
@@ -154,6 +154,7 @@ export default {
             },
 
             animation: false,
+            backgroundColor: this.bgColor,
             series: [
                 {
                   data: [
@@ -173,7 +174,6 @@ export default {
         return {
             options,
             updateOpts,
-            theme,
         }
     },
     watch: {
@@ -250,7 +250,7 @@ export default {
                     {
                         data: this.processData(index),
                         type: 'line',
-                        color: this.theme[datum.colorLabel],
+                        color: this.lineColor,
                     }
                 );
 
@@ -262,7 +262,7 @@ export default {
                         symbolSize: 20,
                         data: [[point.data.x, point.data.y]],
                         type: 'scatter',
-                        color: this.theme[point.colorLabel],
+                        color: this.pointsColor,
                     }
                 );
             })

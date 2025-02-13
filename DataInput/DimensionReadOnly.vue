@@ -228,8 +228,9 @@ export default {
                         :valueFontSize="valueFontSize"
                         :valueBgColor="labelBgColor"
                         :textColor="textColor"
+                        :extraStyleClass="'text-start'"
                         :unit="unit"
-                        class="m-0 py-0 px-0 col-4 border-0"
+                        class="m-0 py-0 px-0 col-4 border-0 "
                     />
                     <label
                         :style="combinedStyle([labelBgColor, textColor, valueFontSize])"
