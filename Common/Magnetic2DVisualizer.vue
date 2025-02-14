@@ -1,5 +1,5 @@
 <script setup>
-import { toTitleCase, removeTrailingZeroes, formatInductance, formatPower, formatTemperature, formatResistance} from '../assets/js/utils.js'
+import { toTitleCase, removeTrailingZeroes, formatInductance, formatPower, formatTemperature, formatResistance, deepCopy } from '../assets/js/utils.js'
 </script>
 
 <script>
@@ -59,25 +59,44 @@ export default {
         },
     },
     data() {
+        const lastSimulatedInputs = "";
+        const lastSimulatedMagnetics = "";
+        const errorMessage = "";
         return {
             posting: false,
             zoomingPlot: false,
             showFieldPlot: this.showFieldPlotInit,
             includeFringing: this.includeFringingInit,
             blockingRebounds: false,
+            lastSimulatedInputs,
+            lastSimulatedMagnetics,
+            errorMessage,
         }
     },
     watch: {
         'modelValue': {
             handler(newValue, oldValue) {
                 if (!this.blockingRebounds) {
-                    this.blockingRebounds = true;
-                    this.zoomingPlot = false;
-                    this.showFieldPlot = this.showFieldPlotInit;
-                    this.includeFringing = this.includeFringingInit;
-                    this.zoomOut();
-                    setTimeout(() => {this.plot();}, 10);
-                    setTimeout(() => this.blockingRebounds = false, 20);
+
+                    const inputsString = JSON.stringify(this.modelValue.inputs);
+                    const magneticsString = JSON.stringify(this.modelValue.magnetic);
+
+                    if (inputsString != this.lastSimulatedInputs || magneticsString != this.lastSimulatedMagnetics) {
+
+                        this.blockingRebounds = true;
+                        this.zoomingPlot = false;
+                        this.showFieldPlot = this.showFieldPlotInit;
+                        this.includeFringing = this.includeFringingInit;
+                        this.zoomOut();
+                        setTimeout(() => {
+                            this.posting = true;
+                            this.plot();
+                        }, 10);
+                        setTimeout(() => this.blockingRebounds = false, 20);
+
+                        this.lastSimulatedInputs = inputsString;
+                        this.lastSimulatedMagnetics = magneticsString;
+                    }
                 }
             },
           deep: true
@@ -85,13 +104,22 @@ export default {
         'operatingPointIndex': {
             handler(newValue, oldValue) {
                 if (!this.blockingRebounds) {
-                    this.blockingRebounds = true;
-                    this.zoomingPlot = false;
-                    this.showFieldPlot = this.showFieldPlotInit;
-                    this.includeFringing = this.includeFringingInit;
-                    this.zoomOut();
-                    setTimeout(() => {this.plot();}, 10);
-                    setTimeout(() => this.blockingRebounds = false, 20);
+
+                    const inputsString = JSON.stringify(this.modelValue.inputs);
+                    const magneticsString = JSON.stringify(this.modelValue.magnetic);
+
+                    if (inputsString != this.lastSimulatedInputs || magneticsString != this.lastSimulatedMagnetics) {
+                        this.blockingRebounds = true;
+                        this.zoomingPlot = false;
+                        this.showFieldPlot = this.showFieldPlotInit;
+                        this.includeFringing = this.includeFringingInit;
+                        this.zoomOut();
+                        setTimeout(() => {
+                            this.posting = true;
+                            this.plot();
+                        }, 10);
+                        setTimeout(() => this.blockingRebounds = false, 20);
+                    }
                 }
             },
           deep: true
@@ -146,12 +174,14 @@ export default {
                         this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
                         this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(regex, `class="" width="${clientWidth}" height="${clientHeight}" viewBox=`);
                     }
+                    this.errorMessage = "";
                     this.posting = false;
                 })
                 .catch(error => {
                     this.posting = false;
                     console.error("Error plotting")
                     console.error(error)
+                    this.errorMessage = "Error while winding magnetic. Try another configuration or report a bug if you think this should work";
                 });
             }
             else {
@@ -163,7 +193,6 @@ export default {
         },
         calculateMagneticSectionPlot() {
             if (this.modelValue.magnetic.coil.turnsDescription != null) {
-                this.posting = true;
                 const url = import.meta.env.VITE_API_ENDPOINT + '/plot_core'
 
                 this.$axios.post(url, {magnetic: this.modelValue.magnetic, operatingPoint: this.modelValue.inputs.operatingPoints[this.operatingPointIndex]})
@@ -196,12 +225,14 @@ export default {
                         this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(regex, `class="" width="${clientWidth}" height="${clientHeight}" viewBox=`);
                         this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
                     }
+                    this.errorMessage = "";
                     this.posting = false;
                 })
                 .catch(error => {
                     this.posting = false;
                     console.error("Error plotting")
                     console.error(error)
+                    this.errorMessage = "Error while winding magnetic. Try another configuration or report a bug if you think this should work";
                 });
             }
             else {
@@ -222,15 +253,22 @@ export default {
         },
         swapFieldPlot() {
             this.showFieldPlot = !this.showFieldPlot;
-            this.plot();
+            setTimeout(() => {
+                this.posting = true;
+                this.plot();
+            }, 10);
             this.$emit("swapFieldPlot", this.showFieldPlot);
         },
         swapIncludeFringing() {
             this.includeFringing = !this.includeFringing;
-            this.plot();
+            setTimeout(() => {
+                this.posting = true;
+                this.plot();
+            }, 10);
             this.$emit("swapIncludeFringing", this.includeFringing);
         },
         plot() {
+            this.errorMessage = "";
             if (this.showFieldPlot) {
                 this.calculateMagneticSectionAndFieldPlot();
             }
@@ -245,7 +283,10 @@ export default {
     computed: {
     },
     mounted() {
-        setTimeout(() => {this.plot();}, 10);
+        setTimeout(() => {
+            this.posting = true;
+            this.plot();
+        }, 10);
     },
 }
 
@@ -308,6 +349,7 @@ export default {
                     </button>
                 </div>
             </div>
+            <label :data-cy="dataTestLabel + '-ErrorMessage'" class="text-danger m-0" style="font-size: 0.9em"> {{errorMessage}}</label>
         </div>
     </div>
 

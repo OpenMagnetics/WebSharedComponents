@@ -40,18 +40,24 @@ export default {
         const posting = false
         const recentChange = false
         const tryingToSend = false
+        const lastSimulatedWire = "";
         const style = getComputedStyle(document.body);
         return {
             posting,
             recentChange,
             tryingToSend,
+            lastSimulatedWire,
         }
     },
     watch: {
         'wire': {
             handler(newValue, oldValue) {
-                this.$userStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = null;
-                this.tryToSend();
+                const wiresString = JSON.stringify(this.wire);
+                if (wiresString != this.lastSimulatedWire) {
+                    this.$userStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = null;
+                    this.tryToSend();
+                    this.lastSimulatedWire = wiresString;
+                }
             },
             deep: true
         },
@@ -64,8 +70,10 @@ export default {
         },
         'operatingPoint': {
             handler(newValue, oldValue) {
-                this.$userStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = null;
-                this.tryToSend();
+                if (this.includeCurrentDensity) {
+                    this.$userStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = null;
+                    this.tryToSend();
+                }
             },
             deep: true
         },
