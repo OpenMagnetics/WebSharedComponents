@@ -296,7 +296,7 @@ export default {
                         }
                     }
                 }
-                , 500);
+                , this.$settingsStore.waitingTimeForPlottingAfterChange);
             }
         },
 

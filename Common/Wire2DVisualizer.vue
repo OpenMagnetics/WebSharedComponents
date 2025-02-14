@@ -89,7 +89,6 @@ export default {
 
                     var url;
                     var data;
-                    console.log(this.operatingPoint)
                     if (this.includeCurrentDensity) {
                         data = {wire: this.wire, operatingPoint: this.operatingPoint}
                         url = import.meta.env.VITE_API_ENDPOINT + '/plot_wire_and_current_density';
@@ -138,7 +137,7 @@ export default {
                             }
                         }
                     }
-                    , 500);
+                    , this.$settingsStore.waitingTimeForPlottingAfterChange);
                 }
             }
             else {

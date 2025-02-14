@@ -144,12 +144,6 @@ export default {
             localData.maximum.multiplier = aux.multiplier;
         }
 
-        console.log(this.name)
-        console.log(this.name)
-        console.log(this.name)
-        console.log(localData)
-        console.log(localData)
-        console.log(localData)
         return {
             localData,
             buttonLabels,

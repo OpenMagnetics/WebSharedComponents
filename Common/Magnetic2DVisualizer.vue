@@ -68,6 +68,9 @@ export default {
             showFieldPlot: this.showFieldPlotInit,
             includeFringing: this.includeFringingInit,
             blockingRebounds: false,
+            recentChange: false,
+            tryingToPlot: false,
+            showWarning: false,
             lastSimulatedInputs,
             lastSimulatedMagnetics,
             errorMessage,
@@ -88,11 +91,10 @@ export default {
                         this.showFieldPlot = this.showFieldPlotInit;
                         this.includeFringing = this.includeFringingInit;
                         this.zoomOut();
-                        setTimeout(() => {
-                            this.posting = true;
-                            this.plot();
-                        }, 10);
+                        this.recentChange = true;
+                        this.tryToPlot();
                         setTimeout(() => this.blockingRebounds = false, 20);
+                        setTimeout(() => this.checkShowWarning(), 500);
 
                         this.lastSimulatedInputs = inputsString;
                         this.lastSimulatedMagnetics = magneticsString;
@@ -114,10 +116,8 @@ export default {
                         this.showFieldPlot = this.showFieldPlotInit;
                         this.includeFringing = this.includeFringingInit;
                         this.zoomOut();
-                        setTimeout(() => {
-                            this.posting = true;
-                            this.plot();
-                        }, 10);
+                        this.recentChange = true;
+                        this.tryToPlot();
                         setTimeout(() => this.blockingRebounds = false, 20);
                     }
                 }
@@ -138,6 +138,33 @@ export default {
         },
     },
     methods: {
+        checkShowWarning() {
+            if (!this.coilFits && !(this.posting || this.tryingToPlot || this.recentChange)) {
+                this.showWarning = true;
+            }
+            else {
+                this.showWarning = false;
+            }
+        },
+        tryToPlot() {
+            if (!this.tryingToPlot) {
+                this.recentChange = false
+                this.tryingToPlot = true
+                setTimeout(() => {
+                    if (this.recentChange) {
+                        this.tryingToPlot = false
+                        this.tryToPlot()
+                    }
+                    else {
+                        setTimeout(() => {
+                            this.posting = true;
+                            this.plot();
+                        }, 10);
+                    }
+                }
+                , this.$settingsStore.waitingTimeForPlottingAfterChange);
+            }
+        },
         calculateMagneticSectionAndFieldPlot() {
             if (this.modelValue.magnetic.coil.turnsDescription != null) {
                 this.posting = true;
@@ -269,6 +296,7 @@ export default {
         },
         plot() {
             this.errorMessage = "";
+            this.tryingToPlot = false
             if (this.showFieldPlot) {
                 this.calculateMagneticSectionAndFieldPlot();
             }
@@ -293,13 +321,13 @@ export default {
 </script>
 
 <template>
-    <div v-if="!coilFits && modelValue.magnetic.coil.turnsDescription == null" class="container">
+    <div v-if="showWarning && modelValue.magnetic.coil.turnsDescription == null" class="container">
         <div class="row">
             <i class="col-12 fa-solid fa-9x fa-triangle-exclamation"></i>
             <label class="text-danger col-12 pt-1 fs-5" style="font-size: 1em">Winding turns not possible</label>
         </div>
     </div>
-    <div v-if="!coilFits && !$userStore.wire2DVisualizerState.showAnyway" class="container">
+    <div v-if="showWarning && !$userStore.wire2DVisualizerState.showAnyway" class="container">
         <div class="row">
             <i class="col-12 fa-solid fa-9x fa-triangle-exclamation"></i>
             <label class="text-danger col-12 pt-1 fs-5" style="font-size: 1em">Turns don't fit in winding window</label>
