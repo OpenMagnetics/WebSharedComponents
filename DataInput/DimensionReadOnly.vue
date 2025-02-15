@@ -105,7 +105,7 @@ export default {
                 localData.scaledValue = removeTrailingZeroes(Number(this.value), this.numberDecimals);
             }
             if (this.value == 0) {
-                localData.multiplier = this.max;
+                localData.multiplier = 1;
             }
             else {
                 if (this.unit != null) {
