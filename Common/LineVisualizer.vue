@@ -253,7 +253,7 @@ export default {
 
             limits.yAxis.forEach((elem, index) => {
                 options.yAxis[index].min = elem.min;
-                options.yAxis[index].max = elem.max;
+                options.yAxis[index].max = elem.max * 1.1;
             })
 
             options.series = []
