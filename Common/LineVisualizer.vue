@@ -119,7 +119,6 @@ export default {
             xAxis: {
                 min: limits.xAxis.min,
                 max: limits.xAxis.max,
-                // name: this.xAxisOptions.label,
                 type: this.xAxisOptions.type,
                 axisLabel: {
                     fontSize: 13,
@@ -131,22 +130,7 @@ export default {
                     },
                 }
             },
-            yAxis: {
-                min: limits.yAxis.min,
-                max: limits.yAxis.max,
-                // name: this.data[0].label,
-                type: this.data[0].type,
-                axisLabel: {
-                    fontSize: 13,
-                    color: this.textColor,
-
-                    margin: 0,
-                    formatter: (value) => {
-                        const aux = formatUnit(value, this.data[0].unit);
-                        return `${removeTrailingZeroes(aux.label, 1)} ${aux.unit}`;
-                    },
-                }
-            },
+            yAxis: [],
 
             grid: {
                 left:   60,
@@ -167,6 +151,25 @@ export default {
             ]
         };
 
+        this.data.forEach((datum) => {
+            options.yAxis.push({
+                min: limits.yAxis.min,
+                max: limits.yAxis.max,
+                name: datum.label,
+                type: datum.type,
+                axisLabel: {
+                    fontSize: 13,
+                    color: this.textColor,
+
+                    margin: 0,
+                    formatter: (value) => {
+                        const aux = formatUnit(value, datum.unit);
+                        return `${removeTrailingZeroes(aux.label, 1)} ${aux.unit}`;
+                    },
+                }
+            })
+        })
+            
         const updateOpts = {
             notMerge: true,
         }
@@ -182,8 +185,6 @@ export default {
         },
     },
     mounted() {
-        console.log(this.points)
-        console.log(this.points)
     },
     created() {
     },
@@ -199,40 +200,47 @@ export default {
             return data;
         },
         processLimits() {
-            const limits = {}
+            const limits = []
 
             var xMinimum = Number.MAX_VALUE;
             var xMaximum = Number.MIN_VALUE;
             var yMinimum = Number.MAX_VALUE;
             var yMaximum = Number.MIN_VALUE;
+            limits.yAxis = []
+
+            this.data.forEach((datum) => {
 
 
-            var yLimit = 0;
-            this.data[0].data.x.forEach((elem) => {
-                xMaximum = Math.max(xMaximum, elem);
-                xMinimum = Math.min(xMinimum, elem);
-            })
-            this.points.forEach((elem) => {
-                xMaximum = Math.max(xMaximum, elem.data.x);
-                xMinimum = Math.min(xMinimum, elem.data.x);
+                var yLimit = 0;
+                datum.data.x.forEach((elem) => {
+                    xMaximum = Math.max(xMaximum, elem);
+                    xMinimum = Math.min(xMinimum, elem);
+                })
+
+                datum.data.y.forEach((elem) => {
+                    yMaximum = Math.max(yMaximum, elem);
+                    yMinimum = Math.min(yMinimum, elem);
+                })
+                this.points.forEach((elem) => {
+                    xMaximum = Math.max(xMaximum, elem.data.x);
+                    xMinimum = Math.min(xMinimum, elem.data.x);
+                })
+                this.points.forEach((elem) => {
+                    xMaximum = Math.max(xMaximum, elem.data.y);
+                    xMinimum = Math.min(xMinimum, elem.data.y);
+                })
             })
 
-            this.data[0].data.y.forEach((elem) => {
-                yMaximum = Math.max(yMaximum, elem);
-                yMinimum = Math.min(yMinimum, elem);
-            })
-            this.points.forEach((elem) => {
-                xMaximum = Math.max(xMaximum, elem.data.y);
-                xMinimum = Math.min(xMinimum, elem.data.y);
+            this.data.forEach((datum) => {
+                limits.yAxis.push({
+                    min: yMinimum,
+                    max: yMaximum,
+                });
             })
 
             limits.xAxis = {
                 min: xMinimum,
                 max: xMaximum,
-            };
-            limits.yAxis = {
-                min: yMinimum,
-                max: yMaximum,
             };
             return limits;
         },
@@ -241,15 +249,22 @@ export default {
 
             options.xAxis.min = limits.xAxis.min;
             options.xAxis.max = limits.xAxis.max;
-            options.yAxis.min = limits.yAxis.min;
-            options.yAxis.max = limits.yAxis.max * 1.1;
+            options.xAxis.type = this.xAxisOptions.type;
+
+            limits.yAxis.forEach((elem, index) => {
+                options.yAxis[index].min = elem.min;
+                options.yAxis[index].max = elem.max;
+            })
 
             options.series = []
             this.data.forEach((datum, index) => {
+                options.yAxis[index].type = datum.type;
+
                 options.series.push(
                     {
                         data: this.processData(index),
                         type: 'line',
+                        name: datum.label,
                         color: this.lineColor,
                     }
                 );
