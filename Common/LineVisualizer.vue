@@ -1,5 +1,5 @@
 <script setup>
-import { toCamelCase, formatUnit, removeTrailingZeroes } from '../assets/js/utils.js'
+import { toCamelCase, formatUnit, removeTrailingZeroes, getMultiplier} from '../assets/js/utils.js'
 import { use } from 'echarts/core'
 import { LineChart, ScatterChart, EffectScatterChart } from 'echarts/charts'
 import {
@@ -116,6 +116,13 @@ export default {
                     dataZoom: {}
                 }
             },
+              legend: {
+                orient: 'horizontal',
+                left: 'left',
+                textStyle: {
+                    color: this.textColor
+                }
+            },
             xAxis: {
                 min: limits.xAxis.min,
                 max: limits.xAxis.max,
@@ -151,18 +158,21 @@ export default {
             ]
         };
 
-        this.data.forEach((datum) => {
+        this.data.forEach((datum, index) => {
             options.yAxis.push({
                 min: limits.yAxis.min,
                 max: limits.yAxis.max,
-                name: datum.label,
+                // name: datum.label,
                 type: datum.type,
                 axisLabel: {
                     fontSize: 13,
-                    color: this.textColor,
+                    color: this.lineColor,
 
                     margin: 0,
                     formatter: (value) => {
+                        if (this.data.length > 1 && this.data[0].unit == this.data[1].unit && index == 1) {
+                            return '';
+                        }
                         const aux = formatUnit(value, datum.unit);
                         return `${removeTrailingZeroes(aux.label, 1)} ${aux.unit}`;
                     },
@@ -209,8 +219,6 @@ export default {
             limits.yAxis = []
 
             this.data.forEach((datum) => {
-
-
                 var yLimit = 0;
                 datum.data.x.forEach((elem) => {
                     xMaximum = Math.max(xMaximum, elem);
@@ -226,10 +234,11 @@ export default {
                     xMinimum = Math.min(xMinimum, elem.data.x);
                 })
                 this.points.forEach((elem) => {
-                    xMaximum = Math.max(xMaximum, elem.data.y);
-                    xMinimum = Math.min(xMinimum, elem.data.y);
+                    yMaximum = Math.max(yMaximum, elem.data.y);
+                    yMinimum = Math.min(yMinimum, elem.data.y);
                 })
             })
+
 
             this.data.forEach((datum) => {
                 limits.yAxis.push({
@@ -252,6 +261,19 @@ export default {
             options.xAxis.type = this.xAxisOptions.type;
 
             limits.yAxis.forEach((elem, index) => {
+                console.log(elem.min)
+                console.log(getMultiplier(elem.min))
+                if (elem.min < 1) {
+                    if (this.data[index].type == "log") {
+                        var numberZeroesInBase = Math.floor( Math.log10(elem.min) + 1) - 1;
+                        console.log(numberZeroesInBase)
+                        console.log(Math.pow(10, numberZeroesInBase))
+                        elem.min = Math.pow(10, numberZeroesInBase);
+                    }
+                    else {
+                        elem.min = 0;
+                    }
+                }
                 options.yAxis[index].min = elem.min;
                 options.yAxis[index].max = elem.max * 1.1;
             })
@@ -265,7 +287,7 @@ export default {
                         data: this.processData(index),
                         type: 'line',
                         name: datum.label,
-                        color: this.lineColor,
+                        color: datum.colorLabel,
                     }
                 );
 
