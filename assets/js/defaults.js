@@ -184,7 +184,7 @@ export const defaultDesignRequirements = {
         "altitude": {
             "maximum": 2000,
         },
-        "cti": "Group IIIB",
+        "cti": "Group II",
         "pollutionDegree": "P2",
         "overvoltageCategory": "OVC-III",
         "insulationType": "Double",

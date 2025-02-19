@@ -54,7 +54,7 @@ export default {
             handler(newValue, oldValue) {
                 const wiresString = JSON.stringify(this.wire);
                 if (wiresString != this.lastSimulatedWire) {
-                    this.$userStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = null;
+                    this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = null;
                     this.tryToSend();
                     this.lastSimulatedWire = wiresString;
                 }
@@ -63,7 +63,7 @@ export default {
         },
         'includeCurrentDensity': {
             handler(newValue, oldValue) {
-                this.$userStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = null;
+                this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = null;
                 this.tryToSend();
             },
             deep: true
@@ -71,7 +71,7 @@ export default {
         'operatingPoint': {
             handler(newValue, oldValue) {
                 if (this.includeCurrentDensity) {
-                    this.$userStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = null;
+                    this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = null;
                     this.tryToSend();
                 }
             },
@@ -107,7 +107,7 @@ export default {
                         this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`width="300" height="300"`,
                             `width="${this.$refs.wire2DPlotViewContainer.clientWidth}" height="${this.$refs.wire2DPlotViewContainer.clientHeight}"`);
                         this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
-                        this.$userStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = this.$refs.wire2DPlotView.innerHTML;
+                        this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = this.$refs.wire2DPlotView.innerHTML;
                     })
                     .catch(error => {
                         this.$refs.wire2DPlotView.innerHTML = "Error in wire";
@@ -121,7 +121,7 @@ export default {
         },
 
         tryToSend() {
-            if (this.$userStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] == null) {
+            if (this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] == null) {
                 if (!this.tryingToSend) {
                     this.recentChange = false
                     this.tryingToSend = true
@@ -141,7 +141,7 @@ export default {
                 }
             }
             else {
-                this.$refs.wire2DPlotView.innerHTML = this.$userStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex];
+                this.$refs.wire2DPlotView.innerHTML = this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex];
             }
         },
 

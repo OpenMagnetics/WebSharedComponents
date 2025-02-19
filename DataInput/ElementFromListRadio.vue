@@ -1,5 +1,5 @@
 <script setup>
-import { toTitleCase, getMultiplier } from '../assets/js/utils.js'
+import { toTitleCase, getMultiplier, combinedStyle, combinedClass } from '../assets/js/utils.js'
 
 </script>
 <script>
@@ -31,9 +31,41 @@ export default {
         altText:{
             type: String
         },
+        disabled: {
+            type: Boolean,
+            default: false,
+        },
         optionsToDisable: {
             type: Array,
             default: [],
+        },
+        valueFontSize: {
+            type: [String, Object],
+            default: 'fs-6'
+        },
+        labelFontSize: {
+            type: [String, Object],
+            default: 'fs-6'
+        },
+        labelWidthProportionClass:{
+            type: String,
+            default: 'col-xs-12 col-md-7'
+        },
+        valueWidthProportionClass:{
+            type: String,
+            default: 'col-4'
+        },
+        labelBgColor: {
+            type: [String, Object],
+            default: "bg-dark",
+        },
+        valueBgColor: {
+            type: [String, Object],
+            default: "bg-light",
+        },
+        textColor: {
+            type: [String, Object],
+            default: "text-white",
         },
     },
     data() {
@@ -61,16 +93,56 @@ export default {
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex">
         <div class="row">
-            <input :data-cy="dataTestLabel + '-alt-title-label'" v-if="altText != null && !titleSameRow" type="text" class="rounded-2 fs-5 ms-3 bg-dark text-white col-11 p-0 mb-2 border-0" @change="$emit('changeText', $event.target.value)" :value="altText">
-            <label :data-cy="dataTestLabel + '-title'" v-if="altText == null && !titleSameRow" class="rounded-2 fs-5 ms-3">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}</label>
+            <input 
+                :style="combinedStyle([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
+                :data-cy="dataTestLabel + '-alt-title-label'"
+                v-if="altText != null && !titleSameRow"
+                type="text"
+                :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
+                class="rounded-2 p-0 mb-2 border-0"
+                @change="$emit('changeText', $event.target.value)"
+                :value="altText"
+            >
+            <label 
+                :style="combinedStyle([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
+                :data-cy="dataTestLabel + '-title'"
+                v-if="altText == null && !titleSameRow"
+                :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
+                class="rounded-2 p-0"
+            >
+                {{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
+            </label>
         </div>
         <div class="row">
-            <label :data-cy="dataTestLabel + '-same-row-label'" v-if="titleSameRow" class="rounded-2 fs-5 col-4">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}</label>
-            <div  v-if="!titleSameRow" class=" col-sm-0 col-md-2">
-            </div>
-            <div class="form-check ms-4 col-lg-6 col-xl-2" v-for="[key, value] in Object.entries(options)">
-                <input  :disabled="optionsToDisable.includes(value)"  :data-cy="dataTestLabel + '-' + value + '-radio-input'" :ref="key" class="form-check-input" type="radio" :checked="modelValue[name].includes(value)"  :id="name + '-radio-input'" @change="changedCheckedValue(value)">
-                <label class="form-check-label" :for="name + '-radio-input'">
+            <label
+                :style="combinedStyle([labelFontSize, labelWidthProportionClass, labelBgColor, textColor, labelWidthProportionClass])"
+                :data-cy="dataTestLabel + '-same-row-label'"
+                v-if="titleSameRow"
+                :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor, labelWidthProportionClass])"
+                class="rounded-2 p-0"
+            >
+                {{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
+            </label>
+            <div
+                :style="combinedStyle([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, valueWidthProportionClass])"
+                class="form-check"
+                :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, valueWidthProportionClass, disabled? 'border-0' : ''])"
+                v-for="[key, value] in Object.entries(options)"
+            >
+                <input
+                    :disabled="optionsToDisable.includes(value)"
+                    :data-cy="dataTestLabel + '-' + value + '-radio-input'"
+                    :ref="key"
+                    class="form-check-input"
+                    type="radio"
+                    :checked="modelValue[name].includes(value)"
+                    :id="key + '-radio-input'"
+                    @change="changedCheckedValue(value)"
+                >
+                <label
+                    class="form-check-label"
+                    :for="key + '-radio-input'"
+                >
                     {{value}}
                 </label>
             </div>

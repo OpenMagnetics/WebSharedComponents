@@ -305,7 +305,7 @@ export default {
             }
         },
         showCoilAnyway() {
-            this.$userStore.wire2DVisualizerState.showAnyway = true;
+            this.$stateStore.wire2DVisualizerState.showAnyway = true;
         },
     },
     computed: {
@@ -327,7 +327,7 @@ export default {
             <label class="text-danger col-12 pt-1 fs-5" style="font-size: 1em">Winding turns not possible</label>
         </div>
     </div>
-    <div v-if="showWarning && !$userStore.wire2DVisualizerState.showAnyway" class="container">
+    <div v-if="showWarning && !$stateStore.wire2DVisualizerState.showAnyway" class="container">
         <div class="row">
             <i class="col-12 fa-solid fa-9x fa-triangle-exclamation"></i>
             <label class="text-danger col-12 pt-1 fs-5" style="font-size: 1em">Turns don't fit in winding window</label>

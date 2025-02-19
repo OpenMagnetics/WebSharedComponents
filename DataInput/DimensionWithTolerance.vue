@@ -340,7 +340,7 @@ export default {
 
 
 <template>
-    <div v-tooltip="styleTooltip" class="container-flex">
+    <div v-tooltip="styleTooltip" class="container-flex p-0">
         <div class="row m-0 ps-3">
             <input
                 :style="combinedStyle([labelBgColor, textColor, titleFontSize])"
@@ -357,7 +357,7 @@ export default {
                 v-if="!varText"
                 :data-cy="dataTestLabel + '-title'"
                 :class="combinedClass([labelBgColor, textColor, titleFontSize])"
-                class="rounded-2">
+                class="rounded-2 p-0">
                 {{toTitleCase(name)}}
             </label> 
         </div>
