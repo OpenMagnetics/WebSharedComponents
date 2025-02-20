@@ -136,21 +136,47 @@ export const isolationSideOrdered = [
     "Duodenary",
 ]
 
-export const designRequirementsOrdered = [
-    "numberWindings",
-    "magnetizingInductance",
-    "minimumImpedance",
-    "turnsRatios",
-    "insulation",
-    "leakageInductance",
-    "strayCapacitance",
-    "operatingTemperature",
-    "maximumWeight",
-    "maximumDimensions",
-    "terminalType",
-    "topology",
-    "market",
-]
+export const designRequirementsOrdered = {
+    "power": [
+        "numberWindings",
+        "magnetizingInductance",
+        "minimumImpedance",
+        "turnsRatios",
+        "insulation",
+        "leakageInductance",
+        "strayCapacitance",
+        "operatingTemperature",
+        "maximumWeight",
+        "maximumDimensions",
+        "terminalType",
+        "topology",
+        "market",
+    ],
+    "commonModeChoke": [
+        "numberWindings",
+        "magnetizingInductance",
+        "minimumImpedance",
+        "insulation",
+        "leakageInductance",
+        "strayCapacitance",
+        "maximumWeight",
+        "maximumDimensions",
+    ],
+}
+
+export const compulsoryRequirements = {
+    "power": [
+        "numberWindings",
+        "magnetizingInductance",
+        "turnsRatios"
+    ],
+    "commonModeChoke": [
+        "numberWindings",
+        "magnetizingInductance",
+        "minimumImpedance",
+        "turnsRatios"
+    ],
+}
 
 export const catalogDesignRequirementsOrdered = [
     "numberWindings",

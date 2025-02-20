@@ -261,13 +261,9 @@ export default {
             options.xAxis.type = this.xAxisOptions.type;
 
             limits.yAxis.forEach((elem, index) => {
-                console.log(elem.min)
-                console.log(getMultiplier(elem.min))
                 if (elem.min < 1) {
                     if (this.data[index].type == "log") {
                         var numberZeroesInBase = Math.floor( Math.log10(elem.min) + 1) - 1;
-                        console.log(numberZeroesInBase)
-                        console.log(Math.pow(10, numberZeroesInBase))
                         elem.min = Math.pow(10, numberZeroesInBase);
                     }
                     else {
