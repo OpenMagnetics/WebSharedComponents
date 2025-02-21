@@ -162,6 +162,14 @@ export const designRequirementsOrdered = {
         "maximumWeight",
         "maximumDimensions",
     ],
+    "commonModeChokeCatalog": [
+        "numberWindings",
+        "magnetizingInductance",
+        "minimumImpedance",
+        "insulation",
+        "leakageInductance",
+        "maximumDimensions",
+    ],
 }
 
 export const compulsoryRequirements = {
@@ -176,17 +184,12 @@ export const compulsoryRequirements = {
         "minimumImpedance",
         "turnsRatios"
     ],
+    "commonModeChokeCatalog": [
+        "numberWindings",
+        "magnetizingInductance",
+        "minimumImpedance",
+    ],
 }
-
-export const catalogDesignRequirementsOrdered = [
-    "numberWindings",
-    "magnetizingInductance",
-    "minimumImpedance",
-    "turnsRatios",
-    "insulation",
-    "operatingTemperature",
-    "maximumDimensions",
-]
 
 export const defaultDesignRequirements = {
     "name": "My Design Requirements",
@@ -292,17 +295,17 @@ export const defaultOperatingPointExcitation = {
 
 export const defaultOperatingPointExcitationWithHarmonics = {  
     "name": "Primary winding excitation",
-    "frequency": 100000,
+    "frequency": 50,
     "current": {
         "harmonics": {
             "amplitudes": [0, 10],
-            "frequencies": [0, 100000]
+            "frequencies": [0, 50]
         }
     },
     "voltage": {
         "harmonics": {
             "amplitudes": [0, 100],
-            "frequencies": [0, 100000]
+            "frequencies": [0, 50]
         }
     }
 }
@@ -557,3 +560,31 @@ export const coreTemperatureModelDefault = 'Maniktala';
 export const reluctanceModelDefault = 'Zhang';
 
 export const wireMaterialDefault = "copper";
+
+export const defaultCmcWizardInputs = {
+    numberPhases: 'Two phases',
+    ambientTemperature: 25,
+    mainSignalFrequency: 50,
+    mainSignalRmsCurrent: 10,
+    numberExtraHarmonics: 1,
+    extraHarmonics: [
+        {
+            frequency: 10000,
+            amplitude: 3,
+        }
+    ],
+    minimumInductance: 100e-6,
+    numberImpedancePoints: 1,
+    impedancePoints: [
+        {
+            frequency: 100000,
+            impedance: 100,
+        }
+    ],
+    insulationType: 'No',
+    maximumDimensions: {
+        width: null,
+        height: null,
+        depth: null,
+    }
+};
