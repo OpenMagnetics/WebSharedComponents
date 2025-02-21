@@ -166,8 +166,6 @@ export const designRequirementsOrdered = {
         "numberWindings",
         "magnetizingInductance",
         "minimumImpedance",
-        "insulation",
-        "leakageInductance",
         "maximumDimensions",
     ],
 }
