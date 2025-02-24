@@ -104,6 +104,13 @@ export const filterMas = {
                     "numberParallels": 0,
                     "isolationSide": "primary",
                     "wire": ""
+                },
+                {
+                    "name": "Secondary",
+                    "numberTurns": 0,
+                    "numberParallels": 0,
+                    "isolationSide": "secondary",
+                    "wire": ""
                 }
             ],
         },
