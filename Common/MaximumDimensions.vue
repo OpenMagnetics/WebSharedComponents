@@ -1,5 +1,4 @@
 <script setup>
-import { useMasStore } from '/src/stores/mas'
 import { toTitleCase, getMultiplier } from '../assets/js/utils.js'
 import DimensionUnit from '../DataInput/DimensionUnit.vue'
 
@@ -33,7 +32,6 @@ export default {
         },
     },
     data() {
-        const masStore = useMasStore();
         var localData = {
             'width': {
                 multiplier: null,
@@ -70,7 +68,6 @@ export default {
         const errorMessages = "";
 
         return {
-            masStore,
             errorMessages,
             localData,
         }
