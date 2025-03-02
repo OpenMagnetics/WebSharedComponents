@@ -337,6 +337,7 @@ export const gapTypes = [
     "Ground",
     "Spacer",
     "Distributed",
+    "Custom",
 ]
 
 export const defaultUngappedGapping = [
