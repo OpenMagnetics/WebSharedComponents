@@ -104,6 +104,13 @@ export const filterMas = {
                     "numberParallels": 0,
                     "isolationSide": "primary",
                     "wire": ""
+                },
+                {
+                    "name": "Secondary",
+                    "numberTurns": 0,
+                    "numberParallels": 0,
+                    "isolationSide": "secondary",
+                    "wire": ""
                 }
             ],
         },
@@ -136,6 +143,22 @@ export const isolationSideOrdered = [
     "Duodenary",
 ]
 
+
+export const IsolationSideOrdered = {
+    primary: "Primary",
+    secondary: "Secondary",
+    tertiary: "Tertiary",
+    quaternary: "Quaternary",
+    quinary: "Quinary",
+    senary: "Senary",
+    septenary: "Septenary",
+    octonary: "Octonary",
+    nonary: "Nonary",
+    denary: "Denary",
+    undenary: "Undenary",
+    duodenary: "Duodenary",
+}
+
 export const designRequirementsOrdered = {
     "power": [
         "numberWindings",
@@ -145,6 +168,7 @@ export const designRequirementsOrdered = {
         "insulation",
         "leakageInductance",
         "strayCapacitance",
+        "isolationSides",
         "operatingTemperature",
         "maximumWeight",
         "maximumDimensions",
@@ -223,8 +247,9 @@ export const defaultDesignRequirements = {
     "market": "Industrial",
     "topology": "Buck Converter",
     "maximumWeight": 300,
+    "isolationSides": ["primary"],
     "maximumDimensions": {"width": null, "height": 0.05, "depth": null},
-    "terminalType": ["Flying Lead"],
+    "terminalType": ["FlyingLead"],
     "wiringTechnology": "Wound"
 }
 
@@ -330,6 +355,7 @@ export const gapTypes = [
     "Ground",
     "Spacer",
     "Distributed",
+    "Custom",
 ]
 
 export const defaultUngappedGapping = [
@@ -585,4 +611,21 @@ export const defaultCmcWizardInputs = {
         height: null,
         depth: null,
     }
+};
+
+export const defaultFlybackWizardInputs = {
+    inputVoltage: {
+        minimum: 120,
+        maximum: 375
+    },
+    diodeVoltageDrop: 0.7,
+    maximumDrainSourceVoltage: 600,
+    currentRippleRatio: 1,
+    efficiency: 0.85,
+    numberOutputs: 2,
+    outputVoltages: [12, 5],
+    outputCurrents: [3, 5],
+    switchingFrequency: 100000,
+    ambientTemperature: 25,
+    insulationType: 'No'
 };

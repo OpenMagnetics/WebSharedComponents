@@ -188,6 +188,7 @@ export default {
                     :disabled="disabled"
                     :justifyContent="false"
                     :titleSameRow="true"
+                    :optionsToDisable="['Custom']"
                     v-model="localData"
                     :options="gapTypes"
                     :valueFontSize="valueFontSize"

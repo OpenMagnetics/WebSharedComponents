@@ -8,6 +8,7 @@ export const tooltipsMagneticSynthesisDesignRequirements = {
     "strayCapacitance": "List of stray capacitances, with tolerance, one for each secondary, each one referred to the primary",
     "operatingTemperature": "Range of operation temperatures that the magnetic will be subjected to",
     "insulation": "Group of inputs used to calculate the insulation coordination",
+    "isolationSides": "Isolation side of each winding",
     "market": "Destination market for the magnetic component",
     "topology": "Topology where our magnetic will be used",
     "maximumWeight": "Maximum weight that the magnetic componenet can weight, including all parts",
