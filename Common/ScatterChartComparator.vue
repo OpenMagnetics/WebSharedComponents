@@ -220,7 +220,11 @@ export default {
             const data = [];
             this.data.forEach((elem) => {
                 const aux = [elem[toCamelCase(this.xLabel)], elem[toCamelCase(this.yLabel)]];
-                data.push(aux);
+                if (elem[toCamelCase(this.xLabel)] < 1e100 && elem[toCamelCase(this.yLabel)] < 1e100) {
+                    console.log(elem[toCamelCase(this.yLabel)])
+                    // TO avoid materiales with no losses because they use the loss factor, which needs current
+                    data.push(aux);
+                }
             });
             return data;
         },
@@ -231,8 +235,10 @@ export default {
             var yLimit = 0;
             this.data.forEach((elem) => {
                 const auxPoint = [elem[toCamelCase(this.xLabel)], elem[toCamelCase(this.yLabel)]];
-                xLimit = Math.max(xLimit, Math.abs(referencePoint[0] - auxPoint[0]));
-                yLimit = Math.max(yLimit, Math.abs(referencePoint[1] - auxPoint[1]));
+                if (elem[toCamelCase(this.xLabel)] < 1e100 && elem[toCamelCase(this.yLabel)] < 1e100) {
+                    xLimit = Math.max(xLimit, Math.abs(referencePoint[0] - auxPoint[0]));
+                    yLimit = Math.max(yLimit, Math.abs(referencePoint[1] - auxPoint[1]));
+                }
             })
 
             limits.xAxis = {
