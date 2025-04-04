@@ -10,7 +10,7 @@
 /**
  * All the data structure used in the Magnetic Agnostic Structure
  */
-export interface Mas {
+export type Mas = {
     /**
      * The description of the inputs that can be used to design a Magnetic
      */
@@ -29,7 +29,7 @@ export interface Mas {
 /**
  * The description of the inputs that can be used to design a Magnetic
  */
-export interface Inputs {
+export type Inputs = {
     /**
      * Data describing the design requirements
      */
@@ -46,7 +46,7 @@ export interface Inputs {
  *
  * The list of requirement that must comply a given magnetic
  */
-export interface DesignRequirements {
+export type DesignRequirements = {
     insulation?: InsulationRequirements;
     /**
      * Isolation side where each winding is connected to.
@@ -95,7 +95,7 @@ export interface DesignRequirements {
     /**
      * Topology that will use the magnetic
      */
-    topology?: Topology;
+    topology?: Topologies;
     /**
      * Required turns ratios between primary and the rest of windings
      */
@@ -107,7 +107,7 @@ export interface DesignRequirements {
     [property: string]: any;
 }
 
-export interface InsulationRequirements {
+export type InsulationRequirements = {
     /**
      * Required values for the altitude
      */
@@ -181,7 +181,7 @@ export interface InsulationRequirements {
  *
  * A dimension of with minimum, nominal, and maximum values
  */
-export interface DimensionWithTolerance {
+export type DimensionWithTolerance = {
     /**
      * True is the maximum value must be excluded from the range
      */
@@ -284,14 +284,14 @@ export enum Market {
 /**
  * Maximum dimensions, width, height, and depth, for the designed magnetic, in m
  */
-export interface MaximumDimensions {
+export type MaximumDimensions = {
     depth?:  number;
     height?: number;
     width?:  number;
     [property: string]: any;
 }
 
-export interface ImpedanceAtFrequency {
+export type ImpedanceAtFrequency = {
     frequency: number;
     impedance: ImpedancePoint;
     [property: string]: any;
@@ -300,11 +300,14 @@ export interface ImpedanceAtFrequency {
 /**
  * Data describing one impendance value
  */
-export interface ImpedancePoint {
+export type ImpedancePoint = {
     imaginaryPart?: number;
-    magnitude:      number;
-    phase?:         number;
-    realPart?:      number;
+    /**
+     * Magnitude of the impedance, in Ohm
+     */
+    magnitude: number;
+    phase?:    number;
+    realPart?: number;
     [property: string]: any;
 }
 
@@ -321,7 +324,7 @@ export enum ConnectionType {
 /**
  * Topology that will use the magnetic
  */
-export enum Topology {
+export enum Topologies {
     ActiveClampForwardConverter = "Active Clamp Forward Converter",
     BoostConverter = "Boost Converter",
     BuckConverter = "Buck Converter",
@@ -355,7 +358,7 @@ export enum WiringTechnology {
  *
  * Excitation of the current per winding that produced the winding losses
  */
-export interface OperatingPoint {
+export type OperatingPoint = {
     conditions:            OperatingConditions;
     excitationsPerWinding: OperatingPointExcitation[];
     /**
@@ -368,7 +371,7 @@ export interface OperatingPoint {
 /**
  * The description of a magnetic operating conditions
  */
-export interface OperatingConditions {
+export type OperatingConditions = {
     /**
      * Relative Humidity of the ambient where the magnetic will operate
      */
@@ -399,7 +402,7 @@ export interface OperatingConditions {
  *
  * Data describing a cold plate cooling
  */
-export interface Cooling {
+export type Cooling = {
     /**
      * Name of the fluid used
      */
@@ -451,7 +454,7 @@ export interface Cooling {
  *
  * The description of a magnetic operating point
  */
-export interface OperatingPointExcitation {
+export type OperatingPointExcitation = {
     current?: SignalDescriptor;
     /**
      * Frequency of the waveform, common for all electromagnetic parameters, in Hz
@@ -474,7 +477,7 @@ export interface OperatingPointExcitation {
  * Structure definining one electromagnetic parameters: current, voltage, magnetic flux
  * density
  */
-export interface SignalDescriptor {
+export type SignalDescriptor = {
     /**
      * Data containing the harmonics of the waveform, defined by a list of amplitudes and a list
      * of frequencies
@@ -489,7 +492,7 @@ export interface SignalDescriptor {
  * Data containing the harmonics of the waveform, defined by a list of amplitudes and a list
  * of frequencies
  */
-export interface Harmonics {
+export type Harmonics = {
     /**
      * List of amplitudes of the harmonics that compose the waveform
      */
@@ -501,7 +504,7 @@ export interface Harmonics {
     [property: string]: any;
 }
 
-export interface Processed {
+export type Processed = {
     /**
      * The effective frequency value of the AC component of the waveform, according to
      * https://sci-hub.wf/https://ieeexplore.ieee.org/document/750181, Appendix C
@@ -511,6 +514,10 @@ export interface Processed {
      * The average value of the waveform, referred to 0
      */
     average?: number;
+    /**
+     * The dead time after TOn and Toff, in seconds, if applicable
+     */
+    deadTime?: number;
     /**
      * The duty cycle of the waveform, if applicable
      */
@@ -558,11 +565,12 @@ export enum WaveformLabel {
     Custom = "Custom",
     FlybackPrimary = "Flyback Primary",
     FlybackSecondary = "Flyback Secondary",
-    FlybackSecondaryDcm = "FlybackSecondaryDCM",
     FlybackSecondaryWithDeadtime = "Flyback Secondary With Deadtime",
     Rectangular = "Rectangular",
     RectangularDcm = "RectangularDCM",
     RectangularWithDeadtime = "Rectangular With Deadtime",
+    SecondaryRectangular = "Secondary Rectangular",
+    SecondaryRectangularWithDeadtime = "Secondary Rectangular With Deadtime",
     Sinusoidal = "Sinusoidal",
     Triangular = "Triangular",
     UnipolarRectangular = "Unipolar Rectangular",
@@ -575,7 +583,7 @@ export enum WaveformLabel {
  * Data containing the points that define an arbitrary waveform with non-equidistant points
  * paired with their time in the period
  */
-export interface Waveform {
+export type Waveform = {
     /**
      * List of values that compose the waveform, at equidistant times form each other
      */
@@ -592,7 +600,7 @@ export interface Waveform {
 /**
  * The description of a magnetic
  */
-export interface Magnetic {
+export type Magnetic = {
     /**
      * Data describing the coil
      */
@@ -618,7 +626,7 @@ export interface Magnetic {
  *
  * The description of a magnetic coil
  */
-export interface Coil {
+export type Coil = {
     bobbin: Bobbin | string;
     /**
      * The data from the coil based on its function, in a way that can be used by analytical
@@ -646,7 +654,7 @@ export interface Coil {
 /**
  * The description of a bobbin
  */
-export interface Bobbin {
+export type Bobbin = {
     /**
      * The lists of distributors of the magnetic bobbin
      */
@@ -668,7 +676,7 @@ export interface Bobbin {
 /**
  * Data from the distributor for a given part
  */
-export interface DistributorInfo {
+export type DistributorInfo = {
     /**
      * The distributor's price for this part
      */
@@ -716,7 +724,7 @@ export interface DistributorInfo {
  * The data from the bobbin based on its function, in a way that can be used by analytical
  * models.
  */
-export interface BobbinFunctionalDescription {
+export type BobbinFunctionalDescription = {
     /**
      * List of connections between windings and pins
      */
@@ -745,7 +753,7 @@ export interface BobbinFunctionalDescription {
     [property: string]: any;
 }
 
-export interface PinWIndingConnection {
+export type PinWIndingConnection = {
     /**
      * The name of the connected pin
      */
@@ -778,7 +786,7 @@ export enum BobbinFamily {
 /**
  * Data describing the pinout of a bobbin
  */
-export interface Pinout {
+export type Pinout = {
     /**
      * The distance between central pins
      */
@@ -810,7 +818,7 @@ export interface Pinout {
 /**
  * Data describing one pin in a bobbin
  */
-export interface Pin {
+export type Pin = {
     /**
      * The coordinates of the center of the pin, referred to the center of the main column
      */
@@ -868,7 +876,7 @@ export enum FunctionalDescriptionType {
 /**
  * Data from the manufacturer for a given part
  */
-export interface ManufacturerInfo {
+export type ManufacturerInfo = {
     /**
      * The manufacturer's price for this part
      */
@@ -909,7 +917,7 @@ export enum Status {
     Prototype = "prototype",
 }
 
-export interface CoreBobbinProcessedDescription {
+export type CoreBobbinProcessedDescription = {
     /**
      * The depth of the central column wall, including thickness, in the z axis
      */
@@ -968,7 +976,7 @@ export enum ColumnShape {
  * will have to fit, and equivalently, where all the current must circulate once, in the
  * case of inductors, or twice, in the case of transformers
  */
-export interface WindingWindowElement {
+export type WindingWindowElement = {
     /**
      * Area of the winding window
      */
@@ -1048,7 +1056,7 @@ export enum WindingWindowShape {
 /**
  * Data describing one winding associated with a magnetic
  */
-export interface CoilFunctionalDescription {
+export type CoilFunctionalDescription = {
     /**
      * Array on elements, representing the all the pins this winding is connected to
      */
@@ -1073,7 +1081,7 @@ export interface CoilFunctionalDescription {
 /**
  * Data describing the connection of the a wire
  */
-export interface ConnectionElement {
+export type ConnectionElement = {
     /**
      * Length of the connection, counted from the exit of the last turn until the terminal, in m
      */
@@ -1103,7 +1111,7 @@ export interface ConnectionElement {
  *
  * The description of a solid planar magnet wire
  */
-export interface Wire {
+export type Wire = {
     /**
      * The conducting diameter of the wire, in m
      */
@@ -1167,7 +1175,7 @@ export interface Wire {
 /**
  * A coating for a wire
  */
-export interface InsulationWireCoating {
+export type InsulationWireCoating = {
     /**
      * The minimum voltage that causes a portion of an insulator to experience electrical
      * breakdown and become electrically conductive, in V
@@ -1204,7 +1212,7 @@ export interface InsulationWireCoating {
 /**
  * A material for insulation
  */
-export interface InsulationMaterial {
+export type InsulationMaterial = {
     /**
      * Alternative names of the material
      */
@@ -1252,7 +1260,7 @@ export interface InsulationMaterial {
 /**
  * data for describing one point of dieletric strength
  */
-export interface DielectricStrengthElement {
+export type DielectricStrengthElement = {
     /**
      * Humidity for the field value, in proportion over 1
      */
@@ -1275,7 +1283,7 @@ export interface DielectricStrengthElement {
 /**
  * data for describing one point of resistivity
  */
-export interface ResistivityPoint {
+export type ResistivityPoint = {
     /**
      * temperature for the field value, in Celsius
      */
@@ -1302,7 +1310,7 @@ export enum InsulationWireCoatingType {
 /**
  * A material for wire
  */
-export interface WireMaterial {
+export type WireMaterial = {
     /**
      * The name of a wire material
      */
@@ -1319,7 +1327,7 @@ export interface WireMaterial {
 /**
  * data for describing the resistivity of a wire
  */
-export interface Resistivity {
+export type Resistivity = {
     /**
      * Temperature reference value, in Celsius
      */
@@ -1338,7 +1346,7 @@ export interface Resistivity {
 /**
  * data for describing one point of thermal conductivity
  */
-export interface ThermalConductivityElement {
+export type ThermalConductivityElement = {
     /**
      * Temperature for the field value, in Celsius
      */
@@ -1364,7 +1372,7 @@ export enum WireStandard {
  *
  * The description of a basic magnet wire
  */
-export interface WireRound {
+export type WireRound = {
     /**
      * The conducting diameter of the wire, in m
      */
@@ -1415,7 +1423,7 @@ export enum WireType {
 /**
  * Data describing one layer in a magnetic
  */
-export interface Layer {
+export type Layer = {
     /**
      * List of additional coordinates of the center of the layer, referred to the center of the
      * main column, in case the layer is not symmetrical, as in toroids
@@ -1484,7 +1492,7 @@ export enum CoordinateSystem {
  * Data describing one part of winding, described by a list with the proportion of each
  * parallel in the winding that is contained here
  */
-export interface PartialWinding {
+export type PartialWinding = {
     /**
      * Array on two elements, representing the input and output connection for this partial
      * winding
@@ -1523,7 +1531,7 @@ export enum WindingStyle {
 /**
  * Data describing one section in a magnetic
  */
-export interface Section {
+export type Section = {
     /**
      * The coordinates of the center of the section, referred to the center of the main column
      */
@@ -1575,7 +1583,7 @@ export interface Section {
 /**
  * Data describing one turn in a magnetic
  */
-export interface Turn {
+export type Turn = {
     /**
      * List of additional coordinates of the center of the turn, referred to the center of the
      * main column, in case the turn is not symmetrical, as in toroids
@@ -1645,7 +1653,7 @@ export enum TurnOrientation {
  *
  * The description of a magnetic core
  */
-export interface MagneticCore {
+export type MagneticCore = {
     /**
      * The lists of distributors of the magnetic core
      */
@@ -1676,7 +1684,7 @@ export interface MagneticCore {
  * The data from the core based on its function, in a way that can be used by analytical
  * models.
  */
-export interface CoreFunctionalDescription {
+export type CoreFunctionalDescription = {
     /**
      * The coating of the core
      */
@@ -1709,7 +1717,7 @@ export enum Coating {
 /**
  * A gap for the magnetic cores
  */
-export interface CoreGap {
+export type CoreGap = {
     /**
      * Geometrical area of the gap
      */
@@ -1756,12 +1764,16 @@ export enum GapType {
 /**
  * A material for the magnetic cores
  */
-export interface CoreMaterial {
+export type CoreMaterial = {
     bhCycle?: BhCycleElement[];
     /**
      * BH Cycle points where the magnetic flux density is 0
      */
     coerciveForce?: BhCycleElement[];
+    /**
+     * The name of a magnetic material together its manufacturer
+     */
+    commercialName?: string;
     /**
      * The temperature at which this material losses all ferromagnetism
      */
@@ -1790,7 +1802,7 @@ export interface CoreMaterial {
     /**
      * The composition of a magnetic material
      */
-    materialComposition?: MaterialCompositionEnum;
+    materialComposition?: MaterialComposition;
     /**
      * The name of a magnetic material
      */
@@ -1826,7 +1838,7 @@ export interface CoreMaterial {
 /**
  * data for describing one point of the BH cycle
  */
-export interface BhCycleElement {
+export type BhCycleElement = {
     /**
      * magnetic field value, in A/m
      */
@@ -1856,16 +1868,24 @@ export enum MaterialEnum {
 /**
  * The composition of a magnetic material
  */
-export enum MaterialCompositionEnum {
+export enum MaterialComposition {
+    CarbonylIron = "Carbonyl Iron",
+    FeMo = "FeMo",
+    FeNi = "FeNi",
+    FeNiMo = "FeNiMo",
+    FeSi = "FeSi",
+    FeSiAl = "FeSiAl",
+    Iron = "Iron",
     MgZn = "MgZn",
     MnZn = "MnZn",
     NiZn = "NiZn",
+    Proprietary = "Proprietary",
 }
 
 /**
  * The data regarding the relative permeability of a magnetic material
  */
-export interface Permeabilities {
+export type Permeabilities = {
     amplitude?: PermeabilityPoint[] | PermeabilityPoint;
     /**
      * The data regarding the complex permeability of a magnetic material
@@ -1878,7 +1898,7 @@ export interface Permeabilities {
 /**
  * data for describing one point of permebility
  */
-export interface PermeabilityPoint {
+export type PermeabilityPoint = {
     /**
      * Frequency of the Magnetic field, in Hz
      */
@@ -1920,7 +1940,7 @@ export interface PermeabilityPoint {
  *
  * Coefficients given by Fair-Rite in order to calculate the permeability of their materials
  */
-export interface InitialPermeabilitModifier {
+export type InitialPermeabilitModifier = {
     /**
      * Field with the coefficients used to calculate how much the permeability decreases with
      * the frequency, as factor = a + b * f + c * pow(f, 2) + d * pow(f, 3) + e * pow(f, 4)
@@ -1968,7 +1988,7 @@ export interface InitialPermeabilitModifier {
  * Field with the coefficients used to calculate how much the permeability decreases with
  * the frequency, as factor = 1 / (a + b * pow(f, c) ) + d
  */
-export interface FrequencyFactor {
+export type FrequencyFactor = {
     a:  number;
     b:  number;
     c:  number;
@@ -1984,7 +2004,7 @@ export interface FrequencyFactor {
  * Field with the coefficients used to calculate how much the permeability decreases with
  * the H DC bias, as factor = a + b * pow(H, c) + d
  */
-export interface MagneticFieldDcBiasFactor {
+export type MagneticFieldDcBiasFactor = {
     a:  number;
     b:  number;
     c:  number;
@@ -1996,7 +2016,7 @@ export interface MagneticFieldDcBiasFactor {
  * Field with the coefficients used to calculate how much the permeability decreases with
  * the B field, as factor = = 1 / ( 1 / ( a + b * pow(B,c)) + 1 / (d * pow(B, e) ) + 1 / f )
  */
-export interface MagneticFluxDensityFactor {
+export type MagneticFluxDensityFactor = {
     a: number;
     b: number;
     c: number;
@@ -2023,7 +2043,7 @@ export enum InitialPermeabilitModifierMethod {
  * Field with the coefficients used to calculate how much the permeability decreases with
  * the temperature, as either factor = a
  */
-export interface TemperatureFactor {
+export type TemperatureFactor = {
     a:  number;
     b?: number;
     c?: number;
@@ -2035,7 +2055,7 @@ export interface TemperatureFactor {
 /**
  * The data regarding the complex permeability of a magnetic material
  */
-export interface ComplexPermeabilityData {
+export type ComplexPermeabilityData = {
     imaginary: PermeabilityPoint[] | PermeabilityPoint;
     real:      PermeabilityPoint[] | PermeabilityPoint;
     [property: string]: any;
@@ -2055,7 +2075,7 @@ export enum CoreMaterialType {
  *
  * List of volumetric losses points
  */
-export interface VolumetricLossesPoint {
+export type VolumetricLossesPoint = {
     magneticFluxDensity: OperatingPointExcitation;
     /**
      * origin of the data
@@ -2083,7 +2103,7 @@ export interface VolumetricLossesPoint {
  *
  * Loss factor method for estimating volumetric losses
  */
-export interface CoreLossesMethodData {
+export type CoreLossesMethodData = {
     /**
      * Name of this method
      */
@@ -2110,7 +2130,7 @@ export interface CoreLossesMethodData {
  * List of coefficients for taking into account the excess losses and the dependencies of
  * the resistivity
  */
-export interface RoshenAdditionalCoefficients {
+export type RoshenAdditionalCoefficients = {
     excessLossesCoefficient:                   number;
     resistivityFrequencyCoefficient:           number;
     resistivityMagneticFluxDensityCoefficient: number;
@@ -2122,7 +2142,7 @@ export interface RoshenAdditionalCoefficients {
 /**
  * Data for describing the loss factor at a given frequency and temperature
  */
-export interface LossFactorPoint {
+export type LossFactorPoint = {
     /**
      * Frequency of the field, in Hz
      */
@@ -2146,7 +2166,7 @@ export enum CoreLossesMethodType {
     Steinmetz = "steinmetz",
 }
 
-export interface SteinmetzCoreLossesMethodRangeDatum {
+export type SteinmetzCoreLossesMethodRangeDatum = {
     /**
      * frequency power coefficient alpha
      */
@@ -2185,7 +2205,7 @@ export interface SteinmetzCoreLossesMethodRangeDatum {
 /**
  * A shape for the magnetic cores
  */
-export interface CoreShape {
+export type CoreShape = {
     /**
      * Alternative names of a magnetic shape
      */
@@ -2280,7 +2300,7 @@ export enum CoreType {
  *
  * Data describing the spacer used to separate cores in additive gaps
  */
-export interface CoreGeometricalDescriptionElement {
+export type CoreGeometricalDescriptionElement = {
     /**
      * The coordinates of the top of the piece, referred to the center of the main column
      *
@@ -2315,7 +2335,7 @@ export interface CoreGeometricalDescriptionElement {
 /**
  * Data describing the machining applied to a piece
  */
-export interface Machining {
+export type Machining = {
     /**
      * The coordinates of the start of the machining, referred to the top of the main column of
      * the piece
@@ -2345,7 +2365,7 @@ export enum CoreGeometricalDescriptionElementType {
 /**
  * The data from the core after been processed, and ready to use by the analytical models
  */
-export interface CoreProcessedDescription {
+export type CoreProcessedDescription = {
     /**
      * List of columns in the core
      */
@@ -2360,6 +2380,11 @@ export interface CoreProcessedDescription {
      */
     height: number;
     /**
+     * Parameter describing steady state temperature rise versus dissipated power within a given
+     * device.
+     */
+    thermalResistance?: number;
+    /**
      * Total width of the core
      */
     width: number;
@@ -2373,7 +2398,7 @@ export interface CoreProcessedDescription {
 /**
  * Data describing a column of the core
  */
-export interface ColumnElement {
+export type ColumnElement = {
     /**
      * Area of the section column, normal to the magnetic flux direction
      */
@@ -2423,7 +2448,7 @@ export enum ColumnType {
 /**
  * Effective data of the magnetic core
  */
-export interface EffectiveParameters {
+export type EffectiveParameters = {
     /**
      * This is the equivalent section that the magnetic flux traverses, because the shape of the
      * core is not uniform and its section changes along the path
@@ -2445,7 +2470,7 @@ export interface EffectiveParameters {
     [property: string]: any;
 }
 
-export interface MagneticManufacturerInfo {
+export type MagneticManufacturerInfo = {
     /**
      * The manufacturer's price for this part
      */
@@ -2474,7 +2499,7 @@ export interface MagneticManufacturerInfo {
     [property: string]: any;
 }
 
-export interface MagneticManufacturerRecommendations {
+export type MagneticManufacturerRecommendations = {
     /**
      * The manufacturer's rated current for this part
      */
@@ -2501,7 +2526,7 @@ export interface MagneticManufacturerRecommendations {
 /**
  * The description of the outputs that result of simulating a Magnetic
  */
-export interface Outputs {
+export type Outputs = {
     /**
      * Data describing the output core losses
      */
@@ -2558,7 +2583,7 @@ export interface Outputs {
  *
  * Data describing the core losses and the intermediate inputs used to calculate them
  */
-export interface CoreLossesOutput {
+export type CoreLossesOutput = {
     /**
      * Value of the core losses
      */
@@ -2606,7 +2631,11 @@ export enum ResultOrigin {
  *
  * Data describing the impendance and the intermediate inputs used to calculate them
  */
-export interface ImpedanceOutput {
+export type ImpedanceOutput = {
+    /**
+     * List of impedance matrix per frequency
+     */
+    impedanceMatrix?: ImpedanceMatrixAtFrequency[];
     /**
      * List of inductance matrix per frequency
      */
@@ -2624,21 +2653,31 @@ export interface ImpedanceOutput {
     [property: string]: any;
 }
 
-export interface InductanceMatrixAtFrequency {
+export type ImpedanceMatrixAtFrequency = {
     /**
      * Frequency of the inductance matrix
      */
     frequency: number;
-    matrix:    Array<DimensionWithTolerance[]>;
+    magnitude: Array<DimensionWithTolerance[]>;
+    phase:     Array<DimensionWithTolerance[]>;
     [property: string]: any;
 }
 
-export interface ResistanceMatrixAtFrequency {
+export type InductanceMatrixAtFrequency = {
+    /**
+     * Frequency of the inductance matrix
+     */
+    frequency: number;
+    magnitude: Array<DimensionWithTolerance[]>;
+    [property: string]: any;
+}
+
+export type ResistanceMatrixAtFrequency = {
     /**
      * Frequency of the resitance matrix
      */
     frequency: number;
-    matrix:    Array<DimensionWithTolerance[]>;
+    magnitude: Array<DimensionWithTolerance[]>;
     [property: string]: any;
 }
 
@@ -2647,7 +2686,7 @@ export interface ResistanceMatrixAtFrequency {
  *
  * List of voltages that the magnetic can withstand
  */
-export interface DielectricVoltage {
+export type DielectricVoltage = {
     /**
      * Duration of the voltate, or undefined if the field is not present
      */
@@ -2685,7 +2724,7 @@ export enum VoltageType {
  *
  * List of voltages that the magnetic can withstand
  */
-export interface InsulationCoordinationOutput {
+export type InsulationCoordinationOutput = {
     /**
      * Clearance required for this magnetic
      */
@@ -2718,7 +2757,7 @@ export interface InsulationCoordinationOutput {
  *
  * Data describing the leakage inductance and the intermediate inputs used to calculate them
  */
-export interface LeakageInductanceOutput {
+export type LeakageInductanceOutput = {
     leakageInductancePerWinding: DimensionWithTolerance[];
     /**
      * Model used to calculate the leakage inductance in the case of simulation, or method used
@@ -2735,7 +2774,7 @@ export interface LeakageInductanceOutput {
  * Data describing the magnetizing inductance and the intermediate inputs used to calculate
  * them
  */
-export interface MagnetizingInductanceOutput {
+export type MagnetizingInductanceOutput = {
     /**
      * Value of the reluctance of the core
      */
@@ -2780,7 +2819,7 @@ export interface MagnetizingInductanceOutput {
 /**
  * Data describing the reluctance of an air gap
  */
-export interface AirGapReluctanceOutput {
+export type AirGapReluctanceOutput = {
     /**
      * Value of the Fringing Factor
      */
@@ -2807,7 +2846,7 @@ export interface AirGapReluctanceOutput {
  *
  * Data describing the stray capacitance and the intermediate inputs used to calculate them
  */
-export interface StrayCapacitanceOutput {
+export type StrayCapacitanceOutput = {
     /**
      * Model used to calculate the stray capacitance in the case of simulation, or method used
      * to measure it
@@ -2846,7 +2885,7 @@ export interface StrayCapacitanceOutput {
  * Network of six equivalent capacitors that describe the capacitance between two given
  * windings
  */
-export interface SixCapacitorNetworkPerWinding {
+export type SixCapacitorNetworkPerWinding = {
     c1: number;
     c2: number;
     c3: number;
@@ -2860,7 +2899,7 @@ export interface SixCapacitorNetworkPerWinding {
  * The three values of a three input electrostatic multipole that describe the capacitance
  * between two given windings
  */
-export interface TripoleCapacitancePerWinding {
+export type TripoleCapacitancePerWinding = {
     c1: number;
     c2: number;
     c3: number;
@@ -2872,7 +2911,7 @@ export interface TripoleCapacitancePerWinding {
  *
  * Data describing the temperature and the intermediate inputs used to calculate them
  */
-export interface TemperatureOutput {
+export type TemperatureOutput = {
     /**
      * bulk thermal resistance of the whole magnetic
      */
@@ -2896,7 +2935,7 @@ export interface TemperatureOutput {
     [property: string]: any;
 }
 
-export interface TemperaturePoint {
+export type TemperaturePoint = {
     /**
      * The coordinates of the temperature point, referred to the center of the main column
      */
@@ -2913,7 +2952,7 @@ export interface TemperaturePoint {
  *
  * Data describing the winding losses and the intermediate inputs used to calculate them
  */
-export interface WindingLossesOutput {
+export type WindingLossesOutput = {
     /**
      * Excitation of the current per physical turn that produced the winding losses
      */
@@ -2955,7 +2994,7 @@ export interface WindingLossesOutput {
     [property: string]: any;
 }
 
-export interface WindingLossesPerElement {
+export type WindingLossesPerElement = {
     /**
      * List of value of the winding ohmic losses
      */
@@ -2974,7 +3013,7 @@ export interface WindingLossesPerElement {
 /**
  * List of value of the winding ohmic losses
  */
-export interface OhmicLosses {
+export type OhmicLosses = {
     /**
      * Value of the losses
      */
@@ -2999,7 +3038,7 @@ export interface OhmicLosses {
  *
  * List of value of the winding skin losses per harmonic
  */
-export interface WindingLossElement {
+export type WindingLossElement = {
     /**
      * List of frequencies of the harmonics that are producing losses
      */
@@ -3022,7 +3061,7 @@ export interface WindingLossElement {
  *
  * Data describing the curren in the different chunks used in field calculation
  */
-export interface WindingWindowCurrentFieldOutput {
+export type WindingWindowCurrentFieldOutput = {
     fieldPerFrequency: Field[];
     /**
      * Model used to calculate the current field
@@ -3035,7 +3074,7 @@ export interface WindingWindowCurrentFieldOutput {
 /**
  * Data describing a field in a 2D or 3D space
  */
-export interface Field {
+export type Field = {
     /**
      * Value of the magnetizing inductance
      */
@@ -3050,7 +3089,7 @@ export interface Field {
 /**
  * Data describing the value of a field in a 2D or 3D space
  */
-export interface FieldPoint {
+export type FieldPoint = {
     /**
      * If this point has some special significance, can be identified with this label
      */
@@ -3081,7 +3120,7 @@ export interface FieldPoint {
 /**
  * Data describing the output magnetic strength field
  */
-export interface WindingWindowMagneticStrengthFieldOutput {
+export type WindingWindowMagneticStrengthFieldOutput = {
     fieldPerFrequency: ComplexField[];
     /**
      * Model used to calculate the magnetic strength field
@@ -3094,7 +3133,7 @@ export interface WindingWindowMagneticStrengthFieldOutput {
 /**
  * Data describing a field in a 2D or 3D space
  */
-export interface ComplexField {
+export type ComplexField = {
     /**
      * Value of the magnetizing inductance
      */
@@ -3109,7 +3148,7 @@ export interface ComplexField {
 /**
  * Data describing the complex value of a field in a 2D or 3D space
  */
-export interface ComplexFieldPoint {
+export type ComplexFieldPoint = {
     /**
      * Imaginary value of the field at this point
      */
@@ -3708,6 +3747,14 @@ export class Convert {
         return JSON.stringify(uncast(value, r("ImpedanceOutput")), null, 2);
     }
 
+    public static toImpedanceMatrixAtFrequency(json: string): ImpedanceMatrixAtFrequency {
+        return cast(JSON.parse(json), r("ImpedanceMatrixAtFrequency"));
+    }
+
+    public static impedanceMatrixAtFrequencyToJson(value: ImpedanceMatrixAtFrequency): string {
+        return JSON.stringify(uncast(value, r("ImpedanceMatrixAtFrequency")), null, 2);
+    }
+
     public static toInductanceMatrixAtFrequency(json: string): InductanceMatrixAtFrequency {
         return cast(JSON.parse(json), r("InductanceMatrixAtFrequency"));
     }
@@ -4060,7 +4107,7 @@ const typeMap: any = {
         { json: "operatingTemperature", js: "operatingTemperature", typ: u(undefined, r("DimensionWithTolerance")) },
         { json: "strayCapacitance", js: "strayCapacitance", typ: u(undefined, a(r("DimensionWithTolerance"))) },
         { json: "terminalType", js: "terminalType", typ: u(undefined, a(r("ConnectionType"))) },
-        { json: "topology", js: "topology", typ: u(undefined, r("Topology")) },
+        { json: "topology", js: "topology", typ: u(undefined, r("Topologies")) },
         { json: "turnsRatios", js: "turnsRatios", typ: a(r("DimensionWithTolerance")) },
         { json: "wiringTechnology", js: "wiringTechnology", typ: u(undefined, r("WiringTechnology")) },
     ], "any"),
@@ -4138,6 +4185,7 @@ const typeMap: any = {
     "Processed": o([
         { json: "acEffectiveFrequency", js: "acEffectiveFrequency", typ: u(undefined, 3.14) },
         { json: "average", js: "average", typ: u(undefined, 3.14) },
+        { json: "deadTime", js: "deadTime", typ: u(undefined, 3.14) },
         { json: "dutyCycle", js: "dutyCycle", typ: u(undefined, 3.14) },
         { json: "effectiveFrequency", js: "effectiveFrequency", typ: u(undefined, 3.14) },
         { json: "label", js: "label", typ: r("WaveformLabel") },
@@ -4418,6 +4466,7 @@ const typeMap: any = {
     "CoreMaterial": o([
         { json: "bhCycle", js: "bhCycle", typ: u(undefined, a(r("BhCycleElement"))) },
         { json: "coerciveForce", js: "coerciveForce", typ: u(undefined, a(r("BhCycleElement"))) },
+        { json: "commercialName", js: "commercialName", typ: u(undefined, "") },
         { json: "curieTemperature", js: "curieTemperature", typ: u(undefined, 3.14) },
         { json: "density", js: "density", typ: u(undefined, 3.14) },
         { json: "family", js: "family", typ: u(undefined, "") },
@@ -4425,7 +4474,7 @@ const typeMap: any = {
         { json: "heatConductivity", js: "heatConductivity", typ: u(undefined, r("DimensionWithTolerance")) },
         { json: "manufacturerInfo", js: "manufacturerInfo", typ: r("ManufacturerInfo") },
         { json: "material", js: "material", typ: r("MaterialEnum") },
-        { json: "materialComposition", js: "materialComposition", typ: u(undefined, r("MaterialCompositionEnum")) },
+        { json: "materialComposition", js: "materialComposition", typ: u(undefined, r("MaterialComposition")) },
         { json: "name", js: "name", typ: "" },
         { json: "permeability", js: "permeability", typ: r("Permeabilities") },
         { json: "remanence", js: "remanence", typ: u(undefined, a(r("BhCycleElement"))) },
@@ -4559,6 +4608,7 @@ const typeMap: any = {
         { json: "depth", js: "depth", typ: 3.14 },
         { json: "effectiveParameters", js: "effectiveParameters", typ: r("EffectiveParameters") },
         { json: "height", js: "height", typ: 3.14 },
+        { json: "thermalResistance", js: "thermalResistance", typ: u(undefined, 3.14) },
         { json: "width", js: "width", typ: 3.14 },
         { json: "windingWindows", js: "windingWindows", typ: a(r("WindingWindowElement")) },
     ], "any"),
@@ -4620,18 +4670,24 @@ const typeMap: any = {
         { json: "volumetricLosses", js: "volumetricLosses", typ: u(undefined, 3.14) },
     ], "any"),
     "ImpedanceOutput": o([
+        { json: "impedanceMatrix", js: "impedanceMatrix", typ: u(undefined, a(r("ImpedanceMatrixAtFrequency"))) },
         { json: "inductanceMatrix", js: "inductanceMatrix", typ: a(r("InductanceMatrixAtFrequency")) },
         { json: "methodUsed", js: "methodUsed", typ: "" },
         { json: "origin", js: "origin", typ: r("ResultOrigin") },
         { json: "resistanceMatrix", js: "resistanceMatrix", typ: a(r("ResistanceMatrixAtFrequency")) },
     ], "any"),
+    "ImpedanceMatrixAtFrequency": o([
+        { json: "frequency", js: "frequency", typ: 3.14 },
+        { json: "magnitude", js: "magnitude", typ: a(a(r("DimensionWithTolerance"))) },
+        { json: "phase", js: "phase", typ: a(a(r("DimensionWithTolerance"))) },
+    ], "any"),
     "InductanceMatrixAtFrequency": o([
         { json: "frequency", js: "frequency", typ: 3.14 },
-        { json: "matrix", js: "matrix", typ: a(a(r("DimensionWithTolerance"))) },
+        { json: "magnitude", js: "magnitude", typ: a(a(r("DimensionWithTolerance"))) },
     ], "any"),
     "ResistanceMatrixAtFrequency": o([
         { json: "frequency", js: "frequency", typ: 3.14 },
-        { json: "matrix", js: "matrix", typ: a(a(r("DimensionWithTolerance"))) },
+        { json: "magnitude", js: "magnitude", typ: a(a(r("DimensionWithTolerance"))) },
     ], "any"),
     "DielectricVoltage": o([
         { json: "duration", js: "duration", typ: u(undefined, 3.14) },
@@ -4828,7 +4884,7 @@ const typeMap: any = {
         "Screw",
         "SMT",
     ],
-    "Topology": [
+    "Topologies": [
         "Active Clamp Forward Converter",
         "Boost Converter",
         "Buck Converter",
@@ -4857,11 +4913,12 @@ const typeMap: any = {
         "Custom",
         "Flyback Primary",
         "Flyback Secondary",
-        "FlybackSecondaryDCM",
         "Flyback Secondary With Deadtime",
         "Rectangular",
         "RectangularDCM",
         "Rectangular With Deadtime",
+        "Secondary Rectangular",
+        "Secondary Rectangular With Deadtime",
         "Sinusoidal",
         "Triangular",
         "Unipolar Rectangular",
@@ -4972,10 +5029,18 @@ const typeMap: any = {
         "nanocrystalline",
         "powder",
     ],
-    "MaterialCompositionEnum": [
+    "MaterialComposition": [
+        "Carbonyl Iron",
+        "FeMo",
+        "FeNi",
+        "FeNiMo",
+        "FeSi",
+        "FeSiAl",
+        "Iron",
         "MgZn",
         "MnZn",
         "NiZn",
+        "Proprietary",
     ],
     "InitialPermeabilitModifierMethod": [
         "fair-rite",

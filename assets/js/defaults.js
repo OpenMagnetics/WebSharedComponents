@@ -623,8 +623,16 @@ export const defaultFlybackWizardInputs = {
     currentRippleRatio: 1,
     efficiency: 0.85,
     numberOutputs: 2,
-    outputVoltages: [12, 5],
-    outputCurrents: [3, 5],
+    outputsParameters: [
+        {
+            voltage: 12,
+            current: 3,
+        },
+        {
+            voltage: 5,
+            current: 5,
+        }
+    ],
     switchingFrequency: 100000,
     ambientTemperature: 25,
     insulationType: 'No'

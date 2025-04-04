@@ -340,8 +340,8 @@ export default {
 
 
 <template>
-    <div v-tooltip="styleTooltip" class="container-flex p-0">
-        <div class="row m-0 ps-3">
+    <div v-tooltip="styleTooltip" class="container-flex m-0 p-0 text-start">
+        <div class="row m-0 p-0">
             <input
                 :style="combinedStyle([labelBgColor, textColor, titleFontSize])"
                 v-tooltip="tooltipsMagneticSynthesisDesignRequirements['changeNameWindings']"
