@@ -621,6 +621,7 @@ export const defaultFlybackWizardInputs = {
     designLevel: 'Help me with the design',
     diodeVoltageDrop: 0.7,
     maximumDrainSourceVoltage: 600,
+    maximumDutyCycle: 0.5,
     currentRippleRatio: 1,
     inductance: 200e-6,
     dutyCycle: 0.5,
