@@ -58,6 +58,10 @@ export default {
             type: Boolean,
             default: false
         },
+        allowUnsorted:{
+            type: Boolean,
+            default: false
+        },
         dataTestLabel: {
             type: String,
             default: '',
@@ -227,7 +231,7 @@ export default {
                     this.errorMessages += "Maximum value must be greater than 0.\n"
                 }
             }
-            if (this.localData.maximum.scaledValue != null && this.localData.nominal.scaledValue != null) {
+            if (this.localData.maximum.scaledValue != null && this.localData.nominal.scaledValue != null && !this.allowUnsorted) {
                 const nominalActualValue = this.localData.nominal.scaledValue * this.localData.nominal.multiplier;
                 const maximumActualValue = this.localData.maximum.scaledValue * this.localData.maximum.multiplier;
                 if (nominalActualValue >= maximumActualValue) {
@@ -235,7 +239,7 @@ export default {
                     this.errorMessages += "Nominal value must be smaller than maximum value. Change or delete one of the fields.\n"
                 }
             }
-            if (this.localData.minimum.scaledValue != null && this.localData.nominal.scaledValue != null) {
+            if (this.localData.minimum.scaledValue != null && this.localData.nominal.scaledValue != null && !this.allowUnsorted) {
                 const nominalActualValue = this.localData.nominal.scaledValue * this.localData.nominal.multiplier;
                 const minimumActualValue = this.localData.minimum.scaledValue * this.localData.minimum.multiplier;
                 if (nominalActualValue <= minimumActualValue) {
@@ -243,7 +247,7 @@ export default {
                     this.errorMessages += "Nominal value must be greater than minimum value. Change or delete one of the fields.\n"
                 }
             }
-            if (this.localData.minimum.scaledValue != null && this.localData.maximum.scaledValue != null) {
+            if (this.localData.minimum.scaledValue != null && this.localData.maximum.scaledValue != null && !this.allowUnsorted) {
                 const maximumActualValue = this.localData.maximum.scaledValue * this.localData.maximum.multiplier;
                 const minimumActualValue = this.localData.minimum.scaledValue * this.localData.minimum.multiplier;
                 if (maximumActualValue <= minimumActualValue) {
