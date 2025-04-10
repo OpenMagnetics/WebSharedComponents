@@ -81,6 +81,12 @@ export default {
             handler(newValue, oldValue) {
                 if (!this.blockingRebounds) {
 
+                    if (this.modelValue.magnetic == null) {
+                        return;
+                    }
+                    if (this.modelValue.inputs == null) {
+                        return;
+                    }
                     const inputsString = JSON.stringify(this.modelValue.inputs);
                     const magneticsString = JSON.stringify(this.modelValue.magnetic);
 
@@ -107,6 +113,12 @@ export default {
             handler(newValue, oldValue) {
                 if (!this.blockingRebounds) {
 
+                    if (this.modelValue.magnetic == null) {
+                        return;
+                    }
+                    if (this.modelValue.inputs == null) {
+                        return;
+                    }
                     const inputsString = JSON.stringify(this.modelValue.inputs);
                     const magneticsString = JSON.stringify(this.modelValue.magnetic);
 
@@ -166,6 +178,9 @@ export default {
             }
         },
         calculateMagneticSectionAndFieldPlot() {
+            if (this.modelValue.magnetic == null) {
+                return;
+            }
             if (this.modelValue.magnetic.coil.turnsDescription != null) {
                 this.posting = true;
                 const url = import.meta.env.VITE_API_ENDPOINT + '/plot_core_and_fields'
@@ -219,6 +234,9 @@ export default {
             }
         },
         calculateMagneticSectionPlot() {
+            if (this.modelValue.magnetic == null) {
+                return;
+            }
             if (this.modelValue.magnetic.coil.turnsDescription != null) {
                 const url = import.meta.env.VITE_API_ENDPOINT + '/plot_core'
 
@@ -321,7 +339,7 @@ export default {
 </script>
 
 <template>
-    <div v-if="showWarning && modelValue.magnetic.coil.turnsDescription == null" class="container">
+    <div v-if="modelValue.magnetic != null && showWarning && modelValue.magnetic.coil.turnsDescription == null" class="container">
         <div class="row">
             <i class="col-12 fa-solid fa-9x fa-triangle-exclamation"></i>
             <label class="text-danger col-12 pt-1 fs-5" style="font-size: 1em">Winding turns not possible</label>
@@ -361,7 +379,7 @@ export default {
                 <div class="text-center">
                     <button
                         :style="buttonStyle"
-                        v-if="enableOptions && modelValue.magnetic.coil.turnsDescription != null"
+                        v-if="modelValue.magnetic != null && enableOptions && modelValue.magnetic.coil.turnsDescription != null"
                         class="btn btn-primary mt-1"
                         @click="swapFieldPlot()"
                     >
@@ -369,7 +387,7 @@ export default {
                     </button>
                     <button
                         :style="buttonStyle"
-                        v-if="showFieldPlot && enableOptions && modelValue.magnetic.coil.turnsDescription != null"
+                        v-if="modelValue.magnetic != null && showFieldPlot && enableOptions && modelValue.magnetic.coil.turnsDescription != null"
                         class="btn btn-primary ms-1 mt-1"
                         @click="swapIncludeFringing()"
                     >
