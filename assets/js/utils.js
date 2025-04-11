@@ -821,35 +821,50 @@ export async function checkAndFixMas(mas, mkf=null) {
     if (mkf != null && (mas.magnetic.coil.bobbin == null || mas.magnetic.coil.bobbin == "Dummy" || mas.magnetic.core.processedDescription == null)) {
         await mkf.ready.then(_ => {
 
-            const aux = deepCopy(mas.magnetic.core);
-            aux['geometricalDescription'] = null;
-            aux['processedDescription'] = null;
-            const coreJson = mkf.calculate_core_data(JSON.stringify(aux), false);
-            if (coreJson.startsWith("Exception")) {
-                console.error(coreJson);
-                return mas;
-            }
-            else {
-                mas.magnetic.core = JSON.parse(coreJson);
+            if (mas.magnetic.core.processedDescription == null) {
+                try {
+
+                    const aux = deepCopy(mas.magnetic.core);
+                    aux['geometricalDescription'] = null;
+                    aux['processedDescription'] = null;
+                    const coreJson = mkf.calculate_core_data(JSON.stringify(aux), false);
+                    if (coreJson.startsWith("Exception")) {
+                        console.error(coreJson);
+                        // return mas;
+                    }
+                    else {
+                        mas.magnetic.core = JSON.parse(coreJson);
+                    }
+                }
+                catch (error) {
+                    console.error(error);
+                }
             }
 
-            mas.magnetic.coil.bobbin = "Dummy";
-            {
-                const result = mkf.calculate_bobbin_data(JSON.stringify(mas.magnetic));
-                if (result.startsWith("Exception")) {
-                    console.error(result);
-                    return mas;
+            if (mas.magnetic.coil.bobbin == null || mas.magnetic.coil.bobbin == "Dummy") {
+                try {
+                    mas.magnetic.coil.bobbin = "Dummy";
+                    {
+                        const result = mkf.calculate_bobbin_data(JSON.stringify(mas.magnetic));
+                        if (result.startsWith("Exception")) {
+                            console.error(result);
+                            // return mas;
+                        }
+                        mas.magnetic.coil.bobbin = JSON.parse(result);
+                    }
                 }
-                mas.magnetic.coil.bobbin = JSON.parse(result);
+                catch (error) {
+                    console.error(error);
+                }
             }
 
 
             for (let i = 0; i < numberWindings; i++) {
-                if (typeof(mas.magnetic.coil.functionalDescription[i].wire) == 'string' && mas.magnetic.coil.functionalDescription[i].wire != "Dummy") {
+                if (typeof(mas.magnetic.coil.functionalDescription[i].wire) == 'string' && mas.magnetic.coil.functionalDescription[i].wire != "Dummy" && mas.magnetic.coil.functionalDescription[i].wire != "") {
                     result = mkf.get_wire_data_by_name(mas.magnetic.coil.functionalDescription[i].wire);
                     if (result.startsWith("Exception")) {
                         console.error(result);
-                        return mas;
+                        // return mas;
                     }
                     else {
                         mas.magnetic.coil.functionalDescription[i].wire = JSON.parse(result);
