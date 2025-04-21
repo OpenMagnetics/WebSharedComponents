@@ -214,8 +214,10 @@ export default {
                 }
                 else {
                     if (this.allowZero) {
-                        if (actualValue < 0)
+                        if (actualValue <= 0)
                             actualValue = 0;
+                        else if (actualValue < this.min)
+                            actualValue = this.min;
                     }
                     else {
                         if (actualValue < this.min)

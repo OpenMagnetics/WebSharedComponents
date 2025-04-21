@@ -105,7 +105,7 @@ export default {
 
 
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex">
+    <div :data-cy="dataTestLabel + '-container'" class="container-flex px-2 m-0">
         <div class="row">
             <label
                 v-if="labelWidthProportionClass != 'col-0'"
