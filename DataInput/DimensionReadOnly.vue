@@ -200,10 +200,10 @@ export default {
                 v-else
                 :style="combinedStyle([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 pe-0"
+                class="rounded-2 pe-0 ps-0"
                 :class="combinedClass([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
             >
-                {{replaceTitle}}
+                {{replaceTitle}}<sub>{{subscriptName}}</sub>
             </label>
             <div v-show="localData.scaledValue != null" :class="valueWidthProportionClass" class="container m-0 px-0">
                 <div class="row m-0 px-0 ">

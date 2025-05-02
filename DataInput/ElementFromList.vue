@@ -47,6 +47,10 @@ export default {
             type: String,
             default: "col-4",
         },
+        selectStyleClass: {
+            type: String,
+            default: "col-8",
+        },
         valueFontSize: {
             type: [String, Object],
             default: 'fs-6'
@@ -54,10 +58,6 @@ export default {
         labelFontSize: {
             type: [String, Object],
             default: 'fs-6'
-        },
-        selectStyleClass: {
-            type: String,
-            default: "col-8",
         },
         labelBgColor: {
             type: [String, Object],
@@ -197,7 +197,7 @@ export default {
                 v-if="altText == null && !titleSameRow"
                 :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 ms-3">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
+                class="rounded-2 p-0">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
             </label>
         </div>
         <div class="row" :class="justifyContent? 'd-flex justify-content-between' : ''">

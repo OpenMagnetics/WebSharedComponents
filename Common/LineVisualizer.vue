@@ -1,5 +1,5 @@
 <script setup>
-import { toCamelCase, formatUnit, removeTrailingZeroes, getMultiplier} from '../assets/js/utils.js'
+import { toCamelCase, formatUnit, removeTrailingZeroes, getMultiplier, deepCopy } from '../assets/js/utils.js'
 import { use } from 'echarts/core'
 import { LineChart, ScatterChart, EffectScatterChart } from 'echarts/charts'
 import {
@@ -63,7 +63,19 @@ export default {
         forceUpdate:{
             type: Number,
             default: 0
-        }
+        },
+        chartStyle:{
+            type: String,
+            default: 'height: 50vh'
+        },
+        chartPaddings:{
+            type: Object,
+            default: {top: 60, left: 60, right: '5%', bottom: 30}
+        },
+        toolbox:{
+            type: Boolean,
+            default: true
+        },
     },
     emits: [
         'click',
@@ -94,29 +106,33 @@ export default {
                     if (params.seriesIndex < this.data.length) {
                         const xDatum = this.data[params.seriesIndex].data.x[params.dataIndex];
                         const yDatum = this.data[params.seriesIndex].data.y[params.dataIndex];
-                        const xAux = formatUnit(xDatum, "Hz");
+                        const xAux = formatUnit(xDatum, this.xAxisOptions.unit);
                         const yAux = formatUnit(yDatum, this.data[params.seriesIndex].unit);
+                        const xText = this.xAxisOptions.unit == null? xDatum : `${removeTrailingZeroes(xAux.label, 2)} ${xAux.unit}`;
+                        const yText = this.data[params.seriesIndex].unit == null? yDatum : `${removeTrailingZeroes(yAux.label, 2)} ${yAux.unit}`;
 
-                        return `${removeTrailingZeroes(yAux.label, 2)} ${yAux.unit} @ ${removeTrailingZeroes(xAux.label, 2)} ${xAux.unit}`;
+                        return `${yText} @ ${xText}`;
                     }
                     else {
                         const newIndex = params.seriesIndex - this.data.length;
                         const xDatum = this.points[newIndex].data.x;
                         const yDatum = this.points[newIndex].data.y;
-                        const xAux = formatUnit(xDatum, "Hz");
+                        const xAux = formatUnit(xDatum, this.xAxisOptions.unit);
                         const yAux = formatUnit(yDatum, this.points[newIndex].unit);
+                        const xText = this.xAxisOptions.unit == null? xDatum : `${removeTrailingZeroes(xAux.label, 2)} ${xAux.unit}`;
+                        const yText = this.data[params.seriesIndex].unit == null? yDatum : `${removeTrailingZeroes(yAux.label, 2)} ${yAux.unit}`;
 
-                        return `Requirement: ${removeTrailingZeroes(yAux.label, 2)} ${yAux.unit} @ ${removeTrailingZeroes(xAux.label, 2)} ${xAux.unit}`;
+                        return `Requirement: ${yText} @ ${xText}`;
                     }
                 },
             },
-            toolbox: {
-                right: 20,
-                feature: {
-                    dataZoom: {}
-                }
-            },
-              legend: {
+            toolbox: !this.toolbox? null : {
+                    right: 20,
+                    feature: {
+                        dataZoom: {}
+                    }
+                },
+            legend: {
                 orient: 'horizontal',
                 left: 'left',
                 textStyle: {
@@ -133,16 +149,14 @@ export default {
 
                     formatter: (value) => {
                         const aux = formatUnit(value, this.xAxisOptions.unit);
-                        return `${removeTrailingZeroes(aux.label, 1)} ${aux.unit}`;
+                        const text = this.xAxisOptions.unit == null? value : `${removeTrailingZeroes(aux.label, 1)} ${aux.unit}`;
+                        return `${text}`;
                     },
                 }
             },
             yAxis: [],
 
-            grid: {
-                left:   60,
-                right:  '5%',
-            },
+            grid: this.chartPaddings,
 
             animation: false,
             backgroundColor: this.bgColor,
@@ -174,12 +188,13 @@ export default {
                             return '';
                         }
                         const aux = formatUnit(value, datum.unit);
-                        return `${removeTrailingZeroes(aux.label, 1)} ${aux.unit}`;
+                        const text = datum.unit == null? value : `${removeTrailingZeroes(aux.label, 1)} ${aux.unit}`;
+                        return `${text}`;
                     },
                 }
             })
         })
-            
+
         const updateOpts = {
             notMerge: true,
         }
@@ -190,8 +205,11 @@ export default {
         }
     },
     watch: {
-        forceUpdate(newValue, oldValue) {
+        'forceUpdate': {
+            handler(newValue, oldValue) {
             this.processOptions(this.options);
+            },
+          deep: true
         },
     },
     mounted() {
@@ -247,6 +265,7 @@ export default {
                 });
             })
 
+
             limits.xAxis = {
                 min: xMinimum,
                 max: xMaximum,
@@ -261,6 +280,7 @@ export default {
             options.xAxis.type = this.xAxisOptions.type;
 
             limits.yAxis.forEach((elem, index) => {
+                var numberDecimals = 5;
                 if (elem.min < 1) {
                     if (this.data[index].type == "log") {
                         var numberZeroesInBase = Math.floor( Math.log10(elem.min) + 1) - 1;
@@ -270,8 +290,11 @@ export default {
                         elem.min = 0;
                     }
                 }
-                options.yAxis[index].min = elem.min;
-                options.yAxis[index].max = elem.max * 1.1;
+                if (this.data[index].numberDecimals != null) {
+                    numberDecimals = this.data[index].numberDecimals;
+                }
+                options.yAxis[index].min = removeTrailingZeroes(elem.min, numberDecimals);
+                options.yAxis[index].max = removeTrailingZeroes(elem.max * 1.1, numberDecimals);
             })
 
             options.series = []
@@ -282,6 +305,7 @@ export default {
                     {
                         data: this.processData(index),
                         type: 'line',
+                        smooth: datum.smooth,
                         name: datum.label,
                         color: datum.colorLabel,
                     }
@@ -308,5 +332,5 @@ export default {
 </script>
 
 <template>
-    <v-chart class="chart" :option="options" autoresize :update-options="updateOpts" @click="onClick" :style="'height: 50vh'"/>
+    <v-chart class="chart" :option="options" autoresize :update-options="updateOpts" @click="onClick" :style="chartStyle"/>
 </template>

@@ -19,25 +19,29 @@ export default {
             type: Array[String],
             required: false
         },
+        replaceTitle:{
+            type: Array[String],
+            default: [null, null]
+        },
         mins:{
             type: Array[Number],
-            default: 1e-12
+            default: [1e-12, 1e-12]
         },
         maxs:{
             type: Array[Number],
-            default: 1e+9
+            default: [1e+9, 1e+9]
         },
         numberDecimals:{
             type: Array[Number],
-            default: 6
+            default: [6, 6]
         },
         allowNegatives:{
-            type: Boolean,
-            default: false
+            type: Array[Boolean],
+            default: [false, false]
         },
         allowZeros:{
-            type: Boolean,
-            default: false
+            type: Array[Boolean],
+            default: [false, false]
         },
         dataTestLabel: {
             type: String,
@@ -128,15 +132,15 @@ export default {
         <div class="row">
             <Dimension class="col-5 offset-1 mb-1 text-start"
                 :name="names[0]"
-                :replaceTitle="toTitleCase(names[0])"
+                :replaceTitle="replaceTitle[0] == null? toTitleCase(names[0]) : replaceTitle[0]"
                 :unit="units[0]"
                 :dataTestLabel="dataTestLabel + ' ' + names[0]"
                 :min="mins[0]"
                 :max="maxs[0]"
                 :justifyContent="true"
                 :forceUpdate="forceUpdate"
-                :allowNegatives="allowNegatives[0]"
-                :allowZeros="allowZeros[0]"
+                :allowNegative="allowNegatives[0]"
+                :allowZero="allowZeros[0]"
                 :modelValue="localData"
                 @update="dimensionUpdated($event, 0)"
                 :valueFontSize='valueFontSize'
@@ -150,15 +154,15 @@ export default {
             />
             <Dimension class="col-5 offset-1 mb-1 text-start"
                 :name="names[1]"
-                :replaceTitle="toTitleCase(names[1])"
+                :replaceTitle="replaceTitle[1] == null? toTitleCase(names[1]) : replaceTitle[1]"
                 :unit="units[1]"
                 :dataTestLabel="dataTestLabel + ' ' + names[1]"
                 :min="mins[1]"
                 :max="maxs[1]"
                 :justifyContent="true"
                 :forceUpdate="forceUpdate"
-                :allowNegatives="allowNegatives[1]"
-                :allowZeros="allowZeros[1]"
+                :allowNegative="allowNegatives[1]"
+                :allowZero="allowZeros[1]"
                 :modelValue="localData"
                 @update="dimensionUpdated($event, 1)"
                 :valueFontSize='valueFontSize'

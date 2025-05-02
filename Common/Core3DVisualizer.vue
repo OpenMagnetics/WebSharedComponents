@@ -9,6 +9,7 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
 <script>
 
 export default {
+    emits: ["errorInDimensions"],
     props: {
         dataTestLabel: {
             type: String,
@@ -272,6 +273,7 @@ export default {
                         this.updating = false
                         this.hasFreeCADError = true
                         console.error(error);
+                        this.$emit("errorInDimensions");
                     });
 
                 }).catch(error => {
