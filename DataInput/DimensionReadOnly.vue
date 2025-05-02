@@ -191,7 +191,7 @@ export default {
                 v-if="replaceTitle == null"
                 :style="combinedStyle([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 pe-0"
+                class="rounded-2 pe-0 ps-0"
                 :class="combinedClass([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
             >
                 {{shortenedName}}<sub>{{subscriptName}}</sub>
