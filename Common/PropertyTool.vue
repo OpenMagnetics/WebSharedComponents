@@ -23,10 +23,6 @@ export default {
             type: Array,
             required: true,
         },
-        indexesToUse: {
-            type: Array,
-            default: null,
-        },
         propertiesConfiguration: {
             type: Object,
             required: true,
@@ -93,7 +89,12 @@ export default {
         },
     },
     data() {
-        const errorMessage = "";
+        const errorMessages = "";
+        const localData = {
+            propertyToEdit: 0
+        };
+        const propertyLabels = {};
+        const selectedPropertyToEdit = 0;
         const loading = false;
         const showEditor = false;
         const showConfiguration = false;
@@ -114,7 +115,10 @@ export default {
 
 
         return {
-            errorMessage,
+            localData,
+            propertyLabels,
+            selectedPropertyToEdit,
+            errorMessages,
             loading,
             showEditor,
             showConfiguration,
@@ -125,18 +129,26 @@ export default {
         }
     },
     computed: {
+        scalarValue() {
+            if (this.properties.length == 0) {
+                return 0;
+            }
+            else if (this.properties[this.selectedPropertyToEdit].length == 0) {
+                return 0;
+            }
+            else {
+                return this.properties[this.selectedPropertyToEdit][0].value;
+            }
+        },
+        showGraph() {
+            return this.data.length > 0 && this.data[this.selectedPropertyToEdit].data.x != null && this.data[this.selectedPropertyToEdit].data.x.length > 1;
+        },
     },
     watch: {
         'properties': {
             handler(newValue, oldValue) {
                 this.extractData();
-                this.forceUpdate += 1;
-            },
-          deep: true
-        },
-        'indexesToUse': {
-            handler(newValue, oldValue) {
-                this.extractData();
+                setTimeout(() => {this.checkData();}, 10);
                 this.forceUpdate += 1;
             },
           deep: true
@@ -146,16 +158,34 @@ export default {
         this.extractData();
     },
     mounted() {
-        this.forceUpdate += 1;
+        setTimeout(() => {this.forceUpdate += 1;}, 10);
     },
     methods: {
-        extractData() {
+        checkData() {
+            console.log("Checking data")
+            this.errorMessages = [];
+            this.data[this.selectedPropertyToEdit].data.x.forEach((elem, index) => {
+                this.errorMessages.push("");
+                if (index < this.data[this.selectedPropertyToEdit].data.x.length - 1) {
+                    const nextElem = this.data[this.selectedPropertyToEdit].data.x[index + 1];
+                    if (elem == nextElem) {
+                        console.log("ea")
+                        this.errorMessages[index + 1] = `Value repeated for ${this.propertiesConfiguration.xAxisLabel}: ${elem}`;
+                    }
 
+                }
+            })
+        },
+        extractData() {
             this.data = [];
             this.properties.forEach((property, propertyIndex) => {
                 const datum = {};
                 datum.type = this.propertiesConfiguration.yAxisMode == "linear"? "value" : this.propertiesConfiguration.yAxisMode;
                 datum.smooth = this.smoothLine;
+                if (this.properties.length > 0) {
+                    datum.label = this.propertiesConfiguration.yAxisReplaceLabel[propertyIndex];
+                    this.propertyLabels[propertyIndex] = datum.label;
+                }
                 datum.numberDecimals = this.propertiesConfiguration.yAxisNumberDecimals;
 
                 datum.data = {
@@ -163,13 +193,11 @@ export default {
                     y: [],
                 };
                 property.forEach((elem, index) => {
-                    if (this.indexesToUse.includes(index)) {
-                        datum.data.x.push(elem[this.propertiesConfiguration.xAxisLabel])
-                        datum.data.y.push(elem[this.propertiesConfiguration.yAxisLabel])
+                    datum.data.x.push(elem[this.propertiesConfiguration.xAxisLabel])
+                    datum.data.y.push(elem[this.propertiesConfiguration.yAxisLabel])
 
-                        if ("log" in this.availableModes && elem[this.propertiesConfiguration.xAxisLabel] < 0) {
-                            delete this.availableModes.log;
-                        }
+                    if ("log" in this.availableModes && elem[this.propertiesConfiguration.xAxisLabel] < 0) {
+                        delete this.availableModes.log;
                     }
                 })
 
@@ -191,25 +219,17 @@ export default {
             this.forceUpdate += 1;
         },
         onAddPointBelow(index) {
-            const newElement = deepCopy(this.properties[0][index])
-            this.properties[0].splice(index + 1, 0, newElement)
-            this.$emit("onAddPoint");
-            this.extractData();
-
+            this.$emit("onAddPoint", this.selectedPropertyToEdit, index);
         },
         onRemovePoint(index) {
-            this.properties[0].splice(index, 1);
-            this.$emit("onRemovePoint");
-            this.extractData();
+            if (this.data[this.selectedPropertyToEdit].data.x.length == 1) {
+                this.showEditor = false;
+            }
+            this.$emit("onRemovePoint", this.selectedPropertyToEdit, index);
         },
         addFirstValue() {
-            const aux = {};
-            aux[this.propertiesConfiguration.xAxisLabel] = 0;
-            aux[this.propertiesConfiguration.yAxisLabel] = 0;
-            this.properties[0].push(aux);
-            this.$emit("onAddPoint");
+            this.$emit("onAddPoint", this.selectedPropertyToEdit, 0);
             this.showEditor = true;
-            this.extractData();
         },
         onEdit() {
             this.showEditor = !this.showEditor;
@@ -217,6 +237,9 @@ export default {
             if (!this.showEditor) {
                 setTimeout(() => {this.forceUpdate += 1;}, 10);
             }
+        },
+        propertyToEditChanged(selectedProperty) {
+            this.selectedPropertyToEdit = selectedProperty;
         }
     }
 }
@@ -241,6 +264,7 @@ export default {
                     <i class="fa-solid fa-pen-to-square"></i>
                 </button>
                 <button
+                    v-if="showGraph"
                     :style="showConfiguration? $styleStore.controlPanel.activeButton : $styleStore.controlPanel.button"
                     class="btn offset-1 col-5 p-0"
                     @click="showConfiguration = !showConfiguration && ! showEditor"
@@ -254,20 +278,40 @@ export default {
                 v-if="showEditor"
                 class="col-12"
             >
-                <div class="row"  v-for="row, index in properties[0]">
+                <div class="row">
+                    <ElementFromList
+                        class="offset-1 col-10 mb-1 text-start"
+                        :dataTestLabel="dataTestLabel + '-PropertySelector'"
+                        :name="'propertyToEdit'"
+                        :titleSameRow="true"
+                        :justifyContent="false"
+                        :modelValue="localData"
+                        @update:modelValue="localData = $event"
+                        :options="propertyLabels"
+                        :labelWidthProportionClass="'col-6'"
+                        :selectStyleClass="'col-6'"
+                        :valueFontSize="labelFontSize"
+                        :labelFontSize="scalarFontSize"
+                        :labelBgColor="labelBgColor"
+                        :valueBgColor="valueBgColor"
+                        :textColor="textColor"
+                        @update="propertyToEditChanged"
+                    />
+                </div>
+                <div class="row"  v-for="row, index in properties[selectedPropertyToEdit]">
                     <PairOfDimensions
-                        v-if="indexesToUse.includes(index)"
-                        class="pt-1 pb-0 mb-0 col-10 border-bottom "
+                        :class="index < properties[selectedPropertyToEdit].length - 1? 'border-bottom' : '' "
+                        class="pt-1 pb-0 pe-4 mb-0 col-10"
                         :style="$styleStore.designRequirements.inputBorderColor"
                         :names="[propertiesConfiguration.xAxisLabel, propertiesConfiguration.yAxisLabel]"
-                        :replaceTitle="[propertiesConfiguration.xAxisReplaceLabel, propertiesConfiguration.yAxisReplaceLabel]"
+                        :replaceTitle="[propertiesConfiguration.xAxisReplaceLabel, propertiesConfiguration.yAxisReplaceLabel[selectedPropertyToEdit]]"
                         :units="[propertiesConfiguration.xAxisUnit, propertiesConfiguration.yAxisUnit]"
                         :allowNegatives="[propertiesConfiguration.xAxisAllowNegative, propertiesConfiguration.yAxisAllowNegative]"
                         :allowZeros="[propertiesConfiguration.xAxisAllowNegative, propertiesConfiguration.yAxisAllowNegative]"
                         :mins="[propertiesConfiguration.xAxisMin, propertiesConfiguration.yAxisMin]"
                         :maxs="[propertiesConfiguration.xAxisMax, propertiesConfiguration.yAxisMax]"
                         :dataTestLabel="dataTestLabel + '-Property-' + index"
-                        v-model="properties[0][index]"
+                        v-model="properties[selectedPropertyToEdit][index]"
                         :labelWidthProportionClass="'col-4'"
                         :valueWidthProportionClass="'col-8'"
                         :valueFontSize='valueFontSize'
@@ -275,9 +319,9 @@ export default {
                         :labelBgColor='labelBgColor'
                         :valueBgColor='valueBgColor'
                         :textColor='textColor'
+                        @update="$emit('onDimensionUpdate', $event, seriesIndex, index)"
                     />
                     <div
-                        v-if="indexesToUse.includes(index)"
                         class="col-2 row"
                     >
                         <button
@@ -304,6 +348,7 @@ export default {
                             />
                         </button>
                     </div>
+                    <label :data-cy="dataTestLabel + '-' + index + '-error-text'" class="text-danger text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages[index]}}</label>
                 </div>
             </div>
             <div 
@@ -348,7 +393,7 @@ export default {
                 />
             </div>
             <span 
-                v-if="data.length == 0 || indexesToUse.length == 0"
+                v-if="data.length > 0 && data[selectedPropertyToEdit].data.x.length == 0"
                 class="col-12 my-2"
             >
                 <label
@@ -360,11 +405,12 @@ export default {
                 <button class="btn btn-primary" @click="addFirstValue()">Add values</button>
             </span>
             <div 
-                v-if="!showEditor && indexesToUse.length > 0"
+                v-if="!showEditor"
                 :class="showEditor || showConfiguration? 'col-9' : 'col-12'"
+                class="pe-3"
             >
                 <LineVisualizer 
-                    v-if="indexesToUse.length > 1"
+                    v-if="showGraph"
                     v-show="!loading"
                     :data="data"
                     :points="[]"
@@ -376,17 +422,18 @@ export default {
                     :bgColor="visualizerBgColor"
                     :lineColor="visualizerLineColor"
                     :textColor="visualizerTextColor"
-                    :chartPaddings="{top: 10, left: 45, right: 10, bottom: 30}"
+                    :chartPaddings="{top: properties.length > 0? 30 : 10, left: 45, right: 10, bottom: 30}"
                 />
                 <DimensionReadOnly 
                     v-else
+                    v-if="data.length > 0 && data[selectedPropertyToEdit].data.x.length > 0"
                     class="col-12 mt-2 px-0 mx-0"
                     :name="'Value'"
                     :replaceTitle="''"
                     :unit="propertiesConfiguration.yAxisUnit"
                     :dataTestLabel="dataTestLabel + '-ScalarValue'"
                     :numberDecimals="2"
-                    :value="properties[0][indexesToUse[0]].value"
+                    :value="scalarValue"
                     :useTitleCase="false"
                     :disableShortenLabels="true"
                     :labelWidthProportionClass="'col-1'"

@@ -286,8 +286,8 @@ export default {
                     ref="inputRef"
                     :disabled="disabled"
                     :data-cy="dataTestLabel + '-number-input'"
-                    :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, disabled? 'border-0' : ''])"
-                    class="col-8 m-0 pe-0 ps-1"
+                    :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, disabled? 'border-0' : '', unit == null? 'col-12' : 'col-8'])"
+                    class="m-0 pe-0 ps-1"
                     @change="changeScaledValue($event.target.value)"
                     :value="removeTrailingZeroes(localData.scaledValue * visualScale, numberDecimals)"
                 >
