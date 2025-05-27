@@ -5,7 +5,7 @@ export const coreAdviserWeights = {
 }
 
 export const magneticAdviserWeights = {
-    "EFFICIENCY": 40,
+    "LOSSES": 40,
     "DIMENSIONS": 30,
     "COST": 30,
 }
