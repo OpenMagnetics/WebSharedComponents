@@ -1,5 +1,5 @@
 export const coreAdviserWeights = {
-    "LOSSES": 40,
+    "EFFICIENCY": 40,
     "DIMENSIONS": 30,
     "COST": 30,
 }
