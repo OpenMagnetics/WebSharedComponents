@@ -1,5 +1,6 @@
 import * as Defaults from './defaults.js'
 import axios from "axios"
+import { ConnectionType } from '/WebSharedComponents/assets/ts/MAS.ts'
 
 var requesting = 0
 
@@ -765,6 +766,17 @@ export async function checkAndFixMas(mas, mkf=null) {
                     mas.inputs.designRequirements.isolationSides.push(Defaults.isolationSideOrdered[i].toLowerCase());
                 }
             }
+        }
+
+        if (mas.inputs.designRequirements.terminalType != null) {
+            mas.inputs.designRequirements.terminalType.forEach((elem, index) => {
+                Object.keys(ConnectionType).forEach((connType) => {
+                    if (elem == connType) {
+                        mas.inputs.designRequirements.terminalType[index] = ConnectionType[connType];
+                    }
+                })
+
+            })
         }
     }
 

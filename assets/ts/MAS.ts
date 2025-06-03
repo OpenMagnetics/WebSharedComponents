@@ -30,6 +30,7 @@ export type Mas = {
  * The description of the inputs that can be used to design a Magnetic
  */
 export type Inputs = {
+    converterInformation?: ConverterInformation;
     /**
      * Data describing the design requirements
      */
@@ -39,6 +40,158 @@ export type Inputs = {
      */
     operatingPoints: OperatingPoint[];
     [property: string]: any;
+}
+
+export type ConverterInformation = {
+    supportedTopologies?: SupportedTopologies;
+    [property: string]: any;
+}
+
+export type SupportedTopologies = {
+    flyback?: Flyback;
+    [property: string]: any;
+}
+
+/**
+ * The description of a Flyback converter excitation
+ */
+export type Flyback = {
+    /**
+     * The maximum current ripple allowed in the output
+     */
+    currentRippleRatio: number;
+    /**
+     * The voltage drop on the diode
+     */
+    diodeVoltageDrop: number;
+    /**
+     * The target efficiency
+     */
+    efficiency: number;
+    /**
+     * The input voltage of the flyback
+     */
+    inputVoltage: DimensionWithTolerance;
+    /**
+     * The maximum drain-source voltage in the selected switch
+     */
+    maximumDrainSourceVoltage?: number;
+    /**
+     * The maximum duty cycle in the selected switch
+     */
+    maximumDutyCycle?: number;
+    /**
+     * A list of operating points
+     */
+    operatingPoints: FlybackOperatingPoint[];
+    [property: string]: any;
+}
+
+/**
+ * The input voltage of the flyback
+ *
+ * Required values for the altitude
+ *
+ * Voltage RMS of the main supply to which this transformer is connected to.
+ *
+ * Required values for the magnetizing inductance
+ *
+ * Required values for the temperature that the magnetic can reach under operating
+ *
+ * The maximum thickness of the insulation around the wire, in m
+ *
+ * The conducting area of the wire, in m². Used for some rectangular shapes where the area
+ * is smaller than expected due to rounded corners
+ *
+ * The conducting diameter of the wire, in m
+ *
+ * The outer diameter of the wire, in m
+ *
+ * The conducting height of the wire, in m
+ *
+ * The conducting width of the wire, in m
+ *
+ * The outer height of the wire, in m
+ *
+ * The outer width of the wire, in m
+ *
+ * The radius of the edge, in case of rectangular wire, in m
+ *
+ * Heat capacity value according to manufacturer, in J/Kg/K
+ *
+ * Heat conductivity value according to manufacturer, in W/m/K
+ *
+ * Data a two dimensional matrix, created as an array of array, where the first coordinate
+ * in the X and the second the Y
+ *
+ * Value of the leakage inductance between the primary and a secondary winding given by the
+ * position in the array
+ *
+ * Value of the magnetizing inductance
+ *
+ * A dimension of with minimum, nominal, and maximum values
+ */
+export type DimensionWithTolerance = {
+    /**
+     * True is the maximum value must be excluded from the range
+     */
+    excludeMaximum?: boolean;
+    /**
+     * True is the minimum value must be excluded from the range
+     */
+    excludeMinimum?: boolean;
+    /**
+     * The maximum value of the dimension
+     */
+    maximum?: number;
+    /**
+     * The minimum value of the dimension
+     */
+    minimum?: number;
+    /**
+     * The nominal value of the dimension
+     */
+    nominal?: number;
+    [property: string]: any;
+}
+
+/**
+ * The descriptionof one flyback operating point
+ */
+export type FlybackOperatingPoint = {
+    /**
+     * The ambient temperature of the operating point
+     */
+    ambientTemperature: number;
+    /**
+     * The mode of the operating point
+     */
+    mode?: FlybackModes;
+    /**
+     * A list of output currents, one per output
+     */
+    outputCurrents: number[];
+    /**
+     * A list of output voltages, one per output
+     */
+    outputVoltages: number[];
+    /**
+     * The switching frequency of the operating point
+     */
+    switchingFrequency?: number;
+    [property: string]: any;
+}
+
+/**
+ * The mode of the operating point
+ *
+ * The conduction mode of the Flyback
+ */
+export enum FlybackModes {
+    BoundaryModeOperation = "Boundary Mode Operation",
+    ContinuousConductionMode = "Continuous Conduction Mode",
+    DiscontinuousConductionMode = "Discontinuous Conduction Mode",
+    QuasiResonantMode = "Quasi Resonant Mode",
 }
 
 /**
@@ -136,72 +289,6 @@ export type InsulationRequirements = {
      * VList of standards that will be taken into account for insulation.
      */
     standards?: InsulationStandards[];
-    [property: string]: any;
-}
-
-/**
- * Required values for the altitude
- *
- * Voltage RMS of the main supply to which this transformer is connected to.
- *
- * Required values for the magnetizing inductance
- *
- * Required values for the temperature that the magnetic can reach under operating
- *
- * The maximum thickness of the insulation around the wire, in m
- *
- * The conducting area of the wire, in m². Used for some rectangular shapes where the area
- * is smaller than expected due to rounded corners
- *
- * The conducting diameter of the wire, in m
- *
- * The outer diameter of the wire, in m
- *
- * The conducting height of the wire, in m
- *
- * The conducting width of the wire, in m
- *
- * The outer height of the wire, in m
- *
- * The outer width of the wire, in m
- *
- * The radius of the edge, in case of rectangular wire, in m
- *
- * Heat capacity value according to manufacturer, in J/Kg/K
- *
- * Heat conductivity value according to manufacturer, in W/m/K
- *
- * Data a two dimensional matrix, created as an array of array, where the first coordinate
- * in the X and the second the Y
- *
- * Value of the leakage inductance between the primary and a secondary winding given by the
- * position in the array
- *
- * Value of the magnetizing inductance
- *
- * A dimension of with minimum, nominal, and maximum values
- */
-export type DimensionWithTolerance = {
-    /**
-     * True is the maximum value must be excluded from the range
-     */
-    excludeMaximum?: boolean;
-    /**
-     * True is the minimum value must be excluded from the range
-     */
-    excludeMinimum?: boolean;
-    /**
-     * The maximum value of the dimension
-     */
-    maximum?: number;
-    /**
-     * The minimum value of the dimension
-     */
-    minimum?: number;
-    /**
-     * The nominal value of the dimension
-     */
-    nominal?: number;
     [property: string]: any;
 }
 
@@ -1796,6 +1883,10 @@ export type CoreMaterial = {
     heatConductivity?: DimensionWithTolerance;
     manufacturerInfo:  ManufacturerInfo;
     /**
+     * The data regarding the mass losses of a magnetic material
+     */
+    massLosses?: { [key: string]: Array<MassLossesPoint[] | MagneticsCoreLossesMethodData> };
+    /**
      * The composition of a magnetic material
      */
     material: MaterialEnum;
@@ -1852,6 +1943,44 @@ export type BhCycleElement = {
      */
     temperature: number;
     [property: string]: any;
+}
+
+/**
+ * List of mass losses points
+ *
+ * data for describing the mass losses at a given point of magnetic flux density, frequency
+ * and temperature
+ */
+export type MassLossesPoint = {
+    magneticFluxDensity: OperatingPointExcitation;
+    /**
+     * origin of the data
+     */
+    origin: string;
+    /**
+     * temperature value, in Celsius
+     */
+    temperature: number;
+    /**
+     * mass losses value, in W/Kg
+     */
+    value: number;
+    [property: string]: any;
+}
+
+/**
+ * Magnetic method for estimating mass losses
+ */
+export type MagneticsCoreLossesMethodData = {
+    /**
+     * Name of this method
+     */
+    method: MassCoreLossesMethodType;
+    [property: string]: any;
+}
+
+export enum MassCoreLossesMethodType {
+    Magnetec = "magnetec",
 }
 
 /**
@@ -2107,7 +2236,7 @@ export type CoreLossesMethodData = {
     /**
      * Name of this method
      */
-    method:  CoreLossesMethodType;
+    method:  VolumetricCoreLossesMethodType;
     ranges?: SteinmetzCoreLossesMethodRangeDatum[];
     /**
      * List of coefficients for taking into account the excess losses and the dependencies of
@@ -2158,7 +2287,7 @@ export type LossFactorPoint = {
     [property: string]: any;
 }
 
-export enum CoreLossesMethodType {
+export enum VolumetricCoreLossesMethodType {
     LossFactor = "lossFactor",
     Magnetics = "magnetics",
     Micrometals = "micrometals",
@@ -2600,6 +2729,10 @@ export type CoreLossesOutput = {
      * Excitation of the B field that produced the core losses
      */
     magneticFluxDensity?: SignalDescriptor;
+    /**
+     * Mass value of the core losses
+     */
+    massLosses?: number;
     /**
      * Model used to calculate the core losses in the case of simulation, or method used to
      * measure it
@@ -3195,6 +3328,46 @@ export class Convert {
         return JSON.stringify(uncast(value, r("Inputs")), null, 2);
     }
 
+    public static toConverterInformation(json: string): ConverterInformation {
+        return cast(JSON.parse(json), r("ConverterInformation"));
+    }
+
+    public static converterInformationToJson(value: ConverterInformation): string {
+        return JSON.stringify(uncast(value, r("ConverterInformation")), null, 2);
+    }
+
+    public static toSupportedTopologies(json: string): SupportedTopologies {
+        return cast(JSON.parse(json), r("SupportedTopologies"));
+    }
+
+    public static supportedTopologiesToJson(value: SupportedTopologies): string {
+        return JSON.stringify(uncast(value, r("SupportedTopologies")), null, 2);
+    }
+
+    public static toFlyback(json: string): Flyback {
+        return cast(JSON.parse(json), r("Flyback"));
+    }
+
+    public static flybackToJson(value: Flyback): string {
+        return JSON.stringify(uncast(value, r("Flyback")), null, 2);
+    }
+
+    public static toDimensionWithTolerance(json: string): DimensionWithTolerance {
+        return cast(JSON.parse(json), r("DimensionWithTolerance"));
+    }
+
+    public static dimensionWithToleranceToJson(value: DimensionWithTolerance): string {
+        return JSON.stringify(uncast(value, r("DimensionWithTolerance")), null, 2);
+    }
+
+    public static toFlybackOperatingPoint(json: string): FlybackOperatingPoint {
+        return cast(JSON.parse(json), r("FlybackOperatingPoint"));
+    }
+
+    public static flybackOperatingPointToJson(value: FlybackOperatingPoint): string {
+        return JSON.stringify(uncast(value, r("FlybackOperatingPoint")), null, 2);
+    }
+
     public static toDesignRequirements(json: string): DesignRequirements {
         return cast(JSON.parse(json), r("DesignRequirements"));
     }
@@ -3209,14 +3382,6 @@ export class Convert {
 
     public static insulationRequirementsToJson(value: InsulationRequirements): string {
         return JSON.stringify(uncast(value, r("InsulationRequirements")), null, 2);
-    }
-
-    public static toDimensionWithTolerance(json: string): DimensionWithTolerance {
-        return cast(JSON.parse(json), r("DimensionWithTolerance"));
-    }
-
-    public static dimensionWithToleranceToJson(value: DimensionWithTolerance): string {
-        return JSON.stringify(uncast(value, r("DimensionWithTolerance")), null, 2);
     }
 
     public static toMaximumDimensions(json: string): MaximumDimensions {
@@ -3553,6 +3718,22 @@ export class Convert {
 
     public static bhCycleElementToJson(value: BhCycleElement): string {
         return JSON.stringify(uncast(value, r("BhCycleElement")), null, 2);
+    }
+
+    public static toMassLossesPoint(json: string): MassLossesPoint {
+        return cast(JSON.parse(json), r("MassLossesPoint"));
+    }
+
+    public static massLossesPointToJson(value: MassLossesPoint): string {
+        return JSON.stringify(uncast(value, r("MassLossesPoint")), null, 2);
+    }
+
+    public static toMagneticsCoreLossesMethodData(json: string): MagneticsCoreLossesMethodData {
+        return cast(JSON.parse(json), r("MagneticsCoreLossesMethodData"));
+    }
+
+    public static magneticsCoreLossesMethodDataToJson(value: MagneticsCoreLossesMethodData): string {
+        return JSON.stringify(uncast(value, r("MagneticsCoreLossesMethodData")), null, 2);
     }
 
     public static toPermeabilities(json: string): Permeabilities {
@@ -4091,8 +4272,38 @@ const typeMap: any = {
         { json: "outputs", js: "outputs", typ: a(r("Outputs")) },
     ], "any"),
     "Inputs": o([
+        { json: "converterInformation", js: "converterInformation", typ: u(undefined, r("ConverterInformation")) },
         { json: "designRequirements", js: "designRequirements", typ: r("DesignRequirements") },
         { json: "operatingPoints", js: "operatingPoints", typ: a(r("OperatingPoint")) },
+    ], "any"),
+    "ConverterInformation": o([
+        { json: "supportedTopologies", js: "supportedTopologies", typ: u(undefined, r("SupportedTopologies")) },
+    ], "any"),
+    "SupportedTopologies": o([
+        { json: "flyback", js: "flyback", typ: u(undefined, r("Flyback")) },
+    ], "any"),
+    "Flyback": o([
+        { json: "currentRippleRatio", js: "currentRippleRatio", typ: 3.14 },
+        { json: "diodeVoltageDrop", js: "diodeVoltageDrop", typ: 3.14 },
+        { json: "efficiency", js: "efficiency", typ: 3.14 },
+        { json: "inputVoltage", js: "inputVoltage", typ: r("DimensionWithTolerance") },
+        { json: "maximumDrainSourceVoltage", js: "maximumDrainSourceVoltage", typ: u(undefined, 3.14) },
+        { json: "maximumDutyCycle", js: "maximumDutyCycle", typ: u(undefined, 3.14) },
+        { json: "operatingPoints", js: "operatingPoints", typ: a(r("FlybackOperatingPoint")) },
+    ], "any"),
+    "DimensionWithTolerance": o([
+        { json: "excludeMaximum", js: "excludeMaximum", typ: u(undefined, true) },
+        { json: "excludeMinimum", js: "excludeMinimum", typ: u(undefined, true) },
+        { json: "maximum", js: "maximum", typ: u(undefined, 3.14) },
+        { json: "minimum", js: "minimum", typ: u(undefined, 3.14) },
+        { json: "nominal", js: "nominal", typ: u(undefined, 3.14) },
+    ], "any"),
+    "FlybackOperatingPoint": o([
+        { json: "ambientTemperature", js: "ambientTemperature", typ: 3.14 },
+        { json: "mode", js: "mode", typ: u(undefined, r("FlybackModes")) },
+        { json: "outputCurrents", js: "outputCurrents", typ: a(3.14) },
+        { json: "outputVoltages", js: "outputVoltages", typ: a(3.14) },
+        { json: "switchingFrequency", js: "switchingFrequency", typ: u(undefined, 3.14) },
     ], "any"),
     "DesignRequirements": o([
         { json: "insulation", js: "insulation", typ: u(undefined, r("InsulationRequirements")) },
@@ -4119,13 +4330,6 @@ const typeMap: any = {
         { json: "overvoltageCategory", js: "overvoltageCategory", typ: u(undefined, r("OvervoltageCategory")) },
         { json: "pollutionDegree", js: "pollutionDegree", typ: u(undefined, r("PollutionDegree")) },
         { json: "standards", js: "standards", typ: u(undefined, a(r("InsulationStandards"))) },
-    ], "any"),
-    "DimensionWithTolerance": o([
-        { json: "excludeMaximum", js: "excludeMaximum", typ: u(undefined, true) },
-        { json: "excludeMinimum", js: "excludeMinimum", typ: u(undefined, true) },
-        { json: "maximum", js: "maximum", typ: u(undefined, 3.14) },
-        { json: "minimum", js: "minimum", typ: u(undefined, 3.14) },
-        { json: "nominal", js: "nominal", typ: u(undefined, 3.14) },
     ], "any"),
     "MaximumDimensions": o([
         { json: "depth", js: "depth", typ: u(undefined, 3.14) },
@@ -4473,6 +4677,7 @@ const typeMap: any = {
         { json: "heatCapacity", js: "heatCapacity", typ: u(undefined, r("DimensionWithTolerance")) },
         { json: "heatConductivity", js: "heatConductivity", typ: u(undefined, r("DimensionWithTolerance")) },
         { json: "manufacturerInfo", js: "manufacturerInfo", typ: r("ManufacturerInfo") },
+        { json: "massLosses", js: "massLosses", typ: u(undefined, m(a(u(a(r("MassLossesPoint")), r("MagneticsCoreLossesMethodData"))))) },
         { json: "material", js: "material", typ: r("MaterialEnum") },
         { json: "materialComposition", js: "materialComposition", typ: u(undefined, r("MaterialComposition")) },
         { json: "name", js: "name", typ: "" },
@@ -4487,6 +4692,15 @@ const typeMap: any = {
         { json: "magneticField", js: "magneticField", typ: 3.14 },
         { json: "magneticFluxDensity", js: "magneticFluxDensity", typ: 3.14 },
         { json: "temperature", js: "temperature", typ: 3.14 },
+    ], "any"),
+    "MassLossesPoint": o([
+        { json: "magneticFluxDensity", js: "magneticFluxDensity", typ: r("OperatingPointExcitation") },
+        { json: "origin", js: "origin", typ: "" },
+        { json: "temperature", js: "temperature", typ: 3.14 },
+        { json: "value", js: "value", typ: 3.14 },
+    ], "any"),
+    "MagneticsCoreLossesMethodData": o([
+        { json: "method", js: "method", typ: r("MassCoreLossesMethodType") },
     ], "any"),
     "Permeabilities": o([
         { json: "amplitude", js: "amplitude", typ: u(undefined, u(a(r("PermeabilityPoint")), r("PermeabilityPoint"))) },
@@ -4548,7 +4762,7 @@ const typeMap: any = {
         { json: "value", js: "value", typ: 3.14 },
     ], "any"),
     "CoreLossesMethodData": o([
-        { json: "method", js: "method", typ: r("CoreLossesMethodType") },
+        { json: "method", js: "method", typ: r("VolumetricCoreLossesMethodType") },
         { json: "ranges", js: "ranges", typ: u(undefined, a(r("SteinmetzCoreLossesMethodRangeDatum"))) },
         { json: "coefficients", js: "coefficients", typ: u(undefined, r("RoshenAdditionalCoefficients")) },
         { json: "referenceVolumetricLosses", js: "referenceVolumetricLosses", typ: u(undefined, a(r("VolumetricLossesPoint"))) },
@@ -4664,6 +4878,7 @@ const typeMap: any = {
         { json: "eddyCurrentCoreLosses", js: "eddyCurrentCoreLosses", typ: u(undefined, 3.14) },
         { json: "hysteresisCoreLosses", js: "hysteresisCoreLosses", typ: u(undefined, 3.14) },
         { json: "magneticFluxDensity", js: "magneticFluxDensity", typ: u(undefined, r("SignalDescriptor")) },
+        { json: "massLosses", js: "massLosses", typ: u(undefined, 3.14) },
         { json: "methodUsed", js: "methodUsed", typ: "" },
         { json: "origin", js: "origin", typ: r("ResultOrigin") },
         { json: "temperature", js: "temperature", typ: u(undefined, 3.14) },
@@ -4827,6 +5042,12 @@ const typeMap: any = {
         { json: "turnIndex", js: "turnIndex", typ: u(undefined, 0) },
         { json: "turnLength", js: "turnLength", typ: u(undefined, 3.14) },
     ], "any"),
+    "FlybackModes": [
+        "Boundary Mode Operation",
+        "Continuous Conduction Mode",
+        "Discontinuous Conduction Mode",
+        "Quasi Resonant Mode",
+    ],
     "Cti": [
         "Group I",
         "Group II",
@@ -5022,6 +5243,9 @@ const typeMap: any = {
         "residual",
         "subtractive",
     ],
+    "MassCoreLossesMethodType": [
+        "magnetec",
+    ],
     "MaterialEnum": [
         "amorphous",
         "electricalSteel",
@@ -5051,7 +5275,7 @@ const typeMap: any = {
         "commercial",
         "custom",
     ],
-    "CoreLossesMethodType": [
+    "VolumetricCoreLossesMethodType": [
         "lossFactor",
         "magnetics",
         "micrometals",
