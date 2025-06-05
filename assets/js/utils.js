@@ -827,138 +827,31 @@ export async function checkAndFixMas(mas, mkf=null) {
                 }
             }
         }
-
+        if (mas.magnetic.coil.layersDescription != null) {
+            for (let i = 0; i < mas.magnetic.coil.layersDescription.length; i++) {
+                if (mas.magnetic.coil.layersDescription[i].partialWindings == null) {
+                    mas.magnetic.coil.layersDescription[i].partialWindings = [];
+                }
+            }
+        }
+        if (mas.magnetic.coil.sectionsDescription != null) {
+            for (let i = 0; i < mas.magnetic.coil.sectionsDescription.length; i++) {
+                if (mas.magnetic.coil.sectionsDescription[i].partialWindings == null) {
+                    mas.magnetic.coil.sectionsDescription[i].partialWindings = [];
+                }
+            }
+        }
     }
 
     if (mkf != null && (mas.magnetic.coil.bobbin == null || mas.magnetic.coil.bobbin == "Dummy" || mas.magnetic.core.processedDescription == null)) {
         await mkf.ready.then(_ => {
-
-            if (mas.magnetic.core.processedDescription == null) {
-                try {
-
-                    const aux = deepCopy(mas.magnetic.core);
-                    aux['geometricalDescription'] = null;
-                    aux['processedDescription'] = null;
-                    const coreJson = mkf.calculate_core_data(JSON.stringify(aux), false);
-                    if (coreJson.startsWith("Exception")) {
-                        console.error(coreJson);
-                        // return mas;
-                    }
-                    else {
-                        mas.magnetic.core = JSON.parse(coreJson);
-                    }
-                }
-                catch (error) {
-                    console.error(error);
-                }
+            const masJson = mkf.mas_autocomplete(JSON.stringify(mas), false, {});
+            if (masJson.startsWith("Exception")) {
+                console.error(masJson);
+                return mas;
             }
-
-            if (mas.magnetic.coil.bobbin == null || mas.magnetic.coil.bobbin == "Dummy") {
-                try {
-                    mas.magnetic.coil.bobbin = "Dummy";
-                    {
-                        const result = mkf.calculate_bobbin_data(JSON.stringify(mas.magnetic));
-                        if (result.startsWith("Exception")) {
-                            console.error(result);
-                            // return mas;
-                        }
-                        mas.magnetic.coil.bobbin = JSON.parse(result);
-                    }
-                }
-                catch (error) {
-                    console.error(error);
-                }
-            }
-
-
-            for (let i = 0; i < numberWindings; i++) {
-                if (typeof(mas.magnetic.coil.functionalDescription[i].wire) == 'string' && mas.magnetic.coil.functionalDescription[i].wire != "Dummy" && mas.magnetic.coil.functionalDescription[i].wire != "") {
-                    result = mkf.get_wire_data_by_name(mas.magnetic.coil.functionalDescription[i].wire);
-                    if (result.startsWith("Exception")) {
-                        console.error(result);
-                        // return mas;
-                    }
-                    else {
-                        mas.magnetic.coil.functionalDescription[i].wire = JSON.parse(result);
-                    }
-                }
-            }
-
-
-            for (var operatingPointIndex = 0; operatingPointIndex < mas.inputs.operatingPoints.length; operatingPointIndex++) {
-                for (var windingIndex = 0; windingIndex < mas.magnetic.coil.functionalDescription.length; windingIndex++) {
-                    if (mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex] == null) {
-                        var turnRatio = mkf.resolve_dimension_with_tolerance(JSON.stringify(mas.inputs.designRequirements.turnsRatios[0]));  
-                        if (windingIndex == 0) {
-                            var result = mkf.calculate_reflected_primary(JSON.stringify(mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[1]), turnRatio);
-
-                            if (result.startsWith("Exception")) {
-                                console.error(result);
-                                return mas;
-                            }
-                            else {
-                                mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex] = JSON.parse(result);
-                            }
-                        }
-                        else {
-                            var result = mkf.calculate_reflected_secondary(JSON.stringify(mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[0]), turnRatio);
-
-                            if (result.startsWith("Exception")) {
-                                console.error(result);
-                                return mas;
-                            }
-                            else {
-                                mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex] = JSON.parse(result);
-                            }
-                        }
-                    }
-                    if (mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].current.waveform == null || 
-                        mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].current.processed == null) {
-                        const result = mkf.standardize_signal_descriptor(JSON.stringify(mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].current), mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].frequency);
-
-                        if (result.startsWith("Exception")) {
-                            console.error(result);
-                            return mas;
-                        }
-                        else {
-                            mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].current = JSON.parse(result);
-                        }
-                    }
-                    if (mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].current.harmonics == null) {
-                        const result = mkf.calculate_harmonics(JSON.stringify(mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].current.waveform), mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].frequency);
-
-                        if (result.startsWith("Exception")) {
-                            console.error(result);
-                            return mas;
-                        }
-                        else {
-                            mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].current.harmonics = JSON.parse(result);
-                        }
-                    }
-                    if (mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].voltage.waveform == null || 
-                        mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].voltage.processed == null) {
-                        const result = mkf.standardize_signal_descriptor(JSON.stringify(mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].voltage), mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].frequency);
-
-                        if (result.startsWith("Exception")) {
-                            console.error(result);
-                            return mas;
-                        }
-                        else {
-                            mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].voltage = JSON.parse(result);
-                        }
-                    }
-                    if (mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].voltage.harmonics == null) {
-                        const result = mkf.calculate_harmonics(JSON.stringify(mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].voltage.waveform), mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].frequency);
-
-                        if (result.startsWith("Exception")) {
-                            console.error(result);
-                            return mas;
-                        }
-                        else {
-                            mas.inputs.operatingPoints[operatingPointIndex].excitationsPerWinding[windingIndex].voltage.harmonics = JSON.parse(result);
-                        }
-                    }
-                }
+            else {
+                mas.magnetic.core = JSON.parse(masJson);
             }
 
             return mas;
@@ -1130,8 +1023,8 @@ export function download(data, strFileName, strMimeType) {
     return true;
 };
 
-export function isMobile() {
-    if( screen.width <= 760 ) {
+export function isMobile(width) {
+    if( width <= 1074 ) {
         return true;
     }
     else {

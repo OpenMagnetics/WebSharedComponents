@@ -212,7 +212,7 @@ export default {
                         :disabled="true"
                         :data-cy="dataTestLabel + '-number-label'"
                         type="number"
-                        class="m-0 px-0 text-end border-0 col-8"
+                        class="m-0 px-0 text-end border-0 col-8 pe-1"
                         :class="combinedClass([valueFontSize, labelBgColor, textColor])"
                         :value="visuallyScaledValue"
                         ref="inputRef"
@@ -245,5 +245,21 @@ export default {
         </div>
     </div>
 </template>
+
+<style scoped type="text/css">
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+</style>
 
 
