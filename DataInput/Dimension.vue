@@ -47,7 +47,7 @@ export default {
         },
         altUnit:{
             type: String,
-            default: ''
+            default: null
         },
         visualScale:{
             type: Number,
@@ -287,7 +287,7 @@ export default {
                     :disabled="disabled"
                     :data-cy="dataTestLabel + '-number-input'"
                     :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, disabled? 'border-0' : '', unit == null && altUnit == null? 'col-12' : 'col-8'])"
-                    class="m-0 pe-0 ps-1"
+                    class="m-0 pe-0 ps-1 text-end"
                     @change="changeScaledValue($event.target.value)"
                     :value="removeTrailingZeroes(localData.scaledValue * visualScale, numberDecimals)"
                 >
