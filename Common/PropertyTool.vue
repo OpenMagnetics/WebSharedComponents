@@ -319,7 +319,7 @@ export default {
                         :labelBgColor='labelBgColor'
                         :valueBgColor='valueBgColor'
                         :textColor='textColor'
-                        @update="$emit('onDimensionUpdate', $event, seriesIndex, index)"
+                        @update="$emit('onDimensionUpdate', $event, selectedPropertyToEdit, index)"
                     />
                     <div
                         class="col-2 row"
@@ -423,6 +423,7 @@ export default {
                     :lineColor="visualizerLineColor"
                     :textColor="visualizerTextColor"
                     :chartPaddings="{top: properties.length > 0? 30 : 10, left: 45, right: 10, bottom: 30}"
+                    :linePaddings="{top: 1.1, left: 1.1, right: 1.1, bottom: 1.1}"
                 />
                 <DimensionReadOnly 
                     v-else
