@@ -21,6 +21,10 @@ export default {
             type: String,
             default: '',
         },
+        replaceTitle:{
+            type: String,
+            default: null,
+        },
         canBeEmpty: {
             type: Boolean,
             default: true,
@@ -115,7 +119,7 @@ export default {
                 :class="combinedClass([labelWidthProportionClass, labelBgColor, textColor])"
                 class="rounded-2 fs-5 "
             >
-                {{toTitleCase(name)}}
+                {{replaceTitle != null? replaceTitle : toTitleCase(name)}}
             </label>
             <input
                 :style="combinedStyle([valueWidthProportionClass, valueBgColor, textColor, extraStyleClass])"

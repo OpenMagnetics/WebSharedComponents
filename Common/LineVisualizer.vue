@@ -72,6 +72,10 @@ export default {
             type: Object,
             default: {top: 60, left: 60, right: '5%', bottom: 30}
         },
+        linePaddings:{
+            type: Object,
+            default: {top: 1.1, left: 1, right: 1, bottom: 1}
+        },
         toolbox:{
             type: Boolean,
             default: true
@@ -275,8 +279,8 @@ export default {
         processOptions(options) {
             const limits = this.processLimits()
 
-            options.xAxis.min = limits.xAxis.min;
-            options.xAxis.max = limits.xAxis.max;
+            options.xAxis.min = limits.xAxis.min * (limits.xAxis.min < 0? this.linePaddings.left : 1.0 / this.linePaddings.left);
+            options.xAxis.max = limits.xAxis.max * this.linePaddings.right;
             options.xAxis.type = this.xAxisOptions.type;
 
             limits.yAxis.forEach((elem, index) => {
@@ -287,14 +291,14 @@ export default {
                         elem.min = Math.pow(10, numberZeroesInBase);
                     }
                     else {
-                        elem.min = 0;
+                        // elem.min = 0;
                     }
                 }
                 if (this.data[index].numberDecimals != null) {
                     numberDecimals = this.data[index].numberDecimals;
                 }
-                options.yAxis[index].min = removeTrailingZeroes(elem.min, numberDecimals);
-                options.yAxis[index].max = removeTrailingZeroes(elem.max * 1.1, numberDecimals);
+                options.yAxis[index].min = removeTrailingZeroes(elem.min * (elem.min < 0? this.linePaddings.bottom : 1.0 / this.linePaddings.bottom), numberDecimals);
+                options.yAxis[index].max = removeTrailingZeroes(elem.max * this.linePaddings.top, numberDecimals);
             })
 
             options.series = []
