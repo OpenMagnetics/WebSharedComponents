@@ -28,6 +28,10 @@ export default {
             type: String,
             default: ''
         },
+        useMetricPrefixes:{
+            type: Boolean,
+            default: true
+        },
         disabled: {
             type: Boolean,
             default: false,
@@ -49,22 +53,113 @@ export default {
         const multipliersLabel = {
         };
 
-        if (this.min <= 1e-12 )
-            multipliersLabel["p"] = 1e-12;
-        if (this.min <= 1e-9 && this.max >= 1e-9  )
-            multipliersLabel["n"] = 1e-9;
-        if (this.min <= 1e-6 && this.max >= 1e-6  )
-            multipliersLabel["u"] = 1e-6;
-        if (this.min <= 1e-3 && this.max >= 1e-3  )
-            multipliersLabel["m"] = 1e-3;
-        if (this.min <= 1 && this.max >= 1  )
+        if (this.min <= 1e-30 && this.max >= 1e-30) {
+            if (this.useMetricPrefixes){
+                multipliersLabel["q"] = 1e-30;
+            }
+            else {
+                multipliersLabel["e-30"] = 1e-30;
+            }
+        }
+        if (this.min <= 1e-27 && this.max >= 1e-27) {
+            if (this.useMetricPrefixes){
+                multipliersLabel["r"] = 1e-27;
+            }
+            else {
+                multipliersLabel["e-27"] = 1e-27;
+            }
+        }
+        if (this.min <= 1e-24 && this.max >= 1e-24) {
+            if (this.useMetricPrefixes){
+                multipliersLabel["y"] = 1e-24;
+            }
+            else {
+                multipliersLabel["e-24"] = 1e-24;
+            }
+        }
+        if (this.min <= 1e-21 && this.max >= 1e-21) {
+            if (this.useMetricPrefixes){
+                multipliersLabel["z"] = 1e-21;
+            }
+            else {
+                multipliersLabel["e-21"] = 1e-21;
+            }
+        }
+        if (this.min <= 1e-18 && this.max >= 1e-18) {
+            if (this.useMetricPrefixes){
+                multipliersLabel["a"] = 1e-18;
+            }
+            else {
+                multipliersLabel["e-18"] = 1e-18;
+            }
+        }
+        if (this.min <= 1e-15 && this.max >= 1e-15) {
+            if (this.useMetricPrefixes){
+                multipliersLabel["f"] = 1e-15;
+            }
+            else {
+                multipliersLabel["e-15"] = 1e-15;
+            }
+        }
+        if (this.min <= 1e-12 && this.max >= 1e-12) {
+            if (this.useMetricPrefixes){
+                multipliersLabel["p"] = 1e-12;
+            }
+            else {
+                multipliersLabel["e-12"] = 1e-12;
+            }
+        }
+        if (this.min <= 1e-9 && this.max >= 1e-9) {
+            if (this.useMetricPrefixes){
+                multipliersLabel["n"] = 1e-9;
+            }
+            else {
+                multipliersLabel["e-9"] = 1e-9;
+            }
+        }
+        if (this.min <= 1e-6 && this.max >= 1e-6) {
+            if (this.useMetricPrefixes){
+                multipliersLabel["u"] = 1e-6;
+            }
+            else {
+                multipliersLabel["e-6"] = 1e-6;
+            }
+        }
+        if (this.min <= 1e-3 && this.max >= 1e-3) {
+            if (this.useMetricPrefixes){
+                multipliersLabel["m"] = 1e-3;
+            }
+            else {
+                multipliersLabel["e-3"] = 1e-3;
+            }
+        }
+        if (this.min <= 1 && this.max >= 1) {
             multipliersLabel[""] = 1;
-        if (this.min <= 1e+3 && this.max >= 1e+3  )
-            multipliersLabel["k"] = 1e+3;
-        if (this.min <= 1e+6 && this.max >= 1e+6  )
-            multipliersLabel["M"] = 1e+6;
-        if (this.min <= 1e+9 && this.max >= 1e+9  )
-            multipliersLabel["G"] = 1e+9;
+        }
+        if (this.min <= 1e+3 && this.max >= 1e+3) {
+            if (this.useMetricPrefixes){
+                multipliersLabel["k"] = 1e+3;
+            }
+            else {
+                multipliersLabel["e+3"] = 1e+3;
+            }
+        }
+        if (this.min <= 1e+6 && this.max >= 1e+6) {
+            if (this.useMetricPrefixes){
+                multipliersLabel["M"] = 1e+6;
+            }
+            else {
+                multipliersLabel["e+6"] = 1e+6;
+            }
+        }
+        if (this.min <= 1e+9 && this.max >= 1e+9) {
+            if (this.useMetricPrefixes){
+                multipliersLabel["G"] = 1e+9;
+            }
+            else {
+                multipliersLabel["e+9"] = 1e+9;
+            }
+        }
 
         return {
             multipliersLabel

@@ -53,6 +53,10 @@ export default {
             type: Number,
             default: 1
         },
+        useMetricPrefixes:{
+            type: Boolean,
+            default: true
+        },
         forceUpdate:{
             type: Number,
             default: 0
@@ -299,6 +303,7 @@ export default {
                     :min="min"
                     :max="max"
                     :unit="unit"
+                    :useMetricPrefixes="useMetricPrefixes"
                     :extraStyleClass="unitExtraStyleClass"
                     :valueBgColor="valueBgColor"
                     :valueFontSize="valueFontSize"

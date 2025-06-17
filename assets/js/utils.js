@@ -150,10 +150,25 @@ export function getMultiplier(value, precision=0.001, disabled=false, power=1) {
     if (disabled) {
         return {scaledValue, multiplier};
     }
-    if (Math.abs(value) < Math.pow(1e-12, power) && Math.abs(value) != 0) {
+    if (Math.abs(value) < Math.pow(1e-27, power) && Math.abs(value) != 0) {
+        multiplier = 1e-30;
+    }
+    else if (Math.abs(value) < Math.pow(1e-24, power) && Math.abs(value) != 0) {
+        multiplier = 1e-27;
+    }
+    else if (Math.abs(value) < Math.pow(1e-21, power) && Math.abs(value) != 0) {
+        multiplier = 1e-24;
+    }
+    else if (Math.abs(value) < Math.pow(1e-18, power) && Math.abs(value) != 0) {
+        multiplier = 1e-21;
+    }
+    else if (Math.abs(value) < Math.pow(1e-15, power) && Math.abs(value) != 0) {
+        multiplier = 1e-18;
+    }
+    else if (Math.abs(value) < Math.pow(1e-12, power) && Math.abs(value) != 0) {
         multiplier = 1e-15;
     }
-    if (Math.abs(value) < Math.pow(1e-9, power) && Math.abs(value) != 0) {
+    else if (Math.abs(value) < Math.pow(1e-9, power) && Math.abs(value) != 0) {
         multiplier = 1e-12;
     }
     else if (Math.abs(value) < Math.pow(1e-6, power) && Math.abs(value) != 0) {
@@ -870,6 +885,33 @@ export async function checkAndFixMas(mas, mkf=null) {
 export function range(start, stop, step=1) {
     const length = Math.ceil((stop - start) / step);
     return Array.from({length}, (_, i) => (i * step) + start);
+}
+
+export function linearSpacedArray(a, b, N) {
+    var h = (b - a) / (N-1);
+    const xs = [];
+    var val = a;
+    for (var x = 0; x < N; ++x) {
+        xs.push(val);
+        val += h
+    }
+    return xs;
+}
+
+
+export function logarithmicSpacedArray(a, b, N) {
+    var logmin = Math.log10(a);
+    var logmax = Math.log10(b);
+
+    var h = (logmax - logmin) / (N-1);
+    const xs = [];
+
+    var val = Math.log10(a);
+    for (var x = 0; x < N; ++x) {
+        xs.push(Math.pow(10, val));
+        val += h;
+    }
+    return xs;
 }
 
 export function download(data, strFileName, strMimeType) {

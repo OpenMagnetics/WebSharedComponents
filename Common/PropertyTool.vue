@@ -35,6 +35,10 @@ export default {
             type: String,
             default: 'height: 50vh'
         },
+        enableEditing:{
+            type: Boolean,
+            default: true
+        },
         addElementButtonColor: {
             type: [String, Object],
             default: "text-secondary",
@@ -86,6 +90,10 @@ export default {
         visualizerTextColor: {
             type: [String, Object],
             default: "#d4d4d4",
+        },
+        chartPaddings:{
+            type: Object,
+            default: {top: 30, left: 45, right: 10, bottom: 30}
         },
     },
     data() {
@@ -257,6 +265,7 @@ export default {
                 class="col-3 row"
             >
                 <button
+                    v-if="enableEditing"
                     :style="showEditor? $styleStore.controlPanel.activeButton : $styleStore.controlPanel.button"
                     class="btn col-5 p-0"
                     @click="onEdit"
@@ -422,7 +431,7 @@ export default {
                     :bgColor="visualizerBgColor"
                     :lineColor="visualizerLineColor"
                     :textColor="visualizerTextColor"
-                    :chartPaddings="{top: properties.length > 0? 30 : 10, left: 45, right: 10, bottom: 30}"
+                    :chartPaddings="chartPaddings"
                     :linePaddings="{top: 1.1, left: 1.1, right: 1.1, bottom: 1.1}"
                 />
                 <DimensionReadOnly 
