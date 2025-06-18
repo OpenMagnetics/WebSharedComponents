@@ -74,7 +74,7 @@ export default {
         },
         linePaddings:{
             type: Object,
-            default: {top: 1.1, left: 1, right: 1, bottom: 1}
+            default: {top: 1.1, left: 1, right: 1, bottom: 1.1}
         },
         toolbox:{
             type: Boolean,
@@ -297,8 +297,8 @@ export default {
                 if (this.data[index].numberDecimals != null) {
                     numberDecimals = this.data[index].numberDecimals;
                 }
-                options.yAxis[index].min = removeTrailingZeroes(elem.min * (elem.min < 0? this.linePaddings.bottom : 1.0 / this.linePaddings.bottom), numberDecimals);
-                options.yAxis[index].max = removeTrailingZeroes(elem.max * this.linePaddings.top, numberDecimals);
+                options.yAxis[index].min = elem.min * (elem.min < 0? this.linePaddings.bottom : 1.0 / this.linePaddings.bottom);
+                options.yAxis[index].max = elem.max * this.linePaddings.top;
             })
 
             options.series = []
@@ -327,6 +327,7 @@ export default {
                     }
                 );
             })
+
         },
         onClick(event) {
             this.$emit('click', event);
