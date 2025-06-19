@@ -145,7 +145,7 @@ export default {
                 return 0;
             }
             else {
-                return this.properties[this.selectedPropertyToEdit][0].value;
+                return this.properties[this.selectedPropertyToEdit][0][this.propertiesConfiguration.yAxisLabel];
             }
         },
         showGraph() {
