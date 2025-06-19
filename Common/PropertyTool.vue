@@ -289,6 +289,7 @@ export default {
             >
                 <div class="row">
                     <ElementFromList
+                        v-if="Object.keys(propertyLabels).length > 1"
                         class="offset-1 col-10 mb-1 text-start"
                         :dataTestLabel="dataTestLabel + '-PropertySelector'"
                         :name="'propertyToEdit'"

@@ -202,6 +202,12 @@ export default {
                         y: [],
                     };
 
+                    if (this.propertiesConfiguration.additionalScope != null) {
+                        Object.keys(this.propertiesConfiguration.additionalScope).forEach((key) => {
+                            scope[key] = this.propertiesConfiguration.additionalScope[key];
+                        })
+                    }
+
                     var xValues;
                     if (this.propertiesConfiguration.xAxisMode == "linear") {
                         xValues = linearSpacedArray(this.propertiesConfiguration.xAxisMin, this.propertiesConfiguration.xAxisMax, this.propertiesConfiguration.xAxisNumberPoints);
@@ -209,7 +215,6 @@ export default {
                     else {
                         xValues = logarithmicSpacedArray(this.propertiesConfiguration.xAxisMin, this.propertiesConfiguration.xAxisMax, this.propertiesConfiguration.xAxisNumberPoints);
                     }
-
 
                     xValues.forEach((xValue) => {
                         scope[this.propertiesConfiguration.xAxisEquationParameter] = xValue;

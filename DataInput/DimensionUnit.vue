@@ -134,7 +134,12 @@ export default {
             }
         }
         if (this.min <= 1 && this.max >= 1) {
-            multipliersLabel[""] = 1;
+            if (this.useMetricPrefixes){
+                multipliersLabel[""] = 1;
+            }
+            else {
+                multipliersLabel["e-0"] = 1e-0;
+            }
         }
         if (this.min <= 1e+3 && this.max >= 1e+3) {
             if (this.useMetricPrefixes){

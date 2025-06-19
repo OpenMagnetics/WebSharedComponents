@@ -1,5 +1,5 @@
 <script setup>
-import { toCamelCase, formatUnit, removeTrailingZeroes, getMultiplier, deepCopy } from '../assets/js/utils.js'
+import { toCamelCase, formatUnit, removeTrailingZeroes, getMultiplier, deepCopy, roundWithDecimals } from '../assets/js/utils.js'
 import { use } from 'echarts/core'
 import { LineChart, ScatterChart, EffectScatterChart } from 'echarts/charts'
 import {
@@ -297,8 +297,8 @@ export default {
                 if (this.data[index].numberDecimals != null) {
                     numberDecimals = this.data[index].numberDecimals;
                 }
-                options.yAxis[index].min = elem.min * (elem.min < 0? this.linePaddings.bottom : 1.0 / this.linePaddings.bottom);
-                options.yAxis[index].max = elem.max * this.linePaddings.top;
+                options.yAxis[index].min = roundWithDecimals(elem.min * (elem.min < 0? this.linePaddings.bottom : 1.0 / this.linePaddings.bottom), 1.0 / Math.pow(10, numberDecimals));
+                options.yAxis[index].max = roundWithDecimals(elem.max * this.linePaddings.top, 1.0 / Math.pow(10, numberDecimals));
             })
 
             options.series = []
