@@ -866,7 +866,7 @@ export async function checkAndFixMas(mas, mkf=null) {
                 return mas;
             }
             else {
-                mas.magnetic.core = JSON.parse(masJson);
+                mas.magnetic.core = JSON.parse(masJson).magnetic.core;
             }
 
             return mas;

@@ -105,6 +105,10 @@ export default {
             type: Object,
             default: {top: 30, left: 45, right: 10, bottom: 30}
         },
+        formulaFontSize:{
+            type: Number,
+            default: 14
+        },
     },
     data() {
         const errorMessages = "";
@@ -161,7 +165,7 @@ export default {
             },
           deep: true
         },
-        'equation': {
+        'equations': {
             handler(newValue, oldValue) {
                 this.extractData();
                 this.forceUpdate += 1;
@@ -193,6 +197,10 @@ export default {
                     datum.smooth = this.smoothLine;
                     if (this.equations.length > 0) {
                         datum.label = this.propertiesConfiguration.yAxisReplaceLabel[equationIndex];
+                        if (this.propertiesConfiguration.seriesEquationParameterUnit != null) {
+                            datum.label += ' '
+                            datum.label += this.propertiesConfiguration.seriesEquationParameterUnit
+                        }
                         this.propertyLabels[equationIndex] = datum.label;
                     }
                     datum.numberDecimals = this.propertiesConfiguration.yAxisNumberDecimals;
@@ -216,6 +224,10 @@ export default {
                         xValues = logarithmicSpacedArray(this.propertiesConfiguration.xAxisMin, this.propertiesConfiguration.xAxisMax, this.propertiesConfiguration.xAxisNumberPoints);
                     }
 
+                    if (this.propertiesConfiguration.seriesEquationParameter != null) {
+                        scope[this.propertiesConfiguration.seriesEquationParameter] = Number(this.propertiesConfiguration.yAxisReplaceLabel[equationIndex]);
+
+                    }
                     xValues.forEach((xValue) => {
                         scope[this.propertiesConfiguration.xAxisEquationParameter] = xValue;
                         datum.data.x.push(xValue)
@@ -315,7 +327,7 @@ export default {
                         :expression="equationsLatex[selectedEquationToEdit]"
                         class="m-0 p-0"
                         :display-mode="true"
-                        :fontsize="14"
+                        :fontsize="formulaFontSize"
                     />
                 </div>
                 <div class="row"  v-for="value, coefficient in coefficients[selectedEquationToEdit]">
