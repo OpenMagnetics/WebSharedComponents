@@ -112,8 +112,8 @@ export default {
                         const yDatum = this.data[params.seriesIndex].data.y[params.dataIndex];
                         const xAux = formatUnit(xDatum, this.xAxisOptions.unit);
                         const yAux = formatUnit(yDatum, this.data[params.seriesIndex].unit);
-                        const xText = this.xAxisOptions.unit == null? xDatum : `${removeTrailingZeroes(xAux.label, 2)} ${xAux.unit}`;
-                        const yText = this.data[params.seriesIndex].unit == null? yDatum : `${removeTrailingZeroes(yAux.label, 2)} ${yAux.unit}`;
+                        const xText = this.xAxisOptions.unit == null? removeTrailingZeroes(xDatum, 2) : `${removeTrailingZeroes(xAux.label, 2)} ${xAux.unit}`;
+                        const yText = this.data[params.seriesIndex].unit == null? removeTrailingZeroes(yDatum, 2) : `${removeTrailingZeroes(yAux.label, 2)} ${yAux.unit}`;
 
                         return `${yText} @ ${xText}`;
                     }
@@ -123,8 +123,8 @@ export default {
                         const yDatum = this.points[newIndex].data.y;
                         const xAux = formatUnit(xDatum, this.xAxisOptions.unit);
                         const yAux = formatUnit(yDatum, this.points[newIndex].unit);
-                        const xText = this.xAxisOptions.unit == null? xDatum : `${removeTrailingZeroes(xAux.label, 2)} ${xAux.unit}`;
-                        const yText = this.data[params.seriesIndex].unit == null? yDatum : `${removeTrailingZeroes(yAux.label, 2)} ${yAux.unit}`;
+                        const xText = this.xAxisOptions.unit == null? removeTrailingZeroes(xDatum, 2) : `${removeTrailingZeroes(xAux.label, 2)} ${xAux.unit}`;
+                        const yText = this.data[params.seriesIndex].unit == null? removeTrailingZeroes(yDatum, 2) : `${removeTrailingZeroes(yAux.label, 2)} ${yAux.unit}`;
 
                         return `Requirement: ${yText} @ ${xText}`;
                     }
