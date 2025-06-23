@@ -149,7 +149,16 @@ export default {
             }
         },
         showGraph() {
-            return this.data.length > 0 && this.data[this.selectedPropertyToEdit].data.x != null && this.data[this.selectedPropertyToEdit].data.x.length > 1;
+            if (this.data.length == 0) {
+                return false;
+            }
+            var result = false;
+            this.data.forEach((elem) => {
+                if (elem.data.x != null && elem.data.x.length > 1) {
+                    result = true;
+                }
+            })
+            return result;
         },
     },
     watch: {
