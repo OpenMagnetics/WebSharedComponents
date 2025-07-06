@@ -79,7 +79,7 @@ export default {
         },
     },
     methods: {
-        computeWire() {
+        computeWireRemotely() {
             if (!this.posting && this.wire != null) {
                 this.$mkf.ready.then(_ => {
                     const aux = deepCopy(this.wire);
@@ -119,21 +119,74 @@ export default {
                 });
             }
         },
+        computeWireLocally() {
+            if (!this.posting && this.wire != null) {
+                this.$mkf.ready.then(_ => {
+                    const aux = deepCopy(this.wire);
+                    this.posting = true;
+                    this.$mkf.ready.then(_ => {
+                        const result = this.$mkf.plot_wire(JSON.stringify(this.wire));
+                        this.$refs.wire2DPlotView.innerHTML = result;
+                        this.posting = false;
+                        console.log(result)
+
+                        var clientWidth = this.$refs.wire2DPlotViewContainer.clientWidth;
+                        var clientHeight = this.$refs.wire2DPlotViewContainer.clientHeight * 0.90;
+                        var originalWidth = 0;
+                        var originalHeight = 0;
+                        {
+                            const regex = /width="(\d*\.)?\d+"/i;
+                            const aux = this.$refs.wire2DPlotView.innerHTML.match(regex)[0];
+                            const regex2 = /(\d*\.)?\d+/g;
+                            var match = aux.match(regex2);
+                            originalWidth = Array.from(match)[0];
+                        }
+                        {
+                            const regex = /height="(\d*\.)?\d+"/i;
+                            const aux = this.$refs.wire2DPlotView.innerHTML.match(regex)[0];
+                            const regex2 = /(\d*\.)?\d+/g;
+                            var match = aux.match(regex2);
+                            originalHeight = Array.from(match)[0];
+                        }
+
+                        if (originalWidth > originalHeight * 0.85) {
+                            this.widthProportion = "100%";
+                        }
+                        else {
+                            const originalProportion = originalWidth / (originalHeight * 0.85)
+                            this.widthProportion = `${originalProportion * 100}%`;
+                        }
+
+                        this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`width=`, `class="scaling-wire-svg" width=`);
+                        this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`<svg`, `<svg class="h-100 w-100"`);
+                        this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = this.$refs.wire2DPlotView.innerHTML;
+                    })
+
+                }).catch(error => {
+                    console.error(error);
+                });
+            }
+        },
 
         tryToSend() {
             if (this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] == null) {
                 if (!this.tryingToSend) {
-                    this.recentChange = false
-                    this.tryingToSend = true
+                    this.recentChange = false;
+                    this.tryingToSend = true;
                     setTimeout(() => {
                         if (!this.hasError) {
                             if (this.recentChange) {
-                                this.tryingToSend = false
-                                this.tryToSend()
+                                this.tryingToSend = false;
+                                this.tryToSend();
                             }
                             else {
-                                this.tryingToSend = false
-                                this.computeWire()
+                                this.tryingToSend = false;
+                                if (this.includeCurrentDensity || this.wire.type == "litz") {
+                                    this.computeWireRemotely();
+                                }
+                                else {
+                                    this.computeWireLocally();
+                                }
                             }
                         }
                     }
@@ -169,4 +222,11 @@ export default {
         width: auto;
         height: auto;
     }
+.scaling-wire-svg {
+    object-fit: contain;
+    height: 100%; 
+    width: v-bind(widthProportion);
+    left: 0; 
+    top: 0;
+}
 </style>

@@ -62,6 +62,7 @@ export default {
         const lastSimulatedInputs = "";
         const lastSimulatedMagnetics = "";
         const errorMessage = "";
+        const widthProportion = "75%"
         return {
             posting: false,
             zoomingPlot: false,
@@ -74,6 +75,7 @@ export default {
             lastSimulatedInputs,
             lastSimulatedMagnetics,
             errorMessage,
+            widthProportion,
         }
     },
     watch: {
@@ -238,47 +240,55 @@ export default {
                 return;
             }
             if (this.modelValue.magnetic.coil.turnsDescription != null) {
-                const url = import.meta.env.VITE_API_ENDPOINT + '/plot_core'
 
-                this.$axios.post(url, {magnetic: this.modelValue.magnetic, operatingPoint: this.modelValue.inputs.operatingPoints[this.operatingPointIndex]})
-                .then(response => {
+                this.$mkf.ready.then(_ => {
+                    const result = this.$mkf.plot_turns(JSON.stringify(this.modelValue.magnetic));
+                    this.$refs.plotView.innerHTML = result;
+
+                    // console.log(result);
+
                     if (this.$refs.Magnetic2DVisualizerContainer == null) {
                         this.posting = false;
                         return;
                     }
                     var clientWidth = this.$refs.Magnetic2DVisualizerContainer.clientWidth;
                     var clientHeight = this.$refs.Magnetic2DVisualizerContainer.clientHeight * 0.90;
-                    const regex = /width="\d+" height="\d+" viewBox=/i;
-                    this.$refs.plotView.innerHTML = response.data
-                    const aux = this.$refs.plotView.innerHTML.match(regex)[0];
-                    const regex2 = /\d+/g;
-                    var match = aux.matchAll(regex2);
-                    var originalDimensions = Array.from(match);
-                    const originalProportion = originalDimensions[0] / originalDimensions[1]
-                    if (originalProportion * clientHeight < clientWidth) {
-                        clientWidth = originalProportion * clientHeight;
+                    var originalWidth = 0;
+                    var originalHeight = 0;
+                    {
+                        const regex = /width="(\d*\.)?\d+"/i;
+                        const aux = this.$refs.plotView.innerHTML.match(regex)[0];
+                        const regex2 = /(\d*\.)?\d+/g;
+                        var match = aux.match(regex2);
+                        originalWidth = Array.from(match)[0];
                     }
-                    else {
-                        clientHeight = clientWidth / originalProportion;
+                    {
+                        const regex = /height="(\d*\.)?\d+"/i;
+                        const aux = this.$refs.plotView.innerHTML.match(regex)[0];
+                        const regex2 = /(\d*\.)?\d+/g;
+                        var match = aux.match(regex2);
+                        originalHeight = Array.from(match)[0];
                     }
 
-                    this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replace(regex, `class="" width="${clientWidth}" height="${clientHeight}" viewBox=`);
-                    this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
-                    if ("zoomPlotView" in this.$refs) {
-                        this.$refs.zoomPlotView.innerHTML = response.data
-                        this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(`<svg`, `<svg class="h-100 w-100"`);
-                        this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(regex, `class="" width="${clientWidth}" height="${clientHeight}" viewBox=`);
-                        this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
+                    if (originalWidth > originalHeight * 0.85) {
+                        this.widthProportion = "100%";
                     }
+                    else {
+                        const originalProportion = originalWidth / (originalHeight * 0.85)
+                        this.widthProportion = `${originalProportion * 100}%`;
+                    }
+
+                    this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replace(`width=`, `class="scaling-svg" width=`);
+                    // this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
+                    // if ("zoomPlotView" in this.$refs) {
+                    //     this.$refs.zoomPlotView.innerHTML = response.data
+                    //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(`<svg`, `<svg class="h-100 w-100"`);
+                    //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(regex, `class="" width="${clientWidth}" height="${clientHeight}" viewBox=`);
+                    //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
+                    // }
                     this.errorMessage = "";
                     this.posting = false;
                 })
-                .catch(error => {
-                    this.posting = false;
-                    console.error("Error plotting")
-                    console.error(error)
-                    this.errorMessage = "Error while winding magnetic. Try another configuration or report a bug if you think this should work";
-                });
             }
             else {
                 this.$refs.plotView.innerHTML = ""
@@ -372,7 +382,7 @@ export default {
                         @click="zoomIn()"
                     >
                         <label class="col-12 text-info fw-lighter">(Click on image to zoom in)</label>
-                        <div data-cy="MagneticAdvise-core-field-plot-image" ref="plotView" :class="showFieldPlot? '' : ''" class="col-12 mt-2" style="height: 100%;" />
+                        <div data-cy="MagneticAdvise-core-field-plot-image" ref="plotView" :class="showFieldPlot? '' : ''" class="col-12 mt-2 scaling-svg-container"  style="padding-bottom: 92% /* 100% * 55/60 */"/>
                     </button>
                     <div v-else data-cy="MagneticAdvise-core-field-plot-zoom-image" ref="plotView" :class="showFieldPlot? '' : ''" class="m-0 " style="height: 100%" />
                 </div>
@@ -404,8 +414,17 @@ export default {
 <style>
 
     .Magnetic2DVisualizer {
+/*        overflow-y: auto; */
         overflow: hidden;
         width: auto;
         height: auto;
     }
+
+.scaling-svg {
+    object-fit: contain;
+    height: 100%; 
+    width: v-bind(widthProportion);
+    left: 0; 
+    top: 0;
+}
 </style>
