@@ -274,7 +274,8 @@ export default {
                         this.widthProportion = "100%";
                     }
                     else {
-                        const originalProportion = originalWidth / (originalHeight * 0.85)
+                        const originalProportion = clientHeight / originalHeight * 1.25
+                        console.log(originalProportion)
                         this.widthProportion = `${originalProportion * 100}%`;
                     }
 
