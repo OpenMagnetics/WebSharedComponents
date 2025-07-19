@@ -62,7 +62,7 @@ export default {
         const lastSimulatedInputs = "";
         const lastSimulatedMagnetics = "";
         const errorMessage = "";
-        const widthProportion = "75%"
+        const width = "75%"
         return {
             posting: false,
             zoomingPlot: false,
@@ -75,7 +75,7 @@ export default {
             lastSimulatedInputs,
             lastSimulatedMagnetics,
             errorMessage,
-            widthProportion,
+            width,
         }
     },
     watch: {
@@ -271,12 +271,13 @@ export default {
                     }
 
                     if (originalWidth > originalHeight * 0.85) {
-                        this.widthProportion = "100%";
+                        this.width = "100%";
                     }
                     else {
-                        const originalProportion = clientHeight / originalHeight * 1.25
-                        console.log(originalProportion)
-                        this.widthProportion = `${originalProportion * 100}%`;
+                        const originalHeightProportion = clientHeight / originalHeight;
+                        const originalWidthProportion = clientWidth / originalWidth;
+                        const scaledWidth = originalWidth / originalHeightProportion
+                        this.width = `${originalWidth * originalHeightProportion}px`;
                     }
 
                     this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replace(`width=`, `class="scaling-svg" width=`);
@@ -424,7 +425,7 @@ export default {
 .scaling-svg {
     object-fit: contain;
     height: 100%; 
-    width: v-bind(widthProportion);
+    width: v-bind(width);
     left: 0; 
     top: 0;
 }
