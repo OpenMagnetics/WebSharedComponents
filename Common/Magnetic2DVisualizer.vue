@@ -81,11 +81,7 @@ export default {
     watch: {
         'modelValue': {
             handler(newValue, oldValue) {
-                console.warn("handler modelValue")
-                console.warn("handler modelValue")
                 if (!this.blockingRebounds) {
-                console.warn("handler modelValue no blockingRebounds")
-                console.warn("handler modelValue no blockingRebounds")
 
                     if (this.modelValue.magnetic == null) {
                         return;
@@ -105,7 +101,6 @@ export default {
                         this.zoomOut();
                         this.recentChange = true;
                         this.tryToPlot();
-                        console.warn("tryToPlot")
                         setTimeout(() => this.blockingRebounds = false, 20);
                         setTimeout(() => this.checkShowWarning(), 500);
 
@@ -257,7 +252,7 @@ export default {
                             return;
                         }
                         var clientWidth = this.$refs.Magnetic2DVisualizerContainer.clientWidth;
-                        var clientHeight = this.$refs.Magnetic2DVisualizerContainer.clientHeight * 0.90;
+                        var clientHeight = this.$refs.Magnetic2DVisualizerContainer.clientHeight * (this.enableOptions? 0.90 : 1);
                         var originalWidth = 0;
                         var originalHeight = 0;
                         {

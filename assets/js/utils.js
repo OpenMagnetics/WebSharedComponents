@@ -858,26 +858,28 @@ export async function checkAndFixMas(mas, mkf=null) {
         }
     }
 
-    if (mkf != null && (mas.magnetic.coil.bobbin == null || mas.magnetic.coil.bobbin == "Dummy" || mas.magnetic.core.processedDescription == null)) {
-        await mkf.ready.then(_ => {
-            const masJson = mkf.mas_autocomplete(JSON.stringify(mas), false, "{}");
-            if (masJson.startsWith("Exception")) {
-                console.error(masJson);
-                return mas;
-            }
-            else {
-                mas.magnetic.core = JSON.parse(masJson).magnetic.core;
-            }
+    if (mas.magnetic.core.functionalDescription.material != "" && mas.magnetic.core.functionalDescription.material != null) {
+        if (mkf != null && (mas.magnetic.coil.bobbin == null || mas.magnetic.coil.bobbin == "Dummy" || mas.magnetic.core.processedDescription == null)) {
+            await mkf.ready.then(_ => {
+                const masJson = mkf.mas_autocomplete(JSON.stringify(mas), false, "{}");
+                if (masJson.startsWith("Exception")) {
+                    console.error(masJson);
+                    return mas;
+                }
+                else {
+                    mas.magnetic.core = JSON.parse(masJson).magnetic.core;
+                }
 
+                return mas;
+            })
+            .catch(error => {
+                console.error(error)
+                return mas;
+            });
+        }
+        else {
             return mas;
-        })
-        .catch(error => {
-            console.error(error)
-            return mas;
-        });
-    }
-    else {
-        return mas;
+        }
     }
     return mas;
 }
