@@ -5,7 +5,7 @@ import { toTitleCase, removeTrailingZeroes, formatInductance, formatPower, forma
 <script>
 
 export default {
-    emits: ["zoomIn", "zoomOut", "swapFieldPlot", "swapIncludeFringing"],
+    emits: ["zoomIn", "zoomOut", "swapFieldPlot", "swapIncludeFringing", "errorInImage"],
     components: {
     },
     props: {
@@ -81,7 +81,11 @@ export default {
     watch: {
         'modelValue': {
             handler(newValue, oldValue) {
+                console.warn("handler modelValue")
+                console.warn("handler modelValue")
                 if (!this.blockingRebounds) {
+                console.warn("handler modelValue no blockingRebounds")
+                console.warn("handler modelValue no blockingRebounds")
 
                     if (this.modelValue.magnetic == null) {
                         return;
@@ -101,6 +105,7 @@ export default {
                         this.zoomOut();
                         this.recentChange = true;
                         this.tryToPlot();
+                        console.warn("tryToPlot")
                         setTimeout(() => this.blockingRebounds = false, 20);
                         setTimeout(() => this.checkShowWarning(), 500);
 
@@ -243,53 +248,64 @@ export default {
 
                 this.$mkf.ready.then(_ => {
                     const result = this.$mkf.plot_turns(JSON.stringify(this.modelValue.magnetic));
-                    this.$refs.plotView.innerHTML = result;
+                    const validImage = result.startsWith("<svg");
+                    if (validImage) {
+                        this.$refs.plotView.innerHTML = result;
 
-                    // console.log(result);
+                        if (this.$refs.Magnetic2DVisualizerContainer == null) {
+                            this.posting = false;
+                            return;
+                        }
+                        var clientWidth = this.$refs.Magnetic2DVisualizerContainer.clientWidth;
+                        var clientHeight = this.$refs.Magnetic2DVisualizerContainer.clientHeight * 0.90;
+                        var originalWidth = 0;
+                        var originalHeight = 0;
+                        {
+                            const regex = /width="(\d*\.)?\d+"/i;
+                            const aux = this.$refs.plotView.innerHTML.match(regex);
+                            if (aux!= null && aux.length > 0) {
+                                const regex2 = /(\d*\.)?\d+/g;
+                                var match = aux[0].match(regex2);
+                                originalWidth = Array.from(match)[0];
+                            }
+                        }
+                        {
+                            const regex = /height="(\d*\.)?\d+"/i;
+                            const aux = this.$refs.plotView.innerHTML.match(regex);
+                            if (aux!= null && aux.length > 0) {
+                                const regex2 = /(\d*\.)?\d+/g;
+                                var match = aux[0].match(regex2);
+                                originalHeight = Array.from(match)[0];
+                            }
+                        }
 
-                    if (this.$refs.Magnetic2DVisualizerContainer == null) {
+                        if (originalWidth > originalHeight * 0.85) {
+                            this.width = "100%";
+                        }
+                        else {
+                            const originalHeightProportion = clientHeight / originalHeight;
+                            const originalWidthProportion = clientWidth / originalWidth;
+                            const scaledWidth = originalWidth / originalHeightProportion
+                            this.width = `${originalWidth * originalHeightProportion}px`;
+                        }
+
+                        this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replace(`width=`, `class="scaling-svg" width=`);
+                        // this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
+                        // if ("zoomPlotView" in this.$refs) {
+                        //     this.$refs.zoomPlotView.innerHTML = response.data
+                        //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(`<svg`, `<svg class="h-100 w-100"`);
+                        //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(regex, `class="" width="${clientWidth}" height="${clientHeight}" viewBox=`);
+                        //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
+                        // }
+                        this.errorMessage = "";
                         this.posting = false;
-                        return;
-                    }
-                    var clientWidth = this.$refs.Magnetic2DVisualizerContainer.clientWidth;
-                    var clientHeight = this.$refs.Magnetic2DVisualizerContainer.clientHeight * 0.90;
-                    var originalWidth = 0;
-                    var originalHeight = 0;
-                    {
-                        const regex = /width="(\d*\.)?\d+"/i;
-                        const aux = this.$refs.plotView.innerHTML.match(regex)[0];
-                        const regex2 = /(\d*\.)?\d+/g;
-                        var match = aux.match(regex2);
-                        originalWidth = Array.from(match)[0];
-                    }
-                    {
-                        const regex = /height="(\d*\.)?\d+"/i;
-                        const aux = this.$refs.plotView.innerHTML.match(regex)[0];
-                        const regex2 = /(\d*\.)?\d+/g;
-                        var match = aux.match(regex2);
-                        originalHeight = Array.from(match)[0];
-                    }
-
-                    if (originalWidth > originalHeight * 0.85) {
-                        this.width = "100%";
                     }
                     else {
-                        const originalHeightProportion = clientHeight / originalHeight;
-                        const originalWidthProportion = clientWidth / originalWidth;
-                        const scaledWidth = originalWidth / originalHeightProportion
-                        this.width = `${originalWidth * originalHeightProportion}px`;
+                        this.posting = false;
+                        this.$emit("errorInImage");
+                        this.lastSimulatedInputs = "";
+                        this.lastSimulatedMagnetics = "";
                     }
-
-                    this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replace(`width=`, `class="scaling-svg" width=`);
-                    // this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
-                    // if ("zoomPlotView" in this.$refs) {
-                    //     this.$refs.zoomPlotView.innerHTML = response.data
-                    //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(`<svg`, `<svg class="h-100 w-100"`);
-                    //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(regex, `class="" width="${clientWidth}" height="${clientHeight}" viewBox=`);
-                    //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
-                    // }
-                    this.errorMessage = "";
-                    this.posting = false;
                 })
             }
             else {

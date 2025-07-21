@@ -128,7 +128,6 @@ export default {
                         const result = this.$mkf.plot_wire(JSON.stringify(this.wire));
                         this.$refs.wire2DPlotView.innerHTML = result;
                         this.posting = false;
-                        console.log(result)
 
                         var clientWidth = this.$refs.wire2DPlotViewContainer.clientWidth;
                         var clientHeight = this.$refs.wire2DPlotViewContainer.clientHeight * 0.90;
