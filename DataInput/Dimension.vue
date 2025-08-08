@@ -237,7 +237,9 @@ export default {
                     const aux = getMultiplier(actualValue, 0.001);
                     this.$refs.inputRef.value = removeTrailingZeroes(aux.scaledValue, this.numberDecimals)
                     this.localData.scaledValue = aux.scaledValue;
-                    this.localData.multiplier = aux.multiplier;
+                    if (this.localData.scaledValue != 0) {
+                        this.localData.multiplier = aux.multiplier;
+                    }
                 }
                 else {
                     this.$refs.inputRef.value = removeTrailingZeroes(actualValue, this.numberDecimals)
