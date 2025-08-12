@@ -37,6 +37,9 @@ export const tooltipsMagneticBuilder = {
     "windingsOrientation": "How the sections are oriented inside the winding window, either contiguous side by side along the column, or overlapping each other",
     "proportions": "Percentarge of the winding window dedicated to each winding",
     "sectionsInterleaving": "Order in which the sections will be placed, with the number of each winding (E.g.: 1 for primary, 2 for secondary, etc.). They can be repeated to create interleaving. E.g.: '121', '2121'",
+    "areaFillingFactor": "Area-based filling factor",
+    "contiguousFillingFactor": "Filling factor along the winding column",
+    "overlappingFillingFactor": "Filling factor normal to the winding column",
     
     "windingLosses": "Total copper loss in all windings",
     "windingLossesPerWinding": "Total copper loss in the selected winding",
