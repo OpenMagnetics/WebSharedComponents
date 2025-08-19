@@ -14,7 +14,7 @@ export default {
             required: true
         },
         options:{
-            type: Object,
+            type: [Array, Object],
             required: true
         },
         dataTestLabel: {
@@ -74,6 +74,18 @@ export default {
     },
     computed: {
         selectedLabel() {
+        },
+        optionsIter() {
+            if (Array.isArray(this.options)) {
+                const aux = {}
+                this.options.forEach((elem) => {
+                    aux[elem] = elem;
+                })
+                return Object.entries(aux);
+            }
+            else {
+                return Object.entries(this.options)
+            }
         }
     },
     watch: { 
@@ -127,7 +139,7 @@ export default {
                 :style="combinedStyle([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, valueWidthProportionClass])"
                 class="form-check"
                 :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, valueWidthProportionClass, disabled? 'border-0' : ''])"
-                v-for="[key, value] in Object.entries(options)"
+                v-for="[key, value] in optionsIter"
             >
                 <input
                     :disabled="optionsToDisable.includes(value)"
@@ -140,10 +152,21 @@ export default {
                     @change="changedCheckedValue(value)"
                 >
                 <label
+                    v-if="key == 'Planar'"
+                >
+                &#128293;
+                </label>
+                <label
                     class="form-check-label"
                     :for="key + '-radio-input'"
                 >
-                    {{value}}
+                    {{key}}
+                </label>
+
+                <label
+                    v-if="key == 'Planar'"
+                >
+                &#128293;
                 </label>
             </div>
         </div>

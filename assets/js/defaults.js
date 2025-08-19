@@ -52,6 +52,7 @@ export const powerMas = {
                 "nominal": 100e-6
             },
             "turnsRatios": [],
+            "wiringTechnology": "Wound",
         },
         "operatingPoints": [],
     },
@@ -165,6 +166,7 @@ export const designRequirementsOrdered = {
         "magnetizingInductance",
         "minimumImpedance",
         "turnsRatios",
+        "wiringTechnology",
         "insulation",
         "leakageInductance",
         "strayCapacitance",

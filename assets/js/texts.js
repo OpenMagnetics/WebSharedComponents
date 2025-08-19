@@ -15,6 +15,7 @@ export const tooltipsMagneticSynthesisDesignRequirements = {
     "maximumDimensions": "Maximum dimensions that the magnetic componenet can occupy, including all parts",
     "terminalType": "Termination required for our magnetic, one per winding",
     "changeNameWindings": "Here you can change the reference for this winding",
+    "wiringTechnology": "Here you can decide between wound or planar technology",
 }
 
 export const tooltipsMagneticSynthesisOperatingPoints = {
@@ -52,6 +53,9 @@ export const tooltipsMagneticBuilder = {
     "dcResistancePerWinding": "Resistance of the winding at DC",
     "effectiveResistancePerWinding": "Resistance of the winding at AC + DC, defined as the total losses of the winding divided by the square of its current RMS",
     "leakageInductanceReflectedToPrimary": "How much energy from the primary is stored in the interstices of the magnetic and is not coupled to this winding, reflected on the primary side",
+    "coreToLayerDistance": "Distance from the border of the PCB to the core",
+    "borderToWireDistance": "Distance from the border of the PCB to the nearest track",
+    "wireToWireDistance": "Distance between tracks on the same layer",
     
     "wireNumberTurns": "Number of turns in thi winding. An extra turn produces more magnetic flux and keeps current density constant",
     "wireNumberParallels": "Number of parallels wires in each turn. An extra parallel keeps magnetic flux constant and decreases current density",
