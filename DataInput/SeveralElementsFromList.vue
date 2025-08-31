@@ -114,7 +114,7 @@ export default {
                     :disabled="optionsToDisable.includes(value) || disabled"
                     :data-cy="dataTestLabel + '-' + value + '-checkbox-input'"
                     :ref="key"
-                    class="form-check-input border"
+                    class="form-check-input bg-transparent border"
                     type="checkbox"
                     :checked="modelValue[name].includes(value)"
                     :id="name + '-checkbox-input'"

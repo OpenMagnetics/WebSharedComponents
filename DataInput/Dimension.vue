@@ -27,7 +27,7 @@ export default {
         },
         max:{
             type: Number,
-            default: 1e+9
+            default: 1e+12
         },
         numberDecimals:{
             type: Number,
