@@ -1110,3 +1110,11 @@ export function combinedClass(classes) {
     })
     return combinedSettings;
 }
+
+export function pruneNulls(obj) {
+    var isArray = obj instanceof Array;
+    for (var k in obj){
+        if (obj[k]===null) isArray ? obj.splice(k,1) : delete obj[k];
+        else if (typeof obj[k]=="object") pruneNulls(obj[k]);
+    }
+}
