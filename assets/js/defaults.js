@@ -649,3 +649,22 @@ export const defaultFlybackWizardInputs = {
     ambientTemperature: 25,
     insulationType: 'No'
 };
+
+export const defaultBuckWizardInputs = {
+    inputVoltage: {
+        minimum: 10,
+        maximum: 12
+    },
+    designLevel: 'Help me with the design',
+    diodeVoltageDrop: 0.7,
+    maximumSwitchCurrent: 8,
+    currentRippleRatio: 0.4,
+    inductance: 200e-6,
+    efficiency: 0.85,
+    outputsParameters: {
+        voltage: 5,
+        current: 2,
+    },
+    switchingFrequency: 100000,
+    ambientTemperature: 25
+};
