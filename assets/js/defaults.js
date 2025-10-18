@@ -1,13 +1,13 @@
 export const coreAdviserWeights = {
-    "EFFICIENCY": 40,
-    "DIMENSIONS": 30,
-    "COST": 30,
+    "Efficiency": 40,
+    "Dimensions": 30,
+    "Cost": 30,
 }
 
 export const magneticAdviserWeights = {
-    "LOSSES": 40,
-    "DIMENSIONS": 30,
-    "COST": 30,
+    "Losses": 40,
+    "Dimensions": 30,
+    "Cost": 30,
 }
 
 
@@ -647,7 +647,7 @@ export const defaultFlybackWizardInputs = {
     ],
     switchingFrequency: 100000,
     ambientTemperature: 25,
-    insulationType: 'No'
+    insulationType: 'Basic'
 };
 
 export const defaultBuckWizardInputs = {
@@ -667,4 +667,136 @@ export const defaultBuckWizardInputs = {
     },
     switchingFrequency: 100000,
     ambientTemperature: 25
+};
+
+export const defaultBoostWizardInputs = {
+    inputVoltage: {
+        minimum: 12,
+        maximum: 24
+    },
+    designLevel: 'Help me with the design',
+    diodeVoltageDrop: 0.7,
+    maximumSwitchCurrent: 8,
+    currentRippleRatio: 0.4,
+    inductance: 200e-6,
+    efficiency: 0.85,
+    outputsParameters: {
+        voltage: 50,
+        current: 1,
+    },
+    switchingFrequency: 100000,
+    ambientTemperature: 25
+};
+
+export const defaultIsolatedBuckWizardInputs = {
+    inputVoltage: {
+        minimum: 36,
+        maximum: 72
+    },
+    designLevel: 'Help me with the design',
+    diodeVoltageDrop: 0.7,
+    maximumSwitchCurrent: 1,
+    currentRippleRatio: 0.4,
+    inductance: 10e-6,
+    efficiency: 0.9,
+    numberOutputs: 2,
+    outputsParameters: [
+        {
+            voltage: 10,
+            current: 0.02,
+            turnsRatio: 5,
+        },
+        {
+            voltage: 10,
+            current: 0.1,
+            turnsRatio: 5,
+        }
+    ],
+    switchingFrequency: 750000,
+    ambientTemperature: 25,
+    insulationType: 'Basic'
+};
+
+export const defaultIsolatedBuckBoostWizardInputs = {
+    inputVoltage: {
+        minimum: 10,
+        maximum: 30
+    },
+    designLevel: 'Help me with the design',
+    diodeVoltageDrop: 0.7,
+    maximumSwitchCurrent: 2.5,
+    currentRippleRatio: 0.4,
+    inductance: 10e-6,
+    efficiency: 0.9,
+    numberOutputs: 3,
+    outputsParameters: [
+        {
+            voltage: 6,
+            current: 0.01,
+            turnsRatio: 0.5,
+        },
+        {
+            voltage: 5,
+            current: 1,
+            turnsRatio: 0.5,
+        },
+        {
+            voltage: 5,
+            current: 0.3,
+            turnsRatio: 0.5,
+        }
+    ],
+    switchingFrequency: 400000,
+    ambientTemperature: 25,
+    insulationType: 'Basic'
+};
+
+export const defaultPushPullWizardInputs = {
+    inputVoltage: {
+        minimum: 20,
+        maximum: 30
+    },
+    designLevel: 'Help me with the design',
+    diodeVoltageDrop: 0.7,
+    maximumSwitchCurrent: 1,
+    currentRippleRatio: 0.3,
+    dutyCycle: 0.45,
+    inductance: 10e-6,
+    efficiency: 0.9,
+    numberOutputs: 1,
+    outputsParameters: [
+        {
+            voltage: 48,
+            current: 0.7,
+            turnsRatio: 1,
+        }
+    ],
+    switchingFrequency: 100000,
+    ambientTemperature: 25,
+    insulationType: 'Basic'
+};
+
+export const defaultForwardWizardInputs = {
+    inputVoltage: {
+        minimum: 100,
+        maximum: 190
+    },
+    designLevel: 'Help me with the design',
+    diodeVoltageDrop: 0.7,
+    maximumSwitchCurrent: 1,
+    currentRippleRatio: 0.3,
+    dutyCycle: 0.42,
+    inductance: 10e-6,
+    efficiency: 0.9,
+    numberOutputs: 1,
+    outputsParameters: [
+        {
+            voltage: 5,
+            current: 5,
+            turnsRatio: 10,
+        }
+    ],
+    switchingFrequency: 200000,
+    ambientTemperature: 25,
+    insulationType: 'Basic'
 };

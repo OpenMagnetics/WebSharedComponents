@@ -420,6 +420,8 @@ export enum Topologies {
     FullBridgeConverter = "Full-Bridge Converter",
     HalfBridgeConverter = "Half-Bridge Converter",
     InvertingBuckBoostConverter = "Inverting Buck-Boost Converter",
+    IsolatedBuckBoostConverter = "Isolated Buck Boost Converter",
+    IsolatedBuckConverter = "Isolated Buck Converter",
     PhaseShiftedFullBridgeConverter = "Phase-Shifted Full-Bridge Converter",
     PushPullConverter = "Push-Pull Converter",
     Sepic = "SEPIC",
