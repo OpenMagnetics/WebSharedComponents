@@ -29,7 +29,7 @@ export default {
         },
         loadingGif: {
             type: String,
-            default: "/images/loading.gif",
+            default: `${import.meta.env.BASE_URL}/images/loading.gif`,
         },
         backgroundColor: {
             type: String,
@@ -240,41 +240,49 @@ export default {
                     if ('familySubtype' in aux['functionalDescription']['shape']){
                         aux['functionalDescription']['shape']['familySubtype'] = String(aux['functionalDescription']['shape']['familySubtype']);
                     }
-                    var core = JSON.parse(this.$mkf.calculate_core_data(JSON.stringify(aux), false));
-                    this.posting = true;
+                    var result = this.$mkf.calculate_core_data(JSON.stringify(aux), false);
 
-                    var url;
-                    var data;
-                    if (this.fullCoreModel) {
-                        data = core;
-                        url = import.meta.env.VITE_API_ENDPOINT + '/core_compute_core_3d_model';
+                    if (result.startsWith("Exception")) {
+                        console.error(result);
+                        return;
                     }
                     else {
-                        data = core.functionalDescription.shape;
-                        url = import.meta.env.VITE_API_ENDPOINT + '/core_compute_shape';
+                        var core = JSON.parse(result);
+                        this.posting = true;
+
+                        var url;
+                        var data;
+                        if (this.fullCoreModel) {
+                            data = core;
+                            url = import.meta.env.VITE_API_ENDPOINT + '/core_compute_core_3d_model';
+                        }
+                        else {
+                            data = core.functionalDescription.shape;
+                            url = import.meta.env.VITE_API_ENDPOINT + '/core_compute_shape';
+                        }
+
+                        this.hasFreeCADError = false;
+                        this.removeObject3D(this.current3dObject);
+                        core = clean(core);
+
+                        if (core.functionalDescription.gapping == undefined) {
+                            core.functionalDescription.gapping = []
+                        }
+
+                        this.$axios.post(url, data)
+                        .then(response => {
+                            this.posting = false
+                            this.updating = false
+                            this.getPiece(response.data);
+                        })
+                        .catch(error => {
+                            this.posting = false
+                            this.updating = false
+                            this.hasFreeCADError = true
+                            console.error(error);
+                            this.$emit("errorInDimensions");
+                        });
                     }
-
-                    this.hasFreeCADError = false;
-                    this.removeObject3D(this.current3dObject);
-                    core = clean(core);
-
-                    if (core.functionalDescription.gapping == undefined) {
-                        core.functionalDescription.gapping = []
-                    }
-
-                    this.$axios.post(url, data)
-                    .then(response => {
-                        this.posting = false
-                        this.updating = false
-                        this.getPiece(response.data);
-                    })
-                    .catch(error => {
-                        this.posting = false
-                        this.updating = false
-                        this.hasFreeCADError = true
-                        console.error(error);
-                        this.$emit("errorInDimensions");
-                    });
 
                 }).catch(error => {
                     console.error(error);

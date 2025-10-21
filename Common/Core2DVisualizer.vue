@@ -19,7 +19,7 @@ export default {
         },
         loadingGif: {
             type: String,
-            default: "/images/loading.gif",
+            default: `${import.meta.env.BASE_URL}/images/loading.gif`,
         },
         backgroundColor: {
             type: String,
