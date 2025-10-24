@@ -375,8 +375,6 @@ export function guessBasicGappingParameters(core, scale=1) {
     var gapType = Defaults.defaultGapType;
     var gapLength = Defaults.defaultGapLength * scale;
     var numberGaps = Defaults.defaultNumberGaps;
-    console.warn(core['functionalDescription'])
-    console.warn(core['processedDescription'])
     if (core['functionalDescription'] != null && core['processedDescription'] != null) {
         if (core['functionalDescription']['gapping'].length == 0) {
             gapType = "Ungapped"
