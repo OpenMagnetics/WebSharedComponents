@@ -225,7 +225,7 @@ export default {
             }
         },
         computeShape() {
-            if (!this.posting && this.core['functionalDescription']['shape'] != "") {
+            if (!this.posting && this.core['functionalDescription']['shape'] != "" && this.core['functionalDescription']['material'] != "") {
                 this.$mkf.ready.then(_ => {
 
                     const aux = deepCopy(this.core);
