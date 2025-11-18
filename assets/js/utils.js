@@ -771,6 +771,25 @@ export function clean(object) {
     return object;
 }
 
+export function cleanCoil(coilToClean) {
+    coilToClean = clean(coilToClean);
+    if (coilToClean.sectionsDescription != null) {
+        for (let i = 0; i < coilToClean.sectionsDescription.length; i++) {
+            if (coilToClean.sectionsDescription[i].partialWindings == null) {
+                coilToClean.sectionsDescription[i].partialWindings = [];
+            }
+        }
+    }
+    if (coilToClean.layersDescription != null) {
+        for (let i = 0; i < coilToClean.layersDescription.length; i++) {
+            if (coilToClean.layersDescription[i].partialWindings == null) {
+                coilToClean.layersDescription[i].partialWindings = [];
+            }
+        }
+    }
+    return coilToClean;
+}
+
 export async function checkAndFixMas(mas, mkf=null) {
     var numberWindings = 0;
     if (mas.inputs != null) {
@@ -1118,3 +1137,12 @@ export function pruneNulls(obj) {
         else if (typeof obj[k]=="object") pruneNulls(obj[k]);
     }
 }
+
+export function generateHash(string) {
+    let hash = 0;
+    for (const char of string) {
+        hash = (hash << 5) - hash + char.charCodeAt(0);
+        hash |= 0; // Constrain to 32bit integer
+    }
+    return hash;
+};
