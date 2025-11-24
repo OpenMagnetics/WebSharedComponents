@@ -139,6 +139,7 @@ export default {
             legend: {
                 orient: 'horizontal',
                 left: 'left',
+                top: 'top',
                 textStyle: {
                     color: this.textColor
                 }
@@ -262,6 +263,8 @@ export default {
             })
 
 
+
+
             this.data.forEach((datum) => {
                 limits.yAxis.push({
                     min: yMinimum,
@@ -279,31 +282,13 @@ export default {
         processOptions(options) {
             const limits = this.processLimits()
 
-            options.xAxis.min = limits.xAxis.min * (limits.xAxis.min < 0? this.linePaddings.left : 1.0 / this.linePaddings.left);
-            options.xAxis.max = limits.xAxis.max * this.linePaddings.right;
-            options.xAxis.type = this.xAxisOptions.type;
-
-            limits.yAxis.forEach((elem, index) => {
-                var numberDecimals = 5;
-                if (elem.min < 1) {
-                    if (this.data[index].type == "log") {
-                        var numberZeroesInBase = Math.floor( Math.log10(elem.min) + 1) - 1;
-                        elem.min = Math.pow(10, numberZeroesInBase);
-                    }
-                    else {
-                        // elem.min = 0;
-                    }
-                }
-                if (this.data[index].numberDecimals != null) {
-                    numberDecimals = this.data[index].numberDecimals;
-                }
-                options.yAxis[index].min = roundWithDecimals(elem.min * (elem.min < 0? this.linePaddings.bottom : 1.0 / this.linePaddings.bottom), 1.0 / Math.pow(10, numberDecimals));
-                options.yAxis[index].max = roundWithDecimals(elem.max * this.linePaddings.top, 1.0 / Math.pow(10, numberDecimals));
-            })
 
             options.series = []
+            options.yAxis = []
             this.data.forEach((datum, index) => {
-                options.yAxis[index].type = datum.type;
+                options.yAxis.push({
+                    type: datum.type,
+                })
 
                 options.series.push(
                     {
@@ -328,6 +313,28 @@ export default {
                 );
             })
 
+            options.xAxis.min = limits.xAxis.min * (limits.xAxis.min < 0? this.linePaddings.left : 1.0 / this.linePaddings.left);
+            options.xAxis.max = limits.xAxis.max * this.linePaddings.right;
+            options.xAxis.type = this.xAxisOptions.type;
+
+            limits.yAxis.forEach((elem, index) => {
+                var numberDecimals = 5;
+                if (elem.min < 1) {
+                    if (this.data[index].type == "log") {
+                        var numberZeroesInBase = Math.floor( Math.log10(elem.min) + 1) - 1;
+                        elem.min = Math.pow(10, numberZeroesInBase);
+                    }
+                    else {
+                        // elem.min = 0;
+                    }
+                }
+                if (this.data[index].numberDecimals != null) {
+                    numberDecimals = this.data[index].numberDecimals;
+                }
+                options.yAxis[index].min = removeTrailingZeroes(roundWithDecimals(elem.min * (elem.min < 0? this.linePaddings.bottom : 1.0 / this.linePaddings.bottom), 1.0 / Math.pow(10, numberDecimals)), 2);
+                options.yAxis[index].max = removeTrailingZeroes(roundWithDecimals(elem.max * this.linePaddings.top, 1.0 / Math.pow(10, numberDecimals)), 2);
+            })
+
         },
         onClick(event) {
             this.$emit('click', event);
@@ -337,5 +344,5 @@ export default {
 </script>
 
 <template>
-    <v-chart class="chart" :option="options" autoresize :update-options="updateOpts" @click="onClick" :style="chartStyle"/>
+    <v-chart v-if="options.yAxis.length > 0" class="chart" :option="options" autoresize :update-options="updateOpts" @click="onClick" :style="chartStyle"/>
 </template>
