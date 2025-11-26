@@ -322,9 +322,11 @@ export default {
 
             limits.yAxis.forEach((elem, index) => {
                 var numberDecimals = 2;
+                var numberDecimalsPointer = numberDecimals
                 if (elem.min < 1) {
                     if (this.data[index].type == "log") {
                         numberDecimals = Math.abs(Math.floor(Math.log10(elem.min)));
+                        numberDecimalsPointer += numberDecimals
                     }
                     else {
                         // elem.min = 0;
@@ -334,8 +336,8 @@ export default {
                     numberDecimals = this.data[index].numberDecimals;
                 }
 
-                if (numberDecimals > options.tooltip.axisPointer.label.precision) {
-                    options.tooltip.axisPointer.label.precision = numberDecimals;
+                if (numberDecimalsPointer > options.tooltip.axisPointer.label.precision) {
+                    options.tooltip.axisPointer.label.precision = numberDecimalsPointer;
                 }
 
                 options.yAxis[index].min = removeTrailingZeroes(roundWithDecimals(elem.min * (elem.min < 0? this.linePaddings.bottom : 1.0 / this.linePaddings.bottom), 1.0 / Math.pow(10, numberDecimals)), numberDecimals);
