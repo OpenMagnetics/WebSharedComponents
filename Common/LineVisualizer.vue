@@ -60,6 +60,10 @@ export default {
         pointsColor: {
             type: String,
         },
+        showPoints: {
+            type: Boolean,
+            default: true,
+        },
         forceUpdate:{
             type: Number,
             default: 0
@@ -103,7 +107,10 @@ export default {
             tooltip: {
                 trigger: 'item',
                 axisPointer: {
-                    type: 'cross'
+                    type: 'cross',
+                    label: {
+                        precision: 2
+                    }
                 },
                 formatter: (params) => {
 
@@ -212,7 +219,7 @@ export default {
     watch: {
         'forceUpdate': {
             handler(newValue, oldValue) {
-            this.processOptions(this.options);
+                this.processOptions(this.options);
             },
           deep: true
         },
@@ -239,15 +246,12 @@ export default {
             var xMaximum = Number.MIN_VALUE;
             var yMinimum = Number.MAX_VALUE;
             var yMaximum = Number.MIN_VALUE;
-            limits.yAxis = []
 
             this.data.forEach((datum) => {
-                var yLimit = 0;
                 datum.data.x.forEach((elem) => {
                     xMaximum = Math.max(xMaximum, elem);
                     xMinimum = Math.min(xMinimum, elem);
                 })
-
                 datum.data.y.forEach((elem) => {
                     yMaximum = Math.max(yMaximum, elem);
                     yMinimum = Math.min(yMinimum, elem);
@@ -262,9 +266,7 @@ export default {
                 })
             })
 
-
-
-
+            limits.yAxis = []
             this.data.forEach((datum) => {
                 limits.yAxis.push({
                     min: yMinimum,
@@ -272,16 +274,15 @@ export default {
                 });
             })
 
-
             limits.xAxis = {
                 min: xMinimum,
                 max: xMaximum,
             };
+
             return limits;
         },
         processOptions(options) {
             const limits = this.processLimits()
-
 
             options.series = []
             options.yAxis = []
@@ -297,6 +298,7 @@ export default {
                         smooth: datum.smooth,
                         name: datum.label,
                         color: datum.colorLabel,
+                        showSymbol: this.showPoints,
                     }
                 );
 
@@ -309,6 +311,7 @@ export default {
                         data: [[point.data.x, point.data.y]],
                         type: 'scatter',
                         color: this.pointsColor,
+                        showSymbol: this.showPoints,
                     }
                 );
             })
@@ -318,11 +321,10 @@ export default {
             options.xAxis.type = this.xAxisOptions.type;
 
             limits.yAxis.forEach((elem, index) => {
-                var numberDecimals = 5;
+                var numberDecimals = 2;
                 if (elem.min < 1) {
                     if (this.data[index].type == "log") {
-                        var numberZeroesInBase = Math.floor( Math.log10(elem.min) + 1) - 1;
-                        elem.min = Math.pow(10, numberZeroesInBase);
+                        numberDecimals = Math.abs(Math.floor(Math.log10(elem.min)));
                     }
                     else {
                         // elem.min = 0;
@@ -331,10 +333,14 @@ export default {
                 if (this.data[index].numberDecimals != null) {
                     numberDecimals = this.data[index].numberDecimals;
                 }
-                options.yAxis[index].min = removeTrailingZeroes(roundWithDecimals(elem.min * (elem.min < 0? this.linePaddings.bottom : 1.0 / this.linePaddings.bottom), 1.0 / Math.pow(10, numberDecimals)), 2);
-                options.yAxis[index].max = removeTrailingZeroes(roundWithDecimals(elem.max * this.linePaddings.top, 1.0 / Math.pow(10, numberDecimals)), 2);
-            })
 
+                if (numberDecimals > options.tooltip.axisPointer.label.precision) {
+                    options.tooltip.axisPointer.label.precision = numberDecimals;
+                }
+
+                options.yAxis[index].min = removeTrailingZeroes(roundWithDecimals(elem.min * (elem.min < 0? this.linePaddings.bottom : 1.0 / this.linePaddings.bottom), 1.0 / Math.pow(10, numberDecimals)), numberDecimals);
+                options.yAxis[index].max = removeTrailingZeroes(roundWithDecimals(elem.max * this.linePaddings.top, 1.0 / Math.pow(10, numberDecimals)), numberDecimals);
+            })
         },
         onClick(event) {
             this.$emit('click', event);
