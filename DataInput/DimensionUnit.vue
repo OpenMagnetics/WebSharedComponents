@@ -221,11 +221,16 @@ export default {
         </select>
     </div>
 </template>
-<!-- 
-<style type="text/css">
-    .unit-select {
-        background-image: none !important;
-        background: none !important;
- }
-</style> -->
 
+<style scoped>
+.unit-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none !important;
+}
+
+.unit-select::-ms-expand {
+    display: none;
+}
+</style>
