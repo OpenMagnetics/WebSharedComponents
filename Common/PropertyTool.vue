@@ -95,6 +95,10 @@ export default {
             type: Object,
             default: {top: 30, left: 45, right: 10, bottom: 30}
         },
+        styleSection: {
+            type: String,
+            default: "controlPanel",
+        },
     },
     data() {
         const errorMessages = "";
@@ -275,7 +279,7 @@ export default {
             >
                 <button
                     v-if="enableEditing"
-                    :style="showEditor? $styleStore.controlPanel.activeButton : $styleStore.controlPanel.button"
+                    :style="showEditor? $styleStore[styleSection].activeButton : $styleStore[styleSection].button"
                     class="btn col-5 p-0"
                     @click="onEdit"
                 >
@@ -283,7 +287,7 @@ export default {
                 </button>
                 <button
                     v-if="showGraph"
-                    :style="showConfiguration? $styleStore.controlPanel.activeButton : $styleStore.controlPanel.button"
+                    :style="showConfiguration? $styleStore[styleSection].activeButton : $styleStore[styleSection].button"
                     class="btn offset-1 col-5 p-0"
                     @click="showConfiguration = !showConfiguration && ! showEditor"
                 >
@@ -321,7 +325,6 @@ export default {
                     <PairOfDimensions
                         :class="index < properties[selectedPropertyToEdit].length - 1? 'border-bottom' : '' "
                         class="pt-1 pb-0 pe-4 mb-0 col-10"
-                        :style="$styleStore.designRequirements.inputBorderColor"
                         :names="[propertiesConfiguration.xAxisLabel, propertiesConfiguration.yAxisLabel]"
                         :replaceTitle="[propertiesConfiguration.xAxisReplaceLabel, propertiesConfiguration.yAxisReplaceLabel[selectedPropertyToEdit]]"
                         :units="[propertiesConfiguration.xAxisUnit, propertiesConfiguration.yAxisUnit]"
