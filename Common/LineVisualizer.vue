@@ -254,7 +254,11 @@ export default {
                 })
                 datum.data.y.forEach((elem) => {
                     yMaximum = Math.max(yMaximum, elem);
-                    yMinimum = Math.min(yMinimum, elem);
+                    if (datum.type == "log" && elem > Number.MIN_VALUE) {
+                        yMinimum = Math.min(yMinimum, elem);
+                    } else if (datum.type != "log") {
+                        yMinimum = Math.min(yMinimum, elem);
+                    }
                 })
                 this.points.forEach((elem) => {
                     xMaximum = Math.max(xMaximum, elem.data.x);
