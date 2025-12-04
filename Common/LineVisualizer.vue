@@ -303,6 +303,9 @@ export default {
                         name: datum.label,
                         color: datum.colorLabel,
                         showSymbol: this.showPoints,
+                        lineStyle: {
+                            type: datum.lineStyle ?? 'solid'  // 'solid', 'dashed', 'dotted'
+                        }
                     }
                 );
 
