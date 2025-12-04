@@ -39,6 +39,10 @@ export default {
             type: Boolean,
             default: true
         },
+        showPoints: {
+            type: [Boolean, Array[Boolean]],
+            default: true,
+        },
         addElementButtonColor: {
             type: [String, Object],
             default: "text-secondary",
@@ -223,6 +227,9 @@ export default {
                 })
 
                 datum.unit = this.propertiesConfiguration.yAxisUnit;
+                if (this.propertiesConfiguration.yAxisLineColor != null) {
+                    datum.colorLabel = this.propertiesConfiguration.yAxisLineColor[propertyIndex];
+                }
 
                 datum.xMaximum = removeTrailingZeroes(Math.max(...datum.data.x), 2);
                 datum.xMinimum = removeTrailingZeroes(Math.min(...datum.data.x), 2);
@@ -440,6 +447,7 @@ export default {
                     :title="''"
                     :forceUpdate="forceUpdate"
                     :chartStyle="chartStyle"
+                    :showPoints="showPoints"
                     :toolbox="false"
                     :bgColor="visualizerBgColor"
                     :lineColor="visualizerLineColor"

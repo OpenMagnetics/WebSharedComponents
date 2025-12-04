@@ -211,7 +211,7 @@ export default {
             <div  v-if="!titleSameRow" class=" col-sm-0 col-md-2">
             </div>
             <select
-                :style="combinedStyle([selectStyleClass, valueFontSize, disabled? labelBgColor : valueBgColor, textColor])"
+                :style="combinedStyle([selectStyleClass, valueFontSize, disabled? labelBgColor : '', textColor])"
                 :disabled="disabled"
                 :data-cy="dataTestLabel + '-select'"
                 :class="combinedClass([selectStyleClass, valueFontSize, disabled? labelBgColor : valueBgColor, textColor, disabled? 'border-0 text-end':''])"
