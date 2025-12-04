@@ -310,7 +310,7 @@ export default {
                         smooth: datum.smooth,
                         name: datum.label,
                         color: datum.colorLabel,
-                        showSymbol: this.showPoints,
+                        showSymbol: showPoints,
                         lineStyle: {
                             type: datum.lineStyle ?? 'solid'  // 'solid', 'dashed', 'dotted'
                         }
