@@ -67,6 +67,7 @@ export default {
     },
     data() {
         var localData = guessBasicGappingParameters(this.core, 1);
+        const previousGapType = localData.gapType;
 
         const blockingRebounds = false;
         const errorMessages = "";
@@ -74,6 +75,7 @@ export default {
             localData,
             blockingRebounds,
             errorMessages,
+            previousGapType,
         }
     },
     computed: {
@@ -93,6 +95,7 @@ export default {
         forceUpdate(newValue, oldValue) {
             this.blockingRebounds = true;
             this.localData = guessBasicGappingParameters(this.core, 1);
+            this.previousGapType = this.localData.gapType;
             setTimeout(() => this.blockingRebounds = false, 10);
         },
     },
@@ -117,6 +120,10 @@ export default {
                 gapping.push(residualGap);
             }
             else if (this.localData.gapType == 'Ground') {
+                if (this.previousGapType == "Distributed") {
+                    this.localData.numberGaps = 1;
+                    this.localData.gapLength *= 3;
+                };
                 const coreGap = {
                     "length": this.localData.gapLength,
                     "type": "subtractive"
@@ -136,6 +143,10 @@ export default {
             }
 
             else if (this.localData.gapType == 'Distributed') {
+                if (this.previousGapType == "Ground" && this.localData.numberGaps == 1) {
+                    this.localData.numberGaps = 3;
+                    this.localData.gapLength /= 3;
+                }
                 const coreGap = {
                     "length": this.localData.gapLength,
                     "type": "subtractive"
@@ -156,6 +167,8 @@ export default {
                     this.$emit("update", gapping);
                 }
             }
+
+            this.previousGapType = this.localData.gapType;
         },
         gapTypeUpdated() {
         },
