@@ -61,7 +61,7 @@ export default {
             type: String,
         },
         showPoints: {
-            type: Boolean,
+            type: [Boolean, Array[Boolean]],
             default: true,
         },
         forceUpdate:{
@@ -295,6 +295,14 @@ export default {
                     type: datum.type,
                 })
 
+                var showPoints;
+                if (typeof(this.showPoints) == "boolean") {
+                    showPoints = this.showPoints;
+                }
+                else {
+                    showPoints = this.showPoints[index];
+                }
+
                 options.series.push(
                     {
                         data: this.processData(index),
@@ -302,7 +310,7 @@ export default {
                         smooth: datum.smooth,
                         name: datum.label,
                         color: datum.colorLabel,
-                        showSymbol: this.showPoints,
+                        showSymbol: showPoints,
                         lineStyle: {
                             type: datum.lineStyle ?? 'solid'  // 'solid', 'dashed', 'dotted'
                         }
@@ -318,7 +326,7 @@ export default {
                         data: [[point.data.x, point.data.y]],
                         type: 'scatter',
                         color: this.pointsColor,
-                        showSymbol: this.showPoints,
+                        showSymbol: true,
                     }
                 );
             })
