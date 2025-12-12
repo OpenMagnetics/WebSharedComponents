@@ -2,7 +2,7 @@
 import { FileLoader, MeshPhysicalMaterial, Object3D, MathUtils, MeshBasicMaterial, Mesh, BoxGeometry, MeshStandardMaterial, LoadingManager, TextureLoader, PointLight, Box3, Vector3} from 'three';
 import {Camera, EffectComposer, InstancedMesh, PhongMaterial, Renderer, RenderPass, SphereGeometry, SpotLight, Scene, UnrealBloomPass, AmbientLight} from 'troisjs';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { clean, deepCopy, hexToRgb } from '../assets/js/utils.js'
+import { clean, deepCopy, hexToRgb, base64ToArrayBuffer } from '../assets/js/utils.js'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
 </script>
 
@@ -92,14 +92,6 @@ export default {
         }
     },
     methods: {
-        base64ToArrayBuffer(base64) {
-            var binaryString = atob(base64);
-            var bytes = new Uint8Array(binaryString.length);
-            for (var i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            return bytes.buffer;
-        },
         removeObject3D(object3D) {
             if (!(object3D instanceof Object3D)) return false;
 
@@ -123,7 +115,7 @@ export default {
             const camera = this.$refs.camera.camera;
             const loader = new STLLoader()
 
-            const geometry = loader.parse(this.base64ToArrayBuffer(sourceObject));
+            const geometry = loader.parse(base64ToArrayBuffer(sourceObject));
             const color = hexToRgb("#7b7c7d")
             const material = new MeshPhysicalMaterial()
             material.color.r = color.r / 255
