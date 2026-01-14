@@ -19,6 +19,10 @@ export default {
             type: Object,
             required: true,
         },
+        forceUpdate:{
+            type: Number,
+            default: 0
+        },
         fullCoreModel: {
             type: Boolean,
             default: true,
@@ -79,13 +83,13 @@ export default {
         }
     },
     watch: {
-        'core': {
+        'forceUpdate': {
             handler(newValue, oldValue) {
-                if (JSON.stringify(newValue) !== JSON.stringify(this.currentCore)) {
+                if (JSON.stringify(this.core) !== JSON.stringify(this.currentCore)) {
                     this.tryToSend();
                     this.updating = true;
                     this.removeObject3D(this.current3dObject);
-                    this.currentCore = deepCopy(newValue);
+                    this.currentCore = deepCopy(this.core);
                 }
             },
           deep: true

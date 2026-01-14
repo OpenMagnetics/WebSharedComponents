@@ -581,7 +581,7 @@ export const defaultGapType = "Ungapped";
 export const defaultGapLength = 5e-6;
 export const defaultNumberGaps = 1;
 
-export const coreLossesModelDefault = 'iGSE';
+export const coreLossesModelDefault = 'IGSE';
 export const coreTemperatureModelDefault = 'Maniktala';
 export const reluctanceModelDefault = 'Zhang';
 
