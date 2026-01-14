@@ -207,7 +207,9 @@ export default {
                 datum.type = this.propertiesConfiguration.yAxisMode == "linear"? "value" : this.propertiesConfiguration.yAxisMode;
                 datum.smooth = this.smoothLine;
                 if (this.properties.length > 0) {
-                    datum.colorLabel = this.propertiesConfiguration.yAxisLineColor[propertyIndex];
+                    if (this.propertiesConfiguration.yAxisLineColor != null && this.propertiesConfiguration.yAxisLineColor[propertyIndex] != null) {
+                        datum.colorLabel = this.propertiesConfiguration.yAxisLineColor[propertyIndex];
+                    }
                     datum.label = this.propertiesConfiguration.yAxisReplaceLabel[propertyIndex];
                     this.propertyLabels[propertyIndex] = datum.label;
                 }
