@@ -13,6 +13,10 @@ export default {
             type: Object,
             required: true
         },
+        forceUpdate:{
+            type: Number,
+            default: 0
+        },
         enableZoom: {
             type: Boolean,
             default: true,
@@ -79,7 +83,7 @@ export default {
         }
     },
     watch: {
-        'modelValue': {
+        'forceUpdate': {
             handler(newValue, oldValue) {
                 if (!this.blockingRebounds) {
 
@@ -184,49 +188,76 @@ export default {
                 return;
             }
             if (this.modelValue.magnetic.coil.turnsDescription != null) {
-                this.posting = true;
-                const url = import.meta.env.VITE_API_ENDPOINT + '/plot_core_and_fields'
 
-                this.$refs.plotView.innerHTML = ""
-                if ("zoomPlotView" in this.$refs) {
-                    this.$refs.zoomPlotView.innerHTML = ""
-                }
-                this.$axios.post(url, {magnetic: this.modelValue.magnetic, operatingPoint: this.modelValue.inputs.operatingPoints[this.operatingPointIndex], includeFringing: this.includeFringing})
-                .then(response => {
-                    var clientWidth = this.$refs.Magnetic2DVisualizerContainer.clientWidth;
-                    var clientHeight = this.$refs.Magnetic2DVisualizerContainer.clientHeight * 0.90;
-                    const regex = /width="\d+" height="\d+" viewBox=/i;
-                    this.$refs.plotView.innerHTML = response.data
-                    const aux = this.$refs.plotView.innerHTML.match(regex)[0];
-                    const regex2 = /\d+/g;
-                    var match = aux.matchAll(regex2);
-                    var originalDimensions = Array.from(match);
-                    const originalProportion = originalDimensions[0] / originalDimensions[1]
-                    if (originalProportion * clientHeight < clientWidth) {
-                        clientWidth = originalProportion * clientHeight;
+                this.$mkf.ready.then(_ => {
+
+                    const settings = JSON.parse(this.$mkf.get_settings());
+                    settings["painterSimpleLitz"] = true;
+                    settings["painterAdvancedLitz"] = false;
+                    settings["painterIncludeFringing"] = this.includeFringing;
+                    this.$mkf.set_settings(JSON.stringify(settings));
+
+
+                    const result = this.$mkf.plot_magnetic_field(JSON.stringify(this.modelValue.magnetic), JSON.stringify(this.modelValue.inputs.operatingPoints[this.operatingPointIndex]));
+                    const validImage = result.startsWith("<svg");
+                    if (validImage) {
+                        this.$refs.plotView.innerHTML = result;
+
+                        if (this.$refs.Magnetic2DVisualizerContainer == null) {
+                            this.posting = false;
+                            return;
+                        }
+                        var clientWidth = this.$refs.Magnetic2DVisualizerContainer.clientWidth;
+                        var clientHeight = this.$refs.Magnetic2DVisualizerContainer.clientHeight * (this.enableOptions? 0.90 : 1);
+                        var originalWidth = 0;
+                        var originalHeight = 0;
+                        {
+                            const regex = /width="(\d*\.)?\d+"/i;
+                            const aux = this.$refs.plotView.innerHTML.match(regex);
+                            if (aux!= null && aux.length > 0) {
+                                const regex2 = /(\d*\.)?\d+/g;
+                                var match = aux[0].match(regex2);
+                                originalWidth = Array.from(match)[0];
+                            }
+                        }
+                        {
+                            const regex = /height="(\d*\.)?\d+"/i;
+                            const aux = this.$refs.plotView.innerHTML.match(regex);
+                            if (aux!= null && aux.length > 0) {
+                                const regex2 = /(\d*\.)?\d+/g;
+                                var match = aux[0].match(regex2);
+                                originalHeight = Array.from(match)[0];
+                            }
+                        }
+
+                        if (originalWidth > originalHeight * 0.85) {
+                            this.width = "100%";
+                        }
+                        else {
+                            const originalHeightProportion = clientHeight / originalHeight;
+                            const originalWidthProportion = clientWidth / originalWidth;
+                            const scaledWidth = originalWidth / originalHeightProportion
+                            this.width = `${originalWidth * originalHeightProportion}px`;
+                        }
+
+                        this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replace(`width=`, `class="scaling-svg" width=`);
+                        // this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
+                        // if ("zoomPlotView" in this.$refs) {
+                        //     this.$refs.zoomPlotView.innerHTML = response.data
+                        //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(`<svg`, `<svg class="h-100 w-100"`);
+                        //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(regex, `class="" width="${clientWidth}" height="${clientHeight}" viewBox=`);
+                        //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
+                        // }
+                        this.errorMessage = "";
+                        this.posting = false;
                     }
                     else {
-                        clientHeight = clientWidth / originalProportion;
+                        this.posting = false;
+                        this.$emit("errorInImage");
+                        this.lastSimulatedInputs = "";
+                        this.lastSimulatedMagnetics = "";
                     }
-
-
-                    this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replace(regex, `class="" width="${clientWidth}" height="${clientHeight}" viewBox=`);
-                    this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
-                    if ("zoomPlotView" in this.$refs) {
-                        this.$refs.zoomPlotView.innerHTML = response.data
-                        this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(`<svg`, `<svg class="h-100 w-100"`);
-                        this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
-                        this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(regex, `class="" width="${clientWidth}" height="${clientHeight}" viewBox=`);
-                    }
-                    this.errorMessage = "";
-                    this.posting = false;
                 })
-                .catch(error => {
-                    this.posting = false;
-                    console.error("Error plotting")
-                    console.error(error)
-                    this.errorMessage = "Error while winding magnetic. Try another configuration or report a bug if you think this should work";
-                });
             }
             else {
                 this.$refs.plotView.innerHTML = ""

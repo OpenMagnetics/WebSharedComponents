@@ -15,6 +15,10 @@ export default {
             type: Object,
             required: true,
         },
+        forceUpdate:{
+            type: Number,
+            default: 0
+        },
         operatingPoint: {
             type: Object,
             required: false,
@@ -40,39 +44,23 @@ export default {
         const posting = false
         const recentChange = false
         const tryingToSend = false
-        const lastSimulatedWire = "";
+        const lastUsedWire = "";
         const style = getComputedStyle(document.body);
         return {
             posting,
             recentChange,
             tryingToSend,
-            lastSimulatedWire,
+            lastUsedWire,
         }
     },
     watch: {
-        'wire': {
+        'forceUpdate': {
             handler(newValue, oldValue) {
                 const wiresString = JSON.stringify(this.wire);
-                if (wiresString != this.lastSimulatedWire) {
+                if (wiresString != this.lastUsedWire) {
                     this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = null;
                     this.tryToSend();
-                    this.lastSimulatedWire = wiresString;
-                }
-            },
-            deep: true
-        },
-        'includeCurrentDensity': {
-            handler(newValue, oldValue) {
-                this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = null;
-                this.tryToSend();
-            },
-            deep: true
-        },
-        'operatingPoint': {
-            handler(newValue, oldValue) {
-                if (this.includeCurrentDensity) {
-                    this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = null;
-                    this.tryToSend();
+                    this.lastUsedWire = wiresString;
                 }
             },
             deep: true
