@@ -32,7 +32,7 @@ export default {
         },
         optionsToDisable: {
             type: Array,
-            default: [],
+            default: () => [],
         },
         classInput: {
             type: String,
@@ -70,12 +70,6 @@ export default {
     data() {
         return {
         }
-    },
-    computed: {
-        selectedLabel() {
-        }
-    },
-    watch: { 
     },
     mounted () {
         Object.keys(this.options).forEach((value) => {

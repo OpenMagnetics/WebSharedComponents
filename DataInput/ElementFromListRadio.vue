@@ -37,7 +37,7 @@ export default {
         },
         optionsToDisable: {
             type: Array,
-            default: [],
+            default: () => [],
         },
         valueFontSize: {
             type: [String, Object],

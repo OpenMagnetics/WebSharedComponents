@@ -23,7 +23,7 @@ export default {
         },
         optionsToDisable: {
             type: Array,
-            default: [],
+            default: () => [],
         },
         classInput: {
             type: String,

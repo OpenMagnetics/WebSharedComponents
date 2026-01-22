@@ -24,7 +24,7 @@ export default {
         },
         defaultValue:{
             type: Object,
-            default: {}
+            default: () => ({})
         },
         halfSize:{
             type: Boolean,
@@ -72,7 +72,7 @@ export default {
         },
         addButtonStyle: {
             type: Object,
-            default: {},
+            default: () => ({}),
         },
         removeButtonBgColor: {
             type: String,

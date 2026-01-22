@@ -33,7 +33,7 @@ export default {
         },
         optionsToDisable: {
             type: Array,
-            default: [],
+            default: () => [],
         },
         justifyContent: {
             type: Boolean,

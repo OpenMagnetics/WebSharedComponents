@@ -40,7 +40,7 @@ export default {
         },
         points: {
             type: Array,
-            default: []
+            default: () => []
         },
         xAxisOptions: {
             type: Object,

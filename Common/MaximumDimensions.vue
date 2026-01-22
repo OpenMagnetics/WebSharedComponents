@@ -72,11 +72,6 @@ export default {
             localData,
         }
     },
-    computed: {    },
-    watch: { 
-    },
-    mounted () {
-    },
     methods: {
         checkErrors() {
             let hasError = false;
