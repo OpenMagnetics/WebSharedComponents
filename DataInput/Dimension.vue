@@ -74,27 +74,27 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         labelFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         labelWidthProportionClass:{
             type: String,
-            default: 'col-xs-12 col-md-7'
+            default: 'col-12 md:col-7'
         },
         valueWidthProportionClass:{
             type: String,
-            default: 'col-xs-8 col-md-5'
+            default: 'col-8 md:col-5'
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: "surface-900",
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: "surface-100",
         },
         textColor: {
             type: [String, Object],
@@ -266,14 +266,14 @@ export default {
 }
 </script>
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex" ref="container">
-        <div class="row align-items-center ">
+    <div :data-cy="dataTestLabel + '-container'" class="grid" ref="container">
+        <div class="col-12 grid align-items-center ">
             <label
                 :style="combinedStyle([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 v-if="replaceTitle == null"
                 :data-cy="dataTestLabel + '-title'"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
-                class="rounded-2 p p-0 "
+                class="border-round p-0 "
             >
                 {{shortenedName}}
             </label>
@@ -282,18 +282,18 @@ export default {
                 v-if="replaceTitle != null && replaceTitle != ''"
                 :data-cy="dataTestLabel + '-title'"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
-                class="rounded-2 p-0"
+                class="border-round p-0"
             >
                 {{replaceTitle}}
             </label>
-            <div v-if="localData.scaledValue != null" class="row m-0 px-0 align-items-center " :class="(justifyContent? 'd-flex justify-content-end ' : '') +  valueWidthProportionClass">
+            <div v-if="localData.scaledValue != null" class="grid m-0 px-0 align-items-center " :class="(justifyContent? 'flex justify-content-end ' : '') +  valueWidthProportionClass">
                 <input type="number"
                     :style="combinedStyle([disabled? labelBgColor : valueBgColor, textColor, valueFontSize])"
                     ref="inputRef"
                     :disabled="disabled"
                     :data-cy="dataTestLabel + '-number-input'"
-                    :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, disabled? 'border-0' : '', unit == null && altUnit == null? 'col-12' : 'col-8'])"
-                    class="m-0 pe-0 ps-1 text-end"
+                    :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, disabled? 'border-none' : '', unit == null && altUnit == null? 'col-12' : 'col-8'])"
+                    class="m-0 pr-0 pl-1 text-right"
                     @change="changeScaledValue($event.target.value)"
                     :value="removeTrailingZeroes(localData.scaledValue * visualScale, numberDecimals)"
                 >
@@ -321,8 +321,8 @@ export default {
                 >{{altUnit}}</label>
             </div>
         </div>
-        <div class="row">
-            <label :data-cy="dataTestLabel + '-error-text'" class="text-danger text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
+        <div class="col-12 grid">
+            <label :data-cy="dataTestLabel + '-error-text'" class="text-red-500 text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
         </div>
     </div>
 </template>

@@ -41,15 +41,15 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         labelFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         labelWidthProportionClass:{
             type: String,
-            default: 'col-xs-12 col-md-7'
+            default: 'col-12 md:col-7'
         },
         valueWidthProportionClass:{
             type: String,
@@ -57,11 +57,11 @@ export default {
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: "surface-900",
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: "surface-100",
         },
         textColor: {
             type: [String, Object],
@@ -103,15 +103,15 @@ export default {
 
 
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex">
-        <div class="row">
+    <div :data-cy="dataTestLabel + '-container'" class="grid">
+        <div class="col-12 grid">
             <input 
                 :style="combinedStyle([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-alt-title-label'"
                 v-if="altText != null && !titleSameRow"
                 type="text"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
-                class="rounded-2 p-0 mb-2 border-0"
+                class="border-round p-0 mb-2 border-none"
                 @change="$emit('changeText', $event.target.value)"
                 :value="altText"
             >
@@ -120,32 +120,32 @@ export default {
                 :data-cy="dataTestLabel + '-title'"
                 v-if="altText == null && !titleSameRow"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
-                class="rounded-2 p-0"
+                class="border-round p-0"
             >
                 {{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
             </label>
         </div>
-        <div class="row">
+        <div class="col-12 grid">
             <label
                 :style="combinedStyle([labelFontSize, labelWidthProportionClass, labelBgColor, textColor, labelWidthProportionClass])"
                 :data-cy="dataTestLabel + '-same-row-label'"
                 v-if="titleSameRow"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor, labelWidthProportionClass])"
-                class="rounded-2 p-0"
+                class="border-round p-0"
             >
                 {{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
             </label>
             <div
                 :style="combinedStyle([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, valueWidthProportionClass])"
-                class="form-check"
-                :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, valueWidthProportionClass, disabled? 'border-0' : ''])"
+                class="p-radio-container"
+                :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, valueWidthProportionClass, disabled? 'border-none' : ''])"
                 v-for="[key, value] in optionsIter"
             >
                 <input
                     :disabled="optionsToDisable.includes(value)"
                     :data-cy="dataTestLabel + '-' + value + '-radio-input'"
                     :ref="key"
-                    class="form-check-input"
+                    class="p-radio-input"
                     type="radio"
                     :checked="modelValue[name].includes(value)"
                     :id="key + '-radio-input'"
@@ -157,7 +157,7 @@ export default {
                 &#128293;
                 </label>
                 <label
-                    class="form-check-label"
+                    class="p-radio-label"
                     :for="key + '-radio-input'"
                 >
                     {{key}}

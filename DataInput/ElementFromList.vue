@@ -53,19 +53,19 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         labelFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: "surface-900",
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: "surface-100",
         },
         textColor: {
             type: [String, Object],
@@ -178,15 +178,15 @@ export default {
 </script>
 
 <template>
-    <div :data-cy="dataTestLabel + '-container'" v-tooltip="styleTooltip" class="container-flex">
-        <div v-tooltip="tooltipsMagneticSynthesisDesignRequirements['changeNameWindings']" class="row">
+    <div :data-cy="dataTestLabel + '-container'" v-tooltip="styleTooltip" class="grid">
+        <div v-tooltip="tooltipsMagneticSynthesisDesignRequirements['changeNameWindings']" class="col-12 grid">
             <input
                 :style="combinedStyle([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
                 v-if="altText != null && !titleSameRow"
                 :data-cy="dataTestLabel + '-alt-title-label'"
                 type="text"
                 :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
-                class="rounded-2 ms-3 col-11 p-0 mb-2 border-0"
+                class="border-round ml-3 col-11 p-0 mb-2 border-none"
                 @change="$emit('changeText', $event.target.value)"
                 :value="altText">
             <label
@@ -194,25 +194,25 @@ export default {
                 v-if="altText == null && !titleSameRow"
                 :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 p-0">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
+                class="border-round p-0">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
             </label>
         </div>
-        <div class="row" :class="justifyContent? 'd-flex justify-content-between' : ''">
+        <div class="col-12 grid" :class="justifyContent? 'flex justify-content-between' : ''">
             <label
                 :style="combinedStyle([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-same-row-label'"
                 v-if="titleSameRow"
                 :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
-                class="rounded-2 m-0 p-0">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
+                class="border-round m-0 p-0">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
             </label>
-            <div  v-if="!titleSameRow" class=" col-sm-0 col-md-2">
+            <div  v-if="!titleSameRow" class=" sm:col-0 md:col-2">
             </div>
             <select
                 :style="combinedStyle([selectStyleClass, valueFontSize, disabled? labelBgColor : valueBgColor, textColor])"
                 :disabled="disabled"
                 :data-cy="dataTestLabel + '-select'"
-                :class="combinedClass([selectStyleClass, valueFontSize, disabled? labelBgColor : valueBgColor, textColor, disabled? 'border-0 text-end':''])"
-                class="form-select py-1 px-2 m-0 mt-1 pe-5"
+                :class="combinedClass([selectStyleClass, valueFontSize, disabled? labelBgColor : valueBgColor, textColor, disabled? 'border-none text-right':''])"
+                class="p-select py-1 px-2 m-0 mt-1 pr-5"
                 @change="changeOption"
                 style="width:auto; max-height: 3em;"
                 :value="localData"

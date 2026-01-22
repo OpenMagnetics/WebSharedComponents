@@ -31,19 +31,19 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         labelFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: "surface-900",
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: "surface-100",
         },
         textColor: {
             type: [String, Object],
@@ -109,15 +109,15 @@ export default {
 
 
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex px-2 m-0">
-        <div class="row">
+    <div :data-cy="dataTestLabel + '-container'" class="grid px-2 m-0">
+        <div class="col-12 grid">
             <label
                 v-if="labelWidthProportionClass != 'col-0'"
                 :style="combinedStyle([labelWidthProportionClass, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
                 :for="name + '-text-input'"
                 :class="combinedClass([labelWidthProportionClass, labelBgColor, textColor])"
-                class="rounded-2 fs-5 "
+                class="border-round text-xl "
             >
                 {{replaceTitle != null? replaceTitle : toTitleCase(name)}}
             </label>
@@ -131,7 +131,7 @@ export default {
                 @change="changeText($event.target.value)"
                 :value="localData"
             >
-            <label class="text-danger text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
+            <label class="text-red-500 text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
         </div>
     </div>
 </template>

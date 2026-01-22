@@ -49,7 +49,7 @@ export default {
         },
         removeElementButtonColor: {
             type: [String, Object],
-            default: "text-danger",
+            default: "text-red-500",
         },
         labelWidthProportionClass: {
             type: String,
@@ -73,11 +73,11 @@ export default {
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: "surface-900",
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: "surface-100",
         },
         textColor: {
             type: [String, Object],
@@ -274,20 +274,20 @@ export default {
 </script>
 
 <template>
-    <div class="container-flex border pt-2 ps-3">
-        <div class="row">
+    <div class="grid border-1 pt-2 pl-3">
+        <div class="col-12 grid">
             <div 
                 class="col-9"
             >
                 {{title}}
             </div>
             <div 
-                class="col-3 row"
+                class="col-3 grid"
             >
                 <button
                     v-if="enableEditing"
                     :style="showEditor? $styleStore[styleSection].activeButton : $styleStore[styleSection].button"
-                    class="btn col-5 p-0"
+                    class="p-button col-5 p-0"
                     @click="onEdit"
                 >
                     <i class="fa-solid fa-pen-to-square"></i>
@@ -295,22 +295,22 @@ export default {
                 <button
                     v-if="showGraph"
                     :style="showConfiguration? $styleStore[styleSection].activeButton : $styleStore[styleSection].button"
-                    class="btn offset-1 col-5 p-0"
+                    class="p-button col-offset-1 col-5 p-0"
                     @click="showConfiguration = !showConfiguration && ! showEditor"
                 >
                     <i class="fa-solid fa-gear"></i>
                 </button>
             </div>
         </div>
-        <div class="row">
+        <div class="col-12 grid">
             <div
                 v-if="showEditor"
                 class="col-12"
             >
-                <div class="row">
+                <div class="grid">
                     <ElementFromList
                         v-if="Object.keys(propertyLabels).length > 1"
-                        class="offset-1 col-10 mb-1 text-start"
+                        class="col-offset-1 col-10 mb-1 text-left"
                         :dataTestLabel="dataTestLabel + '-PropertySelector'"
                         :name="'propertyToEdit'"
                         :titleSameRow="true"
@@ -328,10 +328,10 @@ export default {
                         @update="propertyToEditChanged"
                     />
                 </div>
-                <div class="row"  v-for="row, index in properties[selectedPropertyToEdit]" :key="index">
+                <div class="grid"  v-for="row, index in properties[selectedPropertyToEdit]" :key="index">
                     <PairOfDimensions
-                        :class="index < properties[selectedPropertyToEdit].length - 1? 'border-bottom' : '' "
-                        class="pt-1 pb-0 pe-4 mb-0 col-10"
+                        :class="index < properties[selectedPropertyToEdit].length - 1? 'border-bottom-1' : '' "
+                        class="pt-1 pb-0 pr-4 mb-0 col-10"
                         :names="[propertiesConfiguration.xAxisLabel, propertiesConfiguration.yAxisLabel]"
                         :replaceTitle="[propertiesConfiguration.xAxisReplaceLabel, propertiesConfiguration.yAxisReplaceLabel[selectedPropertyToEdit]]"
                         :units="[propertiesConfiguration.xAxisUnit, propertiesConfiguration.yAxisUnit]"
@@ -351,12 +351,12 @@ export default {
                         @update="$emit('onDimensionUpdate', $event, selectedPropertyToEdit, index)"
                     />
                     <div
-                        class="col-2 row"
+                        class="col-2 grid"
                     >
                         <button
                             :data-cy="dataTestLabel + '-remove-point-button'"
                             type="button"
-                            class="btn h-100 w-50 btn-circle col-6"
+                            class="p-button h-100 w-50 btn-circle col-6"
                             @click="onRemovePoint(index)">
                             <i
                                 :style="combinedStyle([removeElementButtonColor])"
@@ -367,7 +367,7 @@ export default {
                         <button
                             :data-cy="dataTestLabel + '-add-point-below-button'"
                             type="button"
-                            class="btn btn-circle h-100 w-50 col-6"
+                            class="p-button btn-circle h-100 w-50 col-6"
                             @click=" onAddPointBelow(index)"
                             >
                             <i
@@ -377,7 +377,7 @@ export default {
                             />
                         </button>
                     </div>
-                    <label :data-cy="dataTestLabel + '-' + index + '-error-text'" class="text-danger text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages[index]}}</label>
+                    <label :data-cy="dataTestLabel + '-' + index + '-error-text'" class="text-red-500 text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages[index]}}</label>
                 </div>
             </div>
             <div 
@@ -385,7 +385,7 @@ export default {
                 class="col-3"
             >
                 <ElementFromList
-                    class="col-12 mb-1 text-start"
+                    class="col-12 mb-1 text-left"
                     :dataTestLabel="dataTestLabel + '-GraphsSelector'"
                     :name="'xAxisMode'"
                     :titleSameRow="false"
@@ -403,7 +403,7 @@ export default {
                     @update="axisModeChanged"
                 />
                 <ElementFromList
-                    class="col-12 mb-1 text-start"
+                    class="col-12 mb-1 text-left"
                     :dataTestLabel="dataTestLabel + '-GraphsSelector'"
                     :name="'yAxisMode'"
                     :titleSameRow="false"
@@ -426,17 +426,17 @@ export default {
                 class="col-12 my-2"
             >
                 <label
-                    class="text-danger pt-1 mx-3 "
+                    class="text-red-500 pt-1 mx-3 "
                     style="font-size: 1em"
                 >            
                     {{'Property is missing'}}
                 </label>
-                <button class="btn btn-primary" @click="addFirstValue()">Add values</button>
+                <button class="p-button p-button-primary" @click="addFirstValue()">Add values</button>
             </span>
             <div 
                 v-if="!showEditor"
                 :class="showEditor || showConfiguration? 'col-9' : 'col-12'"
-                class="pe-3"
+                class="pr-3"
             >
                 <LineVisualizer 
                     v-if="showGraph"

@@ -36,19 +36,19 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         labelFontSize:{
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: "surface-900",
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: "surface-100",
         },
         textColor: {
             type: [String, Object],
@@ -153,15 +153,15 @@ export default {
 
 
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex">
-        <div class="row">
+    <div :data-cy="dataTestLabel + '-container'" class="grid">
+        <div class="col-12 grid">
             <label
                 :style="combinedStyle([labelBgColor, textColor, labelFontSize])"
                 v-if="replaceTitle == null"
                 :data-cy="dataTestLabel + '-title'"
                 :for="name + '-text-input'"
                 :class="combinedClass([labelBgColor, textColor, labelFontSize])"
-                class="rounded-2 m-0 col-8"
+                class="border-round m-0 col-8"
             >
                 {{toTitleCase(name)}}
             </label>
@@ -171,7 +171,7 @@ export default {
                 :data-cy="dataTestLabel + '-title'"
                 :for="name + '-text-input'"
                 :class="combinedClass([labelBgColor, textColor, labelFontSize])"
-                class="rounded-2 m-0 col-8"
+                class="border-round m-0 col-8"
             >
                 {{replaceTitle}}
             </label>
@@ -187,7 +187,7 @@ export default {
                 @change="changeText($event.target.value)"
                 :value="localData"
             >
-            <label class="text-danger text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
+            <label class="text-red-500 text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
         </div>
     </div>
 </template>

@@ -1,0 +1,167 @@
+/* 
+ * PrimeFlex Compatibility CSS for WebSharedComponents
+ * Provides styling for components migrated from Bootstrap to PrimeFlex
+ */
+
+/* Form select styling to match Bootstrap form-select */
+.p-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    padding-right: 2.25rem;
+}
+
+/* Checkbox styling */
+.p-checkbox-input {
+    width: 1em;
+    height: 1em;
+    margin-top: 0.25em;
+    vertical-align: top;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 0.25em;
+    background-color: transparent;
+}
+
+.p-checkbox-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* Radio button styling */
+.p-radio-input {
+    width: 1em;
+    height: 1em;
+    margin-top: 0.25em;
+    vertical-align: top;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 50%;
+    background-color: transparent;
+}
+
+.p-radio-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* Button styling */
+.p-button {
+    display: inline-block;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid transparent;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    border-radius: 0.25rem;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.p-button-primary {
+    color: #fff;
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.p-button-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+.p-button-danger {
+    color: #fff;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+/* Custom color classes to match Bootstrap naming */
+.surface-900 {
+    background-color: #212529 !important;
+}
+
+.surface-100 {
+    background-color: #f8f9fa !important;
+}
+
+.surface-transparent {
+    background-color: transparent !important;
+}
+
+/* Float utility */
+.float-right {
+    float: right !important;
+}
+
+/* Form label styling */
+.p-form-label {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+}
+
+/* Unit select - no arrow */
+.unit-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none !important;
+}
+
+.unit-select::-ms-expand {
+    display: none;
+}
+
+/* Remove button hover effect */
+.remove-button {
+    display: block;
+}
+
+.remove-button:hover .normal-text {
+    display: none;
+}
+
+.remove-button:hover {
+    background-color: #dc3545 !important;
+}
+
+.remove-button .icon {
+    opacity: 0;
+}
+
+.remove-button:hover .icon {
+    opacity: 1;
+}
+/* CSS Custom Properties to match Bootstrap color variables */
+/* These ensure components that read --bs-* variables continue to work */
+:root {
+    --bs-primary: #0d6efd;
+    --bs-secondary: #6c757d;
+    --bs-success: #198754;
+    --bs-info: #0dcaf0;
+    --bs-warning: #ffc107;
+    --bs-danger: #dc3545;
+    --bs-light: #f8f9fa;
+    --bs-dark: #212529;
+    --bs-white: #ffffff;
+}
+
+/* Additional utility classes for display */
+.block {
+    display: block !important;
+}
+
+.inline-block {
+    display: inline-block !important;
+}
+
+.container {
+    width: 100%;
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
+    margin-right: auto;
+    margin-left: auto;
+}

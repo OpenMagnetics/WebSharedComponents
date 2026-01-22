@@ -38,27 +38,27 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         labelFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         labelWidthProportionClass:{
             type: String,
-            default: 'col-xs-12 col-md-4'
+            default: 'col-12 md:col-4'
         },
         valueWidthProportionClass:{
             type: String,
-            default: 'col-xs-8 col-md-8'
+            default: 'col-8 md:col-8'
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: "surface-900",
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: "surface-100",
         },
         textColor: {
             type: [String, Object],
@@ -181,19 +181,19 @@ export default {
 
 
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex" ref="container">
-        <div class="row" v-tooltip="styleTooltip">
+    <div :data-cy="dataTestLabel + '-container'" class="grid" ref="container">
+        <div class="col-12 grid" v-tooltip="styleTooltip">
             <label
                 :style="combinedStyle([labelFontSize, labelBgColor, textColor])"
                 v-tooltip="tooltipsMagneticBuilder.coreGapping"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 col-12">
+                class="border-round col-12">
                 {{title}}
             </label>
-            <div class="offset-1 col-11">
+            <div class="col-offset-1 col-11">
                 <ElementFromList
                     v-tooltip="tooltipsMagneticBuilder.coreGappingType"
-                    class="col-12 text-start m-0 p-0"
+                    class="col-12 text-left m-0 p-0"
                     :dataTestLabel="dataTestLabel + '-GapType'"
                     :name="'gapType'"
                     :replaceTitle="'Type'"
@@ -213,7 +213,7 @@ export default {
                     @update="update"
                 />
 
-                <Dimension class="col-12 text-start"
+                <Dimension class="col-12 text-left"
                     v-tooltip="tooltipsMagneticBuilder.coreGappingLength"
                     v-if="localData.gapType != 'Ungapped'"
                     :name="'gapLength'"
@@ -237,7 +237,7 @@ export default {
                     @update="update"
                 />
 
-                <Dimension class="col-12 text-start"
+                <Dimension class="col-12 text-left"
                     v-tooltip="tooltipsMagneticBuilder.coreGappingNumberGaps"
                     :name="'numberGaps'"
                     :replaceTitle="'No. Gaps'"

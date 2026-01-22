@@ -27,7 +27,7 @@ export default {
         },
         classInput: {
             type: String,
-            default: 'col-lg-6 col-xl-2',
+            default: 'lg:col-6 xl:col-2',
         },
         justifyContent: {
             type: Boolean,
@@ -39,19 +39,19 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         labelFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: "surface-900",
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: "surface-100",
         },
         textColor: {
             type: [String, Object],
@@ -96,34 +96,34 @@ export default {
 </script>
 
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex ">
-        <div class="row" :class="justifyContent? 'text-start ms-0 ps-0' : 'm-0 ps-3'">
+    <div :data-cy="dataTestLabel + '-container'" class="grid ">
+        <div class="col-12 grid" :class="justifyContent? 'text-left ml-0 pl-0' : 'm-0 pl-3'">
             <label
                 :style="combinedStyle([labelBgColor, textColor, labelFontSize])"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 "
+                class="border-round "
                 :class="combinedClass([labelBgColor, textColor, labelFontSize])"
             >
                 {{toTitleCase(name)}}
             </label>
-        <div class="row">
+        <div class="col-12 grid">
         </div>
-            <div :class="classInput" class="form-check ms-4 " v-for="[key, value] in Object.entries(options)" :key="key">
+            <div :class="classInput" class="p-checkbox-container ml-4 " v-for="[key, value] in Object.entries(options)" :key="key">
                 <input
                     :style="combinedStyle([textColor])"
                     :disabled="optionsToDisable.includes(value) || disabled"
                     :data-cy="dataTestLabel + '-' + value + '-checkbox-input'"
                     :ref="key"
-                    class="form-check-input bg-transparent border"
+                    class="p-checkbox-input surface-transparent border-1"
                     type="checkbox"
                     :checked="modelValue[name].includes(value)"
                     :id="name + '-checkbox-input'"
-                    :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, disabled? 'border-0' : ''])"
+                    :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, disabled? 'border-none' : ''])"
                     @change="changedCheckedValue(value)"
                 >
                 <label 
                     :style="combinedStyle([labelBgColor, textColor, valueFontSize])"
-                    class="form-check-label"
+                    class="p-checkbox-label"
                     :class="combinedClass([labelBgColor, textColor, valueFontSize])"
                     :for="name + '-checkbox-input'">
                     {{value}}

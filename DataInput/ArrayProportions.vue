@@ -58,11 +58,11 @@ export default {
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: "surface-900",
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: "surface-100",
         },
         textColor: {
             type: [String, Object],
@@ -166,26 +166,26 @@ export default {
 </script>
 
 <template>
-    <div class="container-flex">
-        <div class="row">
+    <div class="grid">
+        <div class="col-12 grid">
             <label
                 v-if="replaceTitle == null"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 fs-5 m-0 text-start"
-                :class="maximumNumberElements != null? 'col-lg-6 col-md-12' : 'col-12'"
+                class="border-round text-xl m-0 text-left"
+                :class="maximumNumberElements != null? 'lg:col-6 md:col-12' : 'col-12'"
             >
                 {{toTitleCase(name)}}
             </label>
             <label
                 v-if="replaceTitle != null"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 fs-5 m-0 text-start"
-                :class="maximumNumberElements != null? 'col-lg-6 col-md-12' : 'col-12'"
+                class="border-round text-xl m-0 text-left"
+                :class="maximumNumberElements != null? 'lg:col-6 md:col-12' : 'col-12'"
             >
                 {{replaceTitle}}
             </label>
-            <div class="col-lg-6 col-md-12">
-                <div class="row m-0 p-0">
+            <div class="lg:col-6 md:col-12">
+                <div class="grid m-0 p-0">
                     <div :data-cy="dataTestLabel + '-' + index + '-container'" class="col-6 " v-for="_, index in modelValue" :key="index">
                         <div class=" m-0 p-0">
                             <Dimension :dataTestLabel="dataTestLabel + '-' + index"
@@ -213,8 +213,8 @@ export default {
                 </div>
             </div>
         </div>
-        <div class="row">
-            <label class="text-danger text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
+        <div class="col-12 grid">
+            <label class="text-red-500 text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
         </div>
     </div>
 </template>

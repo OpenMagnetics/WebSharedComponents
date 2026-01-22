@@ -123,48 +123,48 @@ export default {
 </script>
 
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex border-bottom">
-        <div class="row">
-            <label :data-cy="dataTestLabel + '-title'" class="rounded-2 fs-5 text-start" :class="'col-sm-12 col-md-12'">{{'Maximum Dimensions'}}</label>
+    <div :data-cy="dataTestLabel + '-container'" class="grid border-bottom-1">
+        <div class="col-12 grid">
+            <label :data-cy="dataTestLabel + '-title'" class="border-round text-xl text-left" :class="'sm:col-12 md:col-12'">{{'Maximum Dimensions'}}</label>
         </div>
-        <div class="row">
-            <div class="fs-6 offset-1 col-11 row d-flex justify-content-between">
+        <div class="col-12 grid">
+            <div class="text-base col-offset-1 col-11 grid flex justify-content-between">
                 <div class="col-4">
-                    <label v-if="localData.width.scaledValue != null" for="design-requirements-width-input" class="px-0 col-form-label text-center">Width</label>
+                    <label v-if="localData.width.scaledValue != null" for="design-requirements-width-input" class="px-0 p-form-label text-center">Width</label>
                 </div>
-                <div class="fs-6 col-8 row justify-content-end">
-                    <input v-if="localData.width.scaledValue != null" type="number" class="px-0 col-4 bg-light text-white" id="design-requirements-width-input'" @change="changeScaledValue($event.target.value, 'width')" :value="localData.width.scaledValue">
+                <div class="text-base col-8 grid justify-content-end">
+                    <input v-if="localData.width.scaledValue != null" type="number" class="px-0 col-4 surface-100 text-white" id="design-requirements-width-input'" @change="changeScaledValue($event.target.value, 'width')" :value="localData.width.scaledValue">
                     <DimensionUnit :min="min" :max="max" v-if="unit != null && localData.width.scaledValue != null" :unit="unit" v-model="localData.width.multiplier" class="px-0 col-2" @update:modelValue="changeMultiplier('width')"/>
                 </div>
-                <button v-if="localData.width.scaledValue == null" class="col-12 px-xl-3 px-md-0 btn btn-primary" @click="add('width')">{{'Add Width'}}</button>
+                <button v-if="localData.width.scaledValue == null" class="col-12 xl:px-3 md:px-0 p-button p-button-primary" @click="add('width')">{{'Add Width'}}</button>
             </div>
         </div>
-        <div class="row">
-            <div class="fs-6 offset-1 col-11 row d-flex justify-content-between">
+        <div class="col-12 grid">
+            <div class="text-base col-offset-1 col-11 grid flex justify-content-between">
                 <div class="col-4">
-                    <label v-if="localData.height.scaledValue != null" for="design-requirements-height-input" class="px-0 col-form-label text-center">Height</label>
+                    <label v-if="localData.height.scaledValue != null" for="design-requirements-height-input" class="px-0 p-form-label text-center">Height</label>
                 </div>
-                <div class="fs-6 col-8 row justify-content-end">
-                    <input v-if="localData.height.scaledValue != null" type="number" class="px-0 col-4 bg-light text-white" id="design-requirements-height-input'" @change="changeScaledValue($event.target.value, 'height')" :value="localData.height.scaledValue">
+                <div class="text-base col-8 grid justify-content-end">
+                    <input v-if="localData.height.scaledValue != null" type="number" class="px-0 col-4 surface-100 text-white" id="design-requirements-height-input'" @change="changeScaledValue($event.target.value, 'height')" :value="localData.height.scaledValue">
                     <DimensionUnit :min="min" :max="max" v-if="unit != null && localData.height.scaledValue != null" :unit="unit" v-model="localData.height.multiplier" class="px-0 col-2" @update:modelValue="changeMultiplier('height')"/>
                 </div>
-                <button v-if="localData.height.scaledValue == null" class="col-12 px-xl-3 px-md-0 btn btn-primary" @click="add('height')">{{'Add Height'}}</button>
+                <button v-if="localData.height.scaledValue == null" class="col-12 xl:px-3 md:px-0 p-button p-button-primary" @click="add('height')">{{'Add Height'}}</button>
             </div>
         </div>
-        <div class="row">
-            <div class="fs-6 offset-1 col-11 row d-flex justify-content-between">
+        <div class="col-12 grid">
+            <div class="text-base col-offset-1 col-11 grid flex justify-content-between">
                 <div class="col-4">
-                    <label v-if="localData.depth.scaledValue != null" for="design-requirements-depth-input" class="px-0 col-form-label text-center">Depth</label>
+                    <label v-if="localData.depth.scaledValue != null" for="design-requirements-depth-input" class="px-0 p-form-label text-center">Depth</label>
                 </div>
-                <div class="fs-6 col-8 row justify-content-end">
-                    <input v-if="localData.depth.scaledValue != null" type="number" class="px-0 col-4 bg-light text-white" id="design-requirements-depth-input'" @change="changeScaledValue($event.target.value, 'depth')" :value="localData.depth.scaledValue">
+                <div class="text-base col-8 grid justify-content-end">
+                    <input v-if="localData.depth.scaledValue != null" type="number" class="px-0 col-4 surface-100 text-white" id="design-requirements-depth-input'" @change="changeScaledValue($event.target.value, 'depth')" :value="localData.depth.scaledValue">
                     <DimensionUnit :min="min" :max="max" v-if="unit != null && localData.depth.scaledValue != null" :unit="unit" v-model="localData.depth.multiplier" class="px-0 col-2" @update:modelValue="changeMultiplier('depth')"/>
                 </div>
-                <button v-if="localData.depth.scaledValue == null" class="col-12 px-xl-3 px-md-0 btn btn-primary" @click="add('depth')">{{'Add Depth'}}</button>
+                <button v-if="localData.depth.scaledValue == null" class="col-12 xl:px-3 md:px-0 p-button p-button-primary" @click="add('depth')">{{'Add Depth'}}</button>
             </div>
         </div>
-        <div class="row">
-            <label class="text-danger text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
+        <div class="col-12 grid">
+            <label class="text-red-500 text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
         </div>
     </div>
 </template>

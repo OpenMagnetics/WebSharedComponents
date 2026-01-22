@@ -393,36 +393,36 @@ export default {
 </script>
 
 <template>
-    <div v-if="modelValue.magnetic != null && showWarning && modelValue.magnetic.coil.turnsDescription == null" class="container">
-        <div class="row">
+    <div v-if="modelValue.magnetic != null && showWarning && modelValue.magnetic.coil.turnsDescription == null" class="grid">
+        <div class="col-12 grid">
             <i class="col-12 fa-solid fa-9x fa-triangle-exclamation"></i>
-            <label class="text-danger col-12 pt-1 fs-5" style="font-size: 1em">Winding turns not possible</label>
+            <label class="text-red-500 col-12 pt-1 text-xl" style="font-size: 1em">Winding turns not possible</label>
         </div>
     </div>
-    <div v-if="showWarning && !$stateStore.wire2DVisualizerState.showAnyway" class="container">
-        <div class="row">
+    <div v-if="showWarning && !$stateStore.wire2DVisualizerState.showAnyway" class="grid">
+        <div class="col-12 grid">
             <i class="col-12 fa-solid fa-9x fa-triangle-exclamation"></i>
-            <label class="text-danger col-12 pt-1 fs-5" style="font-size: 1em">Turns don't fit in winding window</label>
-            <button class="btn btn-danger offset-3 col-6 fs-5" @click="showCoilAnyway()">Show me anyway</button>
+            <label class="text-red-500 col-12 pt-1 text-xl" style="font-size: 1em">Turns don't fit in winding window</label>
+            <button class="p-button p-button-danger col-offset-3 col-6 text-xl" @click="showCoilAnyway()">Show me anyway</button>
         </div>
     </div>
 
     <div v-else class="m-0 p-0 Magnetic2DVisualizer text-center mx-auto" ref="Magnetic2DVisualizerContainer" style="height: 100%; width: 100%;">
-        <div v-if="enableZoom" v-show="zoomingPlot" class="row mx-1" style="height: 100%;">
-            <button class="btn" @click="zoomOut()">
+        <div v-if="enableZoom" v-show="zoomingPlot" class="grid mx-1" style="height: 100%;">
+            <button class="p-button" @click="zoomOut()">
                 <label class="col-12 text-info fw-lighter" >(Click on image to go back)</label>
                 <div data-cy="MagneticAdvise-core-field-plot-zoom-image" ref="zoomPlotView" :class="showFieldPlot? '' : ''" class="m-0" style="width: 100%;" />
             </button>
         </div>
 
         <div v-show="!zoomingPlot">
-            <img data-cy="CorePublish-loading" v-if="posting" class="mx-auto d-block container" alt="loading" style="height: auto;" :src="loadingGif">
+            <img data-cy="CorePublish-loading" v-if="posting" class="mx-auto block container" alt="loading" style="height: auto;" :src="loadingGif">
 
             <div v-show="!posting">
                 <div>
                     <button
                         v-if="enableZoom"
-                        class="btn"
+                        class="p-button"
                         @click="zoomIn()"
                     >
                         <label class="col-12 text-info fw-lighter">(Click on image to zoom in)</label>
@@ -434,7 +434,7 @@ export default {
                     <button
                         :style="buttonStyle"
                         v-if="modelValue.magnetic != null && enableOptions && modelValue.magnetic.coil.turnsDescription != null"
-                        class="btn btn-primary mt-1"
+                        class="p-button p-button-primary mt-1"
                         @click="swapFieldPlot()"
                     >
                         {{showFieldPlot? 'Hide H field' : 'Show H field'}}
@@ -442,14 +442,14 @@ export default {
                     <button
                         :style="buttonStyle"
                         v-if="modelValue.magnetic != null && showFieldPlot && enableOptions && modelValue.magnetic.coil.turnsDescription != null"
-                        class="btn btn-primary ms-1 mt-1"
+                        class="p-button p-button-primary ml-1 mt-1"
                         @click="swapIncludeFringing()"
                     >
                         {{includeFringing? 'Exclude Fringing H field' : 'Include Fringing H field'}}
                     </button>
                 </div>
             </div>
-            <label :data-cy="dataTestLabel + '-ErrorMessage'" class="text-danger m-0" style="font-size: 0.9em"> {{errorMessage}}</label>
+            <label :data-cy="dataTestLabel + '-ErrorMessage'" class="text-red-500 m-0" style="font-size: 0.9em"> {{errorMessage}}</label>
         </div>
     </div>
 

@@ -38,11 +38,11 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: "surface-100",
         },
         textColor: {
             type: [String, Object],
@@ -204,8 +204,8 @@ export default {
     <div>
         <select
             :style="combinedStyle([valueFontSize, extraStyleClass, valueBgColor, textColor])"
-            class="form-select m-0 p-0 unit-select"
-            :class="combinedClass([valueFontSize, extraStyleClass, valueBgColor, textColor, disabled? 'border-0':'', extraStyleClass==''? ' text-center p-1 ': ''])"
+            class="p-select m-0 p-0 unit-select"
+            :class="combinedClass([valueFontSize, extraStyleClass, valueBgColor, textColor, disabled? 'border-none':'', extraStyleClass==''? ' text-center p-1 ': ''])"
             :value="modelValueInRange"
             @change="$emit('update:modelValue', Number($event.target.value))"
             style="width:auto;"

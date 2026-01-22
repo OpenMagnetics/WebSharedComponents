@@ -62,7 +62,7 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         labelWidthProportionClass:{
             type: String,
@@ -78,11 +78,11 @@ export default {
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: "surface-900",
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: "surface-100",
         },
         textColor: {
             type: [String, Object],
@@ -185,13 +185,13 @@ export default {
 </script>
 
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex" ref="container">
-        <div class="row align-items-center ">
+    <div :data-cy="dataTestLabel + '-container'" class="grid" ref="container">
+        <div class="col-12 grid align-items-center ">
             <label
                 v-if="replaceTitle == null"
                 :style="combinedStyle([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 pe-0 ps-0"
+                class="border-round pr-0 pl-0"
                 :class="combinedClass([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
             >
                 {{shortenedName}}<sub>{{subscriptName}}</sub>
@@ -200,19 +200,19 @@ export default {
                 v-else
                 :style="combinedStyle([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 pe-0 ps-0"
+                class="border-round pr-0 pl-0"
                 :class="combinedClass([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
             >
                 {{replaceTitle}}<sub>{{subscriptName}}</sub>
             </label>
-            <div v-show="localData.scaledValue != null" :class="valueWidthProportionClass" class="container m-0 px-0">
-                <div class="row m-0 px-0 ">
+            <div v-show="localData.scaledValue != null" :class="valueWidthProportionClass" class="m-0 px-0">
+                <div class="grid m-0 px-0 ">
                     <input 
                         :style="combinedStyle([valueFontSize, labelBgColor, textColor])"
                         :disabled="true"
                         :data-cy="dataTestLabel + '-number-label'"
                         type="number"
-                        class="m-0 px-0 text-end border-0 col-8 pe-1"
+                        class="m-0 px-0 text-right border-none col-8 pr-1"
                         :class="combinedClass([valueFontSize, labelBgColor, textColor])"
                         :value="visuallyScaledValue"
                         ref="inputRef"
@@ -228,15 +228,15 @@ export default {
                         :valueFontSize="valueFontSize"
                         :valueBgColor="labelBgColor"
                         :textColor="textColor"
-                        :extraStyleClass="'text-start'"
+                        :extraStyleClass="'text-left'"
                         :unit="unit"
-                        class="m-0 py-0 px-0 col-4 border-0 "
+                        class="m-0 py-0 px-0 col-4 border-none "
                     />
                     <label
                         :style="combinedStyle([labelBgColor, textColor, valueFontSize])"
                         :data-cy="dataTestLabel + '-DimensionUnit-text'"
                         v-if="unit == null"
-                        class="ms-2 pt-1 px-0 col-2"
+                        class="ml-2 pt-1 px-0 col-2"
                     >
                         {{altUnit}}
                     </label>

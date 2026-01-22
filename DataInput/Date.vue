@@ -24,11 +24,11 @@ export default {
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: "surface-900",
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: "surface-100",
         },
         textColor: {
             type: [String, Object],
@@ -87,14 +87,14 @@ export default {
 </script>
 
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex">
-        <div class="row">
+    <div :data-cy="dataTestLabel + '-container'" class="grid">
+        <div class="col-12 grid">
             <label
                 :style="combinedStyle([labelWidthProportionClass, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
                 :for="name + '-date-input'"
                 :class="combinedClass([labelWidthProportionClass, labelBgColor, textColor])"
-                class="rounded-2 fs-5 col-3 "
+                class="border-round text-xl col-3 "
             >
                 {{toTitleCase(name)}}
             </label>

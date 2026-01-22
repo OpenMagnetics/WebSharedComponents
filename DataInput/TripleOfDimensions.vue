@@ -45,27 +45,27 @@ export default {
         },
         labelWidthProportionClass:{
             type: String,
-            default: 'col-xs-12 col-md-7'
+            default: 'col-12 md:col-7'
         },
         valueWidthProportionClass:{
             type: String,
-            default: 'col-xs-8 col-md-5'
+            default: 'col-8 md:col-5'
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         labelFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: 'text-base'
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: "surface-900",
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: "surface-100",
         },
         textColor: {
             type: [String, Object],
@@ -132,9 +132,9 @@ export default {
 
 
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex">
-        <div class="row">
-            <Dimension class="col-3 offset-0 mb-1 text-start"
+    <div :data-cy="dataTestLabel + '-container'" class="grid">
+        <div class="col-12 grid">
+            <Dimension class="col-3 col-offset-0 mb-1 text-left"
                 :name="names[0]"
                 :replaceTitle="toTitleCase(names[0])"
                 :unit="units[0]"
@@ -156,7 +156,7 @@ export default {
                 :textColor='textColor'
                 :unitExtraStyleClass='unitExtraStyleClass'
             />
-            <Dimension class="col-3 offset-1 mb-1 text-start"
+            <Dimension class="col-3 col-offset-1 mb-1 text-left"
                 :name="names[1]"
                 :replaceTitle="toTitleCase(names[1])"
                 :unit="units[1]"
@@ -178,7 +178,7 @@ export default {
                 :textColor='textColor'
                 :unitExtraStyleClass='unitExtraStyleClass'
             />
-            <Dimension class="col-3 offset-1 mb-1 text-start"
+            <Dimension class="col-3 col-offset-1 mb-1 text-left"
                 :name="names[2]"
                 :replaceTitle="toTitleCase(names[2])"
                 :unit="units[2]"

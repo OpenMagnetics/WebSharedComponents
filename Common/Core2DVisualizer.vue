@@ -119,7 +119,7 @@ export default {
     <div class="m-0 p-0 Core2DVisualizer text-center mx-auto" ref="Core2DVisualizerContainer" >
 
         <div >
-            <img data-cy="CorePublish-loading" v-if="posting" class="mx-auto d-block container" alt="loading" style="height: auto;" :src="loadingGif">
+            <img data-cy="CorePublish-loading" v-if="posting" class="mx-auto block container" alt="loading" style="height: auto;" :src="loadingGif">
 
             <div v-show="!posting">
                 <div>
@@ -127,7 +127,7 @@ export default {
                     <div data-cy="MagneticAdvise-core-field-plot-zoom-image" ref="topView" class="m-0 " style="height: 50%" />
                 </div>
             </div>
-            <label :data-cy="dataTestLabel + '-ErrorMessage'" class="text-danger m-0" style="font-size: 0.9em"> {{errorMessage}}</label>
+            <label :data-cy="dataTestLabel + '-ErrorMessage'" class="text-red-500 m-0" style="font-size: 0.9em"> {{errorMessage}}</label>
         </div>
     </div>
 
