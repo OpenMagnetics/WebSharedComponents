@@ -96,7 +96,7 @@ export default {
         };
 
         if (this.value != null) {
-            var aux;
+            let aux;
             if (this.unit != null) {
                 aux = getMultiplier(Number(this.value), 0.001, false, this.power);
                 localData.scaledValue = removeTrailingZeroes(aux.scaledValue, this.numberDecimals);
@@ -118,7 +118,7 @@ export default {
         }
 
 
-        var shortenedName = this.name;
+        let shortenedName = this.name;
 
         return {
             localData,
@@ -150,12 +150,12 @@ export default {
                     return this.name;
                 }
 
-            var shortenName = this.name;
+            let shortenName = this.name;
             if (this.useTitleCase) {
                 shortenName = toTitleCase(this.name);
             }
             if (this.$refs.container.clientWidth < 400 && this.name.length > 10) {
-                var slice = 7;
+                let slice = 7;
                 if (this.$refs.container.clientWidth < 310)
                     slice = 6;
                 if (this.$refs.container.clientWidth < 250)

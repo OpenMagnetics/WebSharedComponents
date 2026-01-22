@@ -153,8 +153,8 @@ export default {
             const boundingBox = new Box3();
             boundingBox.setFromObject( object );
 
-            var middle = new Vector3();
-            var size = new Vector3();
+            const middle = new Vector3();
+            const size = new Vector3();
             boundingBox.getSize(size);
 
             // figure out how to fit the box in the view:
@@ -236,18 +236,18 @@ export default {
                     if ('familySubtype' in aux['functionalDescription']['shape']){
                         aux['functionalDescription']['shape']['familySubtype'] = String(aux['functionalDescription']['shape']['familySubtype']);
                     }
-                    var result = this.$mkf.calculate_core_data(JSON.stringify(aux), false);
+                    const result = this.$mkf.calculate_core_data(JSON.stringify(aux), false);
 
                     if (result.startsWith("Exception")) {
                         console.error(result);
                         return;
                     }
                     else {
-                        var core = JSON.parse(result);
+                        const core = JSON.parse(result);
                         this.posting = true;
 
-                        var url;
-                        var data;
+                        let url;
+                        let data;
                         if (this.fullCoreModel) {
                             data = core;
                             url = import.meta.env.VITE_API_ENDPOINT + '/core_compute_core_3d_model';

@@ -216,7 +216,7 @@ export default {
                         })
                     }
 
-                    var xValues;
+                    let xValues;
                     if (this.propertiesConfiguration.xAxisMode == "linear") {
                         xValues = linearSpacedArray(this.propertiesConfiguration.xAxisMin, this.propertiesConfiguration.xAxisMax, this.propertiesConfiguration.xAxisNumberPoints);
                     }
@@ -330,7 +330,7 @@ export default {
                         :fontsize="formulaFontSize"
                     />
                 </div>
-                <div class="row"  v-for="value, coefficient in coefficients[selectedEquationToEdit]">
+                <div class="row"  v-for="value, coefficient in coefficients[selectedEquationToEdit]" :key="coefficient">
                     <Dimension 
                         v-if="value != null"
                         :name="coefficient"

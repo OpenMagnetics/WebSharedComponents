@@ -2,7 +2,7 @@ import * as Defaults from './defaults.js'
 import axios from "axios"
 import { ConnectionType } from '/WebSharedComponents/assets/ts/MAS.ts'
 
-var requesting = 0
+let requesting = 0
 
 export function downloadBase64asPDF(pdfBase64, fileName) {
     const linkSource = `data:application/pdf;base64,${pdfBase64}`;
@@ -57,7 +57,7 @@ export function toCamelCase(str) {
 }
 
 export function toPascalCase(string) {
-    var result = toCamelCase(string);
+    const result = toCamelCase(string);
     const finalResult = result.charAt(0).toUpperCase() + result.slice(1);
     return finalResult;
 }
@@ -96,9 +96,9 @@ export function roundValue(chart, datasetIndex, index, value, xPrecision, yPreci
 }
 
 export function formatUnit(valueRaw, unitRaw, power=1, precision=0.001) {
-    var base
-    var unit
-    var label
+    let base
+    let unit
+    let label
     if (Math.abs(valueRaw) < Math.pow(0.000000001, power) && Math.abs(valueRaw) != 0) {
         base = 0.000000000001
         unit = "p" + unitRaw
@@ -145,8 +145,8 @@ export function formatUnit(valueRaw, unitRaw, power=1, precision=0.001) {
 }
 
 export function getMultiplier(value, precision=0.001, disabled=false, power=1) {
-    var multiplier = 1;
-    var scaledValue = value;
+    let multiplier = 1;
+    let scaledValue = value;
     if (disabled) {
         return {scaledValue, multiplier};
     }
@@ -323,9 +323,9 @@ export function unpackDataPoints(dataPoints) {
 
 export function packDataPoints(waveform, frequency, compress) {
     const dataPoints = []
-    var compressedData = []
-    var compressedTime = []
-    var previousSlope = 0
+    let compressedData = []
+    let compressedTime = []
+    let previousSlope = 0
 
     if (!("time" in waveform)) {
         waveform["time"] = []
@@ -336,7 +336,7 @@ export function packDataPoints(waveform, frequency, compress) {
 
     if (compress) {
         for (let i = 0; i < waveform["data"].length; i++) {
-            var slope
+            let slope
             if (i < waveform["data"].length - 1) {
                 slope = (waveform["data"][i + 1] - waveform["data"][i]) / (waveform["time"][i + 1] - waveform["time"][i])
             }
@@ -363,7 +363,7 @@ export function packDataPoints(waveform, frequency, compress) {
 }
 
 export function hexToRgb(hex) {
-    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? {
         r: parseInt(result[1], 16),
         g: parseInt(result[2], 16),
@@ -372,9 +372,9 @@ export function hexToRgb(hex) {
 }
  
 export function guessBasicGappingParameters(core, scale=1) {
-    var gapType = Defaults.defaultGapType;
-    var gapLength = Defaults.defaultGapLength * scale;
-    var numberGaps = Defaults.defaultNumberGaps;
+    let gapType = Defaults.defaultGapType;
+    let gapLength = Defaults.defaultGapLength * scale;
+    let numberGaps = Defaults.defaultNumberGaps;
     if (core['functionalDescription'] != null && core['processedDescription'] != null) {
         if (core['functionalDescription']['gapping'].length == 0) {
             gapType = "Ungapped"
@@ -496,7 +496,7 @@ export function processCoreTexts(data) {
     }
     const numberTurnsPrimary = data.magnetic.coil.functionalDescription[0].numberTurns;
     {
-        var materialName;
+        let materialName;
         if (typeof data.magnetic.core.functionalDescription.material === 'string' || data.magnetic.core.functionalDescription.material instanceof String) {
             materialName = data.magnetic.core.functionalDescription.material;
         }
@@ -526,7 +526,7 @@ export function processCoreTexts(data) {
     }
     if ('temp' in data.magnetic.core) {
         {
-            var aux = formatUnit(1 / data.magnetic.core.temp["25"].reluctance, "H/tu.");
+            let aux = formatUnit(1 / data.magnetic.core.temp["25"].reluctance, "H/tu.");
             localTexts.coreMaterialPermeanceTable = {};
             localTexts.coreMaterialPermeanceTable.text = 'Permeance (AL value)';
             localTexts.coreMaterialPermeanceTable.value_25 = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
@@ -546,14 +546,14 @@ export function processCoreTexts(data) {
             localTexts.coreMaterialEffectivePermeabilityTable.value_100 = `${removeTrailingZeroes(data.magnetic.core.temp["100"].effectivePermeability, 0)}`;
         }
         {
-            var aux = formatTemperature(data.magnetic.core.functionalDescription.material.curieTemperature);
+            const aux = formatTemperature(data.magnetic.core.functionalDescription.material.curieTemperature);
 
             localTexts.coreMaterialCurieTemperatureTable = {};
             localTexts.coreMaterialCurieTemperatureTable.text = 'Curie Temperature';
             localTexts.coreMaterialCurieTemperatureTable.value = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
         }
         {
-            var aux = formatUnit(data.magnetic.core.temp["25"].resistivity, "Ωm");
+            let aux = formatUnit(data.magnetic.core.temp["25"].resistivity, "Ωm");
             localTexts.coreMaterialResistivityTable = {};
             localTexts.coreMaterialResistivityTable.text = 'Resistivity';
             localTexts.coreMaterialResistivityTable.value_25 = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
@@ -561,7 +561,7 @@ export function processCoreTexts(data) {
             localTexts.coreMaterialResistivityTable.value_100 = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
         }
         {
-            var aux = formatUnit(data.magnetic.core.temp["25"].magneticFluxDensitySaturation, "T");
+            let aux = formatUnit(data.magnetic.core.temp["25"].magneticFluxDensitySaturation, "T");
             localTexts.magneticFluxDensitySaturationTable = {};
             localTexts.magneticFluxDensitySaturationTable.text = 'Saturation B Field';
             localTexts.magneticFluxDensitySaturationTable.value_25 = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
@@ -569,7 +569,7 @@ export function processCoreTexts(data) {
             localTexts.magneticFluxDensitySaturationTable.value_100 = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
         }
         {
-            var aux = formatUnit(data.magnetic.core.functionalDescription.material.density * 1000, "g/m³");  // Because the unit is kg
+            const aux = formatUnit(data.magnetic.core.functionalDescription.material.density * 1000, "g/m³");  // Because the unit is kg
             localTexts.coreMaterialDensityTable = {};
             localTexts.coreMaterialDensityTable.text = 'Density';
             localTexts.coreMaterialDensityTable.value = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
@@ -633,7 +633,7 @@ export function processCoreTexts(data) {
     localTexts.windingLossesTable = [];
 
 
-    for (var operatingPointIndex = 0; operatingPointIndex < data.inputs.operatingPoints.length; operatingPointIndex++) {
+    for (let operatingPointIndex = 0; operatingPointIndex < data.inputs.operatingPoints.length; operatingPointIndex++) {
         localTexts.magnetizingInductanceTable.push({text: null, value: null});
         localTexts.coreLossesTable.push({text: null, value: null});
         localTexts.coreTemperatureTable.push({text: null, value: null});
@@ -691,7 +691,7 @@ export function processCoreMaterialTexts(data) {
             });
         }
         {
-            var aux = formatTemperature(data.curieTemperature);
+            const aux = formatTemperature(data.curieTemperature);
 
             localTexts.coreMaterialCurieTemperatureTable = {};
             localTexts.coreMaterialCurieTemperatureTable.text = 'Curie Temperature';
@@ -702,7 +702,7 @@ export function processCoreMaterialTexts(data) {
             localTexts.coreMaterialResistivityTable.text = 'Resistivity';
             localTexts.coreMaterialResistivityTable.value = {};
             Object.entries(data.temp).forEach(([key, val])  => {
-                var aux = formatUnit(val.resistivity, "Ωm");
+                const aux = formatUnit(val.resistivity, "Ωm");
                 localTexts.coreMaterialResistivityTable.value[key] = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
             });
         }
@@ -711,7 +711,7 @@ export function processCoreMaterialTexts(data) {
             localTexts.coreMaterialRemanenceTable.text = 'Remanence';
             localTexts.coreMaterialRemanenceTable.value = {};
             Object.entries(data.temp).forEach(([key, val])  => {
-                var aux = formatUnit(val.remanence, "T");
+                const aux = formatUnit(val.remanence, "T");
                 localTexts.coreMaterialRemanenceTable.value[key] = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
             });
         }
@@ -720,17 +720,17 @@ export function processCoreMaterialTexts(data) {
             localTexts.coreMaterialCoerciveForceTable.text = 'Coercive Force';
             localTexts.coreMaterialCoerciveForceTable.value = {};
             Object.entries(data.temp).forEach(([key, val])  => {
-                var aux = formatUnit(val.coerciveForce, "A/m");
+                const aux = formatUnit(val.coerciveForce, "A/m");
                 localTexts.coreMaterialCoerciveForceTable.value[key] = `${removeTrailingZeroes(aux.label, 1)} ${aux.unit}`;
             });
         }
         {
-            var aux = formatUnit(data.temp["25"].magneticFluxDensitySaturation, "T");
+            const auxInit = formatUnit(data.temp["25"].magneticFluxDensitySaturation, "T");
             localTexts.magneticFluxDensitySaturationTable = {};
             localTexts.magneticFluxDensitySaturationTable.text = 'Saturation B Field';
             localTexts.magneticFluxDensitySaturationTable.value = {};
             Object.entries(data.temp).forEach(([key, val])  => {
-                var aux = formatUnit(val.magneticFluxDensitySaturation, "T");
+                const aux = formatUnit(val.magneticFluxDensitySaturation, "T");
                 localTexts.magneticFluxDensitySaturationTable.value[key] = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
             });
         }
@@ -791,7 +791,7 @@ export function cleanCoil(coilToClean) {
 }
 
 export async function checkAndFixMas(mas, mkf=null) {
-    var numberWindings = 0;
+    let numberWindings = 0;
     if (mas.inputs != null) {
         numberWindings = mas.inputs.designRequirements.turnsRatios.length + 1;
         if (mas.inputs.designRequirements.isolationSides != null) {
@@ -909,10 +909,10 @@ export function range(start, stop, step=1) {
 }
 
 export function linearSpacedArray(a, b, N) {
-    var h = (b - a) / (N-1);
+    const h = (b - a) / (N-1);
     const xs = [];
-    var val = a;
-    for (var x = 0; x < N; ++x) {
+    let val = a;
+    for (let x = 0; x < N; ++x) {
         xs.push(val);
         val += h
     }
@@ -921,14 +921,14 @@ export function linearSpacedArray(a, b, N) {
 
 
 export function logarithmicSpacedArray(a, b, N) {
-    var logmin = Math.log10(a);
-    var logmax = Math.log10(b);
+    const logmin = Math.log10(a);
+    const logmax = Math.log10(b);
 
-    var h = (logmax - logmin) / (N-1);
+    const h = (logmax - logmin) / (N-1);
     const xs = [];
 
-    var val = Math.log10(a);
-    for (var x = 0; x < N; ++x) {
+    let val = Math.log10(a);
+    for (let x = 0; x < N; ++x) {
         xs.push(Math.pow(10, val));
         val += h;
     }
@@ -1111,7 +1111,7 @@ export function ordinalSuffixOf(i) {
 }
 
 export function combinedStyle(styles) {
-    var combinedSettings = {};
+    let combinedSettings = {};
     styles.forEach((style) => {
         if (typeof(style) === 'object') {
             combinedSettings = { ...combinedSettings, ...style };
@@ -1121,7 +1121,7 @@ export function combinedStyle(styles) {
 }
 
 export function combinedClass(classes) {
-    var combinedSettings = '';
+    let combinedSettings = '';
     classes.forEach((style) => {
         if (typeof(style) === 'string') {
             combinedSettings += ' ' + style;
@@ -1131,8 +1131,8 @@ export function combinedClass(classes) {
 }
 
 export function pruneNulls(obj) {
-    var isArray = obj instanceof Array;
-    for (var k in obj){
+    const isArray = obj instanceof Array;
+    for (const k in obj){
         if (obj[k]===null) isArray ? obj.splice(k,1) : delete obj[k];
         else if (typeof obj[k]=="object") pruneNulls(obj[k]);
     }
@@ -1148,9 +1148,9 @@ export function generateHash(string) {
 };
 
 export function base64ToArrayBuffer(base64) {
-    var binaryString = atob(base64);
-    var bytes = new Uint8Array(binaryString.length);
-    for (var i = 0; i < binaryString.length; i++) {
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
     }
     return bytes.buffer;

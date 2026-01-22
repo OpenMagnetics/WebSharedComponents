@@ -71,12 +71,12 @@ export default {
             if (!this.posting && this.wire != null) {
                 this.$mkf.ready.then(_ => {
                     const aux = deepCopy(this.wire);
-                    // var core = JSON.parse(crossReferencers.get_wire_data(JSON.stringify(aux), false));
-                    // var core = JSON.parse(crossReferencers.get_wire_data_by_name(JSON.stringify(aux), false));
+                    // const core = JSON.parse(crossReferencers.get_wire_data(JSON.stringify(aux), false));
+                    // const core = JSON.parse(crossReferencers.get_wire_data_by_name(JSON.stringify(aux), false));
                     this.posting = true;
 
-                    var url;
-                    var data;
+                    let url;
+                    let data;
                     if (this.includeCurrentDensity) {
                         data = {wire: this.wire, operatingPoint: this.operatingPoint}
                         url = import.meta.env.VITE_API_ENDPOINT + '/plot_wire_and_current_density';
@@ -117,22 +117,22 @@ export default {
                         this.$refs.wire2DPlotView.innerHTML = result;
                         this.posting = false;
 
-                        var clientWidth = this.$refs.wire2DPlotViewContainer.clientWidth;
-                        var clientHeight = this.$refs.wire2DPlotViewContainer.clientHeight * 0.90;
-                        var originalWidth = 0;
-                        var originalHeight = 0;
+                        const clientWidth = this.$refs.wire2DPlotViewContainer.clientWidth;
+                        const clientHeight = this.$refs.wire2DPlotViewContainer.clientHeight * 0.90;
+                        let originalWidth = 0;
+                        let originalHeight = 0;
                         {
                             const regex = /width="(\d*\.)?\d+"/i;
                             const aux = this.$refs.wire2DPlotView.innerHTML.match(regex)[0];
                             const regex2 = /(\d*\.)?\d+/g;
-                            var match = aux.match(regex2);
+                            const match = aux.match(regex2);
                             originalWidth = Array.from(match)[0];
                         }
                         {
                             const regex = /height="(\d*\.)?\d+"/i;
                             const aux = this.$refs.wire2DPlotView.innerHTML.match(regex)[0];
                             const regex2 = /(\d*\.)?\d+/g;
-                            var match = aux.match(regex2);
+                            const match = aux.match(regex2);
                             originalHeight = Array.from(match)[0];
                         }
 

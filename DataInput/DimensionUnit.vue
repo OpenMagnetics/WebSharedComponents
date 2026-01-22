@@ -173,8 +173,8 @@ export default {
     computed: {
         modelValueInRange() {
             if (!Object.values(this.multipliersLabel).includes(this.modelValue)) {
-                var distance = 1e+12;
-                var closest = this.modelValue;
+                let distance = 1e+12;
+                let closest = this.modelValue;
                 for (let [key, value] of Object.entries(this.multipliersLabel)) {
                     const thisDistance = Math.abs(value - this.modelValue);
                     if (distance > thisDistance) {

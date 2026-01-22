@@ -73,7 +73,7 @@ export default {
         },
     },
     data() {
-        var localData = this.assignLocalData(this.options)
+        const localData = this.assignLocalData(this.options)
 
         return {
             localData
@@ -93,13 +93,11 @@ export default {
             }
         },
         chosenOption() {
-            console.log(this.options.constructor.name)
-            console.log(this.modelValue[this.name])
             if (this.options.constructor.name === "Array") {
                 return this.modelValue[this.name];
             }
             else {
-                var chosen = null;
+                let chosen = null;
                 for (let [key, value] of Object.entries(this.options)) {
                     if (this.modelValue[this.name] == key) {
                         this.modelValue[this.name] = value;
@@ -110,8 +108,7 @@ export default {
             }
         },
         styleTooltip() {
-            var relative_placement;
-            relative_placement = 'top'
+            const relative_placement = 'top';
             return {
                 theme: {
                     placement: relative_placement,
@@ -139,7 +136,7 @@ export default {
     },
     methods: {
         assignLocalData(options) {
-            var localData;
+            let localData;
             if (options.constructor.name === "Array") {
                 localData = this.modelValue[this.name];
             }
@@ -155,10 +152,10 @@ export default {
             return localData;
         },
         changeOption(event) {
-            var chosen = null;
+            let chosen = null;
 
             if (this.options.constructor.name === "Array") {
-                for (var i = this.options.length - 1; i >= 0; i--) {
+                for (let i = this.options.length - 1; i >= 0; i--) {
                     if (event.target.value == this.options[i]) {
                         chosen = this.options[i];
                     }
@@ -220,7 +217,7 @@ export default {
                 style="width:auto; max-height: 3em;"
                 :value="localData"
             >
-                <option :disabled="optionsToDisable.includes(value)" v-for="value in computedOptions">
+                <option :disabled="optionsToDisable.includes(value)" v-for="value in computedOptions" :key="value">
                     {{value}}
                 </option>
             </select>

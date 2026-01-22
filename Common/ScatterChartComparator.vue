@@ -79,7 +79,7 @@ export default {
           dark: style.getPropertyValue('--bs-dark'),
           white: style.getPropertyValue('--bs-white'),
         };
-        var options = {
+        const options = {
             title: {
                 left: 'center',
                 text: "Core Visual Map",
@@ -198,7 +198,6 @@ export default {
             this.processOptions(this.options);
         },
         highlightIndex(newValue, oldValue) {
-            console.log("highlightIndex")
             setTimeout(() => {this.processOptions(this.options)}, 10);
         },
     },
@@ -210,7 +209,7 @@ export default {
     },
     methods: {
         processSubtext() {
-            var subtext = "";
+            let subtext = "";
             subtext += this.labelFormatter(this.xLabel);
             subtext += " vs ";
             subtext += this.labelFormatter(this.yLabel);
@@ -221,7 +220,6 @@ export default {
             this.data.forEach((elem) => {
                 const aux = [elem[toCamelCase(this.xLabel)], elem[toCamelCase(this.yLabel)]];
                 if (elem[toCamelCase(this.xLabel)] < 1e100 && elem[toCamelCase(this.yLabel)] < 1e100) {
-                    console.log(elem[toCamelCase(this.yLabel)])
                     // TO avoid materiales with no losses because they use the loss factor, which needs current
                     data.push(aux);
                 }
@@ -231,8 +229,8 @@ export default {
         processLimits() {
             const limits = {}
             const referencePoint = [this.reference[toCamelCase(this.xLabel)], this.reference[toCamelCase(this.yLabel)]];
-            var xLimit = 0;
-            var yLimit = 0;
+            let xLimit = 0;
+            let yLimit = 0;
             this.data.forEach((elem) => {
                 const auxPoint = [elem[toCamelCase(this.xLabel)], elem[toCamelCase(this.yLabel)]];
                 if (elem[toCamelCase(this.xLabel)] < 1e100 && elem[toCamelCase(this.yLabel)] < 1e100) {

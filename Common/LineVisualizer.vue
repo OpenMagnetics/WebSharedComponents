@@ -91,7 +91,7 @@ export default {
     data() {
         const limits = this.processLimits()
 
-        var options = {
+        const options = {
             title: {
                 left: 'center',
                 text: this.title,
@@ -242,10 +242,10 @@ export default {
         processLimits() {
             const limits = []
 
-            var xMinimum = Number.MAX_VALUE;
-            var xMaximum = Number.MIN_VALUE;
-            var yMinimum = Number.MAX_VALUE;
-            var yMaximum = Number.MIN_VALUE;
+            let xMinimum = Number.MAX_VALUE;
+            let xMaximum = Number.MIN_VALUE;
+            let yMinimum = Number.MAX_VALUE;
+            let yMaximum = Number.MIN_VALUE;
 
             this.data.forEach((datum) => {
                 datum.data.x.forEach((elem) => {
@@ -295,7 +295,7 @@ export default {
                     type: datum.type,
                 })
 
-                var showPoints;
+                let showPoints;
                 if (typeof(this.showPoints) == "boolean") {
                     showPoints = this.showPoints;
                 }
@@ -336,8 +336,8 @@ export default {
             options.xAxis.type = this.xAxisOptions.type;
 
             limits.yAxis.forEach((elem, index) => {
-                var numberDecimals = 2;
-                var numberDecimalsPointer = numberDecimals
+                let numberDecimals = 2;
+                let numberDecimalsPointer = numberDecimals
                 if (elem.min < 1) {
                     if (this.data[index].type == "log") {
                         numberDecimals = Math.abs(Math.floor(Math.log10(elem.min)));

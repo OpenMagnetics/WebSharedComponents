@@ -104,7 +104,7 @@ export default {
         },
     },
     data() {
-        var localData = {
+        const localData = {
             minimum: {
                 multiplier: null,
                 scaledValue: null
@@ -162,10 +162,10 @@ export default {
         shortenedButtonLabels() {
             const shortenedButtonLabels = {}
             for (let [key, value] of Object.entries(this.buttonLabels)) {
-                var label = value;
+                let label = value;
                 if (window.innerWidth > 768 && window.innerWidth < 1005 && !this.halfSize ||
                     window.innerWidth > 768 && window.innerWidth < 2000 && this.halfSize) {
-                    var slice = 3;
+                    let slice = 3;
 
                     if (window.innerWidth < 1500 && this.halfSize){
                         slice = 2;
@@ -181,8 +181,7 @@ export default {
             return shortenedButtonLabels
         },
         styleTooltip() {
-            var relative_placement;
-            relative_placement = 'top'
+            const relative_placement = 'top';
             return {
                 theme: {
                     placement: relative_placement,
@@ -199,7 +198,7 @@ export default {
     },
     methods: {
         checkErrors() {
-            var hasError = false;
+            let hasError = false;
             this.errorMessages = "";
             if (this.localData.minimum.scaledValue == null && this.localData.nominal.scaledValue == null && this.localData.maximum.scaledValue == null && !this.allowAllNull) {
                 hasError = true;
@@ -280,7 +279,7 @@ export default {
             this.update(field, actualValue);
         },
         add(field) {
-            var newValue = this.defaultValue[field];
+            let newValue = this.defaultValue[field];
             if (field == 'minimum') {
                 if (this.localData.nominal.scaledValue != null) {
                     newValue = this.localData.nominal.scaledValue / 2;

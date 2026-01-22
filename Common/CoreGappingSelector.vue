@@ -66,7 +66,7 @@ export default {
         },
     },
     data() {
-        var localData = guessBasicGappingParameters(this.core, 1);
+        const localData = guessBasicGappingParameters(this.core, 1);
         const previousGapType = localData.gapType;
 
         const blockingRebounds = false;
@@ -80,8 +80,7 @@ export default {
     },
     computed: {
         styleTooltip() {
-            var relative_placement;
-            relative_placement = 'top'
+            const relative_placement = 'top';
             return {
                 theme: {
                     placement: relative_placement,
@@ -103,7 +102,7 @@ export default {
     },
     methods: {
         checkErrors() {
-            var hasError = false;
+            let hasError = false;
             this.errorMessages = "";
             return hasError;
         },
@@ -151,7 +150,7 @@ export default {
                     "length": this.localData.gapLength,
                     "type": "subtractive"
                 }
-                for (var i = this.localData.numberGaps - 1; i >= 0; i--) {
+                for (let i = this.localData.numberGaps - 1; i >= 0; i--) {
                     gapping.push(coreGap);
                 }
                 gapping.push(residualGap);

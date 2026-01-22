@@ -72,8 +72,8 @@ export default {
     },
     methods: {
         changedCheckedValue(checkedValue) {
-            var found = false;
-            var newList = [];
+            let found = false;
+            const newList = [];
             for (let [key, value] of Object.entries(this.modelValue[this.name])) {
                 if (value == checkedValue) {
                     found = true;
@@ -108,7 +108,7 @@ export default {
             </label>
         <div class="row">
         </div>
-            <div :class="classInput" class="form-check ms-4 " v-for="[key, value] in Object.entries(options)">
+            <div :class="classInput" class="form-check ms-4 " v-for="[key, value] in Object.entries(options)" :key="key">
                 <input
                     :style="combinedStyle([textColor])"
                     :disabled="optionsToDisable.includes(value) || disabled"

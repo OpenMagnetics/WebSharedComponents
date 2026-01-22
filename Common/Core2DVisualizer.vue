@@ -77,12 +77,8 @@ export default {
 
                 this.$axios.post(url, this.core.functionalDescription.shape)
                 .then(response => {
-                    console.log(response)
-                    // return
-
-
-                    var clientWidth = this.$refs.Core2DVisualizerContainer.clientWidth;
-                    var clientHeight = this.$refs.Core2DVisualizerContainer.clientHeight * 0.90;
+                    const clientWidth = this.$refs.Core2DVisualizerContainer.clientWidth;
+                    const clientHeight = this.$refs.Core2DVisualizerContainer.clientHeight * 0.90;
                     this.$refs.frontView.innerHTML = response.data.front_view;
                     this.$refs.topView.innerHTML = response.data.top_view;
                     this.errorMessage = "";

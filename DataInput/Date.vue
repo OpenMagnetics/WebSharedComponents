@@ -44,7 +44,7 @@ export default {
         },
     },
     data() {
-        var localData = "";
+        let localData = "";
 
         if (this.modelValue[this.name] == null &&
             this.defaultValue != null) {
@@ -66,12 +66,7 @@ export default {
     },
     watch: {
         modelValue(newValue, oldValue) {
-            console.log("this.modelValue[this.name]")
-            console.log(this.modelValue[this.name])
             this.modelValue[this.name] = newValue[this.name];
-            console.log("newValue[this.name]")
-            console.log(newValue[this.name])
-            console.log(newValue[this.name])
         },
     },
     mounted () {

@@ -86,16 +86,16 @@ export default {
     },
     methods: {
         getRandomColor() {
-            var letters = '0123456789ABCDEF';
-            var color = '#';
-            for (var i = 0; i < 6; i++) {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
                 color += letters[Math.floor(Math.random() * 16)];
             }
             return color;
         },
         changedCheckedValue(checkedValue) {
-            var found = false;
-            var newList = [];
+            let found = false;
+            const newList = [];
             for (let [key, value] of Object.entries(this.modelValue[this.name])) {
                 if (value == checkedValue) {
                     found = true;
@@ -129,7 +129,7 @@ export default {
                 {{toTitleCase(name)}}
             </label>
         </div>
-            <div :class="classInput" class="form-check ms-4 " v-for="[key, value] in Object.entries(options)">
+            <div :class="classInput" class="form-check ms-4 " v-for="[key, value] in Object.entries(options)" :key="key">
                 <input
                     :style="combinedStyle([textColor])"
                     :disabled="optionsToDisable.includes(value) || disabled"

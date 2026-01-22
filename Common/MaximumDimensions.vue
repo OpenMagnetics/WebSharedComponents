@@ -32,7 +32,7 @@ export default {
         },
     },
     data() {
-        var localData = {
+        const localData = {
             'width': {
                 multiplier: null,
                 scaledValue: null
@@ -79,7 +79,7 @@ export default {
     },
     methods: {
         checkErrors() {
-            var hasError = false;
+            let hasError = false;
             this.errorMessages = "";
             return hasError;
         },

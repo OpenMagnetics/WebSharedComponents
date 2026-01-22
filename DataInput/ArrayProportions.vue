@@ -112,7 +112,7 @@ export default {
     methods: {
         resizeArray(newLength) {
             const newElements = [];
-            for (var i = 0; i < newLength; i++) {
+            for (let i = 0; i < newLength; i++) {
                 if (i < this.modelValue.length) {
                     newElements.push(this.modelValue[i]);
                 }
@@ -133,7 +133,7 @@ export default {
             this.modelValue.splice(index, 1)
         },
         update(updatedValue, updatedIndex, force=false) {
-            var total = 0;
+            let total = 0;
             for (const [key, value] of Object.entries(this.localData)) {
                 total += value;
             }
@@ -144,7 +144,7 @@ export default {
                 const remaining = Math.max(this.min, this.max - fixedValue);
 
                 if (total > this.max) {
-                    for (var index = 0; index < this.modelValue.length; index++) {
+                    for (let index = 0; index < this.modelValue.length; index++) {
                         if (index != updatedIndex) {
                             this.localData[index] = remaining / (this.modelValue.length - 1);
                         }
@@ -152,7 +152,7 @@ export default {
                 }
 
                 this.forceUpdate += 1;
-                for (var index = 0; index < this.modelValue.length; index++) {
+                for (let index = 0; index < this.modelValue.length; index++) {
                     this.modelValue[index] = this.localData[index] / 100;
                 }
                 this.blockingRebounds = true;
@@ -186,7 +186,7 @@ export default {
             </label>
             <div class="col-lg-6 col-md-12">
                 <div class="row m-0 p-0">
-                    <div :data-cy="dataTestLabel + '-' + index + '-container'" class="col-6 " v-for="_, index in modelValue">
+                    <div :data-cy="dataTestLabel + '-' + index + '-container'" class="col-6 " v-for="_, index in modelValue" :key="index">
                         <div class=" m-0 p-0">
                             <Dimension :dataTestLabel="dataTestLabel + '-' + index"
                                 :allowNegative="allowNegative"

@@ -80,8 +80,8 @@ export default {
         },
     },
     data() {
-        var localData = {};
-        var forceUpdate = 0;
+        const localData = {};
+        const forceUpdate = 0;
 
         if (this.modelValue[this.names[0]] != null) {
             localData[this.names[0]] = this.modelValue[this.names[0]];

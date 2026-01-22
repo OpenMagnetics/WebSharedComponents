@@ -60,7 +60,7 @@ export default {
         },
     },
     data() {
-        var localData = "";
+        let localData = "";
 
         if (this.modelValue != null) {
             localData = this.modelValue;
@@ -92,7 +92,7 @@ export default {
 
             this.localData = "";
             newValueArray.forEach((newChar) => {
-                var found = false;
+                let found = false;
                 allowedCharactersArray.forEach((allowedChar) => {
                     if (allowedChar == newChar) {
                         found = true;
@@ -103,11 +103,11 @@ export default {
                 }
             });
 
-            var missingValues = false;
-            var missingValue = "";
+            let missingValues = false;
+            let missingValue = "";
             if (!this.allowMissing) {
                 allowedCharactersArray.forEach((allowedChar) => {
-                    var found = false;
+                    let found = false;
                     newValueArray.forEach((newChar) => {
                         if (allowedChar == newChar) {
                             found = true;
@@ -120,9 +120,9 @@ export default {
                 });
             }
 
-            var consecutiveValues = false;
+            let consecutiveValues = false;
             if (!this.allowConsecutive) {
-                for (var i = 0; i < newValueArray.length - 1; i++) {
+                for (let i = 0; i < newValueArray.length - 1; i++) {
                     if (newValueArray[i] == newValueArray[i + 1]) {
                         consecutiveValues = true;
                     }

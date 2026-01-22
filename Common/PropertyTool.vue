@@ -159,7 +159,7 @@ export default {
             if (this.data.length == 0) {
                 return false;
             }
-            var result = false;
+            let result = false;
             this.data.forEach((elem) => {
                 if (elem.data.x != null && elem.data.x.length > 1) {
                     result = true;
@@ -186,14 +186,12 @@ export default {
     },
     methods: {
         checkData() {
-            console.log("Checking data")
             this.errorMessages = [];
             this.data[this.selectedPropertyToEdit].data.x.forEach((elem, index) => {
                 this.errorMessages.push("");
                 if (index < this.data[this.selectedPropertyToEdit].data.x.length - 1) {
                     const nextElem = this.data[this.selectedPropertyToEdit].data.x[index + 1];
                     if (elem == nextElem) {
-                        console.log("ea")
                         this.errorMessages[index + 1] = `Value repeated for ${this.propertiesConfiguration.xAxisLabel}: ${elem}`;
                     }
 
@@ -330,7 +328,7 @@ export default {
                         @update="propertyToEditChanged"
                     />
                 </div>
-                <div class="row"  v-for="row, index in properties[selectedPropertyToEdit]">
+                <div class="row"  v-for="row, index in properties[selectedPropertyToEdit]" :key="index">
                     <PairOfDimensions
                         :class="index < properties[selectedPropertyToEdit].length - 1? 'border-bottom' : '' "
                         class="pt-1 pb-0 pe-4 mb-0 col-10"

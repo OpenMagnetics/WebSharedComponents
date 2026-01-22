@@ -207,16 +207,16 @@ export default {
                             this.posting = false;
                             return;
                         }
-                        var clientWidth = this.$refs.Magnetic2DVisualizerContainer.clientWidth;
-                        var clientHeight = this.$refs.Magnetic2DVisualizerContainer.clientHeight * (this.enableOptions? 0.90 : 1);
-                        var originalWidth = 0;
-                        var originalHeight = 0;
+                        const clientWidth = this.$refs.Magnetic2DVisualizerContainer.clientWidth;
+                        const clientHeight = this.$refs.Magnetic2DVisualizerContainer.clientHeight * (this.enableOptions? 0.90 : 1);
+                        let originalWidth = 0;
+                        let originalHeight = 0;
                         {
                             const regex = /width="(\d*\.)?\d+"/i;
                             const aux = this.$refs.plotView.innerHTML.match(regex);
                             if (aux!= null && aux.length > 0) {
                                 const regex2 = /(\d*\.)?\d+/g;
-                                var match = aux[0].match(regex2);
+                                const match = aux[0].match(regex2);
                                 originalWidth = Array.from(match)[0];
                             }
                         }
@@ -225,7 +225,7 @@ export default {
                             const aux = this.$refs.plotView.innerHTML.match(regex);
                             if (aux!= null && aux.length > 0) {
                                 const regex2 = /(\d*\.)?\d+/g;
-                                var match = aux[0].match(regex2);
+                                const match = aux[0].match(regex2);
                                 originalHeight = Array.from(match)[0];
                             }
                         }
@@ -282,16 +282,16 @@ export default {
                             this.posting = false;
                             return;
                         }
-                        var clientWidth = this.$refs.Magnetic2DVisualizerContainer.clientWidth;
-                        var clientHeight = this.$refs.Magnetic2DVisualizerContainer.clientHeight * (this.enableOptions? 0.90 : 1);
-                        var originalWidth = 0;
-                        var originalHeight = 0;
+                        const clientWidth = this.$refs.Magnetic2DVisualizerContainer.clientWidth;
+                        const clientHeight = this.$refs.Magnetic2DVisualizerContainer.clientHeight * (this.enableOptions? 0.90 : 1);
+                        let originalWidth = 0;
+                        let originalHeight = 0;
                         {
                             const regex = /width="(\d*\.)?\d+"/i;
                             const aux = this.$refs.plotView.innerHTML.match(regex);
                             if (aux!= null && aux.length > 0) {
                                 const regex2 = /(\d*\.)?\d+/g;
-                                var match = aux[0].match(regex2);
+                                const match = aux[0].match(regex2);
                                 originalWidth = Array.from(match)[0];
                             }
                         }
@@ -300,7 +300,7 @@ export default {
                             const aux = this.$refs.plotView.innerHTML.match(regex);
                             if (aux!= null && aux.length > 0) {
                                 const regex2 = /(\d*\.)?\d+/g;
-                                var match = aux[0].match(regex2);
+                                const match = aux[0].match(regex2);
                                 originalHeight = Array.from(match)[0];
                             }
                         }

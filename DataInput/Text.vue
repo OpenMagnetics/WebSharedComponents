@@ -63,7 +63,7 @@ export default {
         },
     },
     data() {
-        var localData = "";
+        let localData = "";
 
         if (this.modelValue[this.name] == null &&
             this.defaultValue != null) {
