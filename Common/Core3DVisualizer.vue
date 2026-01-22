@@ -259,10 +259,10 @@ export default {
 
                         this.hasFreeCADError = false;
                         this.removeObject3D(this.current3dObject);
-                        core = clean(core);
+                        data = clean(data);
 
-                        if (core.functionalDescription.gapping == undefined) {
-                            core.functionalDescription.gapping = []
+                        if (data.functionalDescription.gapping == undefined) {
+                            data.functionalDescription.gapping = []
                         }
 
                         this.$axios.post(url, data)
