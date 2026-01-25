@@ -1,5 +1,6 @@
 <script setup>
 import { deepCopy } from '../assets/js/utils.js'
+import { waitForMkf } from '../assets/js/mkfRuntime.js'
 
 </script>
 
@@ -67,9 +68,10 @@ export default {
         },
     },
     methods: {
-        computeWireRemotely() {
+        async computeWireRemotely() {
             if (!this.posting && this.wire != null) {
-                this.$mkf.ready.then(_ => {
+                try {
+                    const mkf = await waitForMkf();
                     const aux = deepCopy(this.wire);
                     // const core = JSON.parse(crossReferencers.get_wire_data(JSON.stringify(aux), false));
                     // const core = JSON.parse(crossReferencers.get_wire_data_by_name(JSON.stringify(aux), false));
@@ -102,19 +104,18 @@ export default {
                         this.posting = false
                     });
 
-                }).catch(error => {
+                } catch (error) {
                     console.error(error);
-                });
+                }
             }
         },
         async computeWireLocally() {
             if (!this.posting && this.wire != null) {
                 try {
-                    await this.$mkf.ready;
+                    const mkf = await waitForMkf();
                     const aux = deepCopy(this.wire);
                     this.posting = true;
-                    await this.$mkf.ready;
-                    const result = await this.$mkf.plot_wire(JSON.stringify(this.wire));
+                    const result = await mkf.plot_wire(JSON.stringify(this.wire));
                     if (!result || !result.startsWith("<svg")) {
                         this.posting = false;
                         console.error("Invalid SVG result from plot_wire");

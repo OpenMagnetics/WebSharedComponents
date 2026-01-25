@@ -1,4 +1,6 @@
 <script>
+import { waitForMkf } from '../assets/js/mkfRuntime.js';
+
 // Constants
 const ASPECT_RATIO_THRESHOLD = 0.85;
 const OPTIONS_HEIGHT_MULTIPLIER = 0.90;
@@ -260,7 +262,7 @@ export default {
                 this.$refs.zoomPlotView.innerHTML = "";
             }
         },
-        calculateBasicPlot() {
+        async calculateBasicPlot() {
             if (this.modelValue.magnetic == null) {
                 return;
             }
@@ -269,12 +271,15 @@ export default {
                 return;
             }
 
-            this.$mkf.ready.then(async () => {
-                const result = await this.$mkf.plot_turns(JSON.stringify(this.modelValue.magnetic));
+            try {
+                const mkf = await waitForMkf();
+                const result = await mkf.plot_turns(JSON.stringify(this.modelValue.magnetic));
                 this.processSvgResult(result);
-            });
+            } catch (error) {
+                console.error('Error in calculateBasicPlot:', error);
+            }
         },
-        calculateMagneticFieldPlot() {
+        async calculateMagneticFieldPlot() {
             if (this.modelValue.magnetic == null) {
                 return;
             }
@@ -283,21 +288,24 @@ export default {
                 return;
             }
 
-            this.$mkf.ready.then(async () => {
-                const settings = JSON.parse(await this.$mkf.get_settings());
+            try {
+                const mkf = await waitForMkf();
+                const settings = JSON.parse(await mkf.get_settings());
                 settings.painterSimpleLitz = true;
                 settings.painterAdvancedLitz = false;
                 settings.painterIncludeFringing = this.includeFringing;
-                await this.$mkf.set_settings(JSON.stringify(settings));
+                await mkf.set_settings(JSON.stringify(settings));
 
-                const result = await this.$mkf.plot_magnetic_field(
+                const result = await mkf.plot_magnetic_field(
                     JSON.stringify(this.modelValue.magnetic),
                     JSON.stringify(this.modelValue.inputs.operatingPoints[this.operatingPointIndex])
                 );
                 this.processSvgResult(result);
-            });
+            } catch (error) {
+                console.error('Error in calculateMagneticFieldPlot:', error);
+            }
         },
-        calculateElectricFieldPlot() {
+        async calculateElectricFieldPlot() {
             if (this.modelValue.magnetic == null) {
                 return;
             }
@@ -306,21 +314,24 @@ export default {
                 return;
             }
 
-            this.$mkf.ready.then(async () => {
-                const settings = JSON.parse(await this.$mkf.get_settings());
+            try {
+                const mkf = await waitForMkf();
+                const settings = JSON.parse(await mkf.get_settings());
                 settings.painterSimpleLitz = true;
                 settings.painterAdvancedLitz = false;
-                await this.$mkf.set_settings(JSON.stringify(settings));
+                await mkf.set_settings(JSON.stringify(settings));
 
-                const result = await this.$mkf.plot_electric_field(
+                const result = await mkf.plot_electric_field(
                     JSON.stringify(this.modelValue.magnetic),
                     JSON.stringify(this.modelValue.inputs.operatingPoints[this.operatingPointIndex])
                 );
                 this.processSvgResult(result);
-            });
+            } catch (error) {
+                console.error('Error in calculateElectricFieldPlot:', error);
+            }
         },
         // Wire losses plot - uses existing WASM function
-        calculateWiresLossesPlot() {
+        async calculateWiresLossesPlot() {
             if (this.modelValue.magnetic == null) {
                 return;
             }
@@ -329,18 +340,21 @@ export default {
                 return;
             }
 
-            this.$mkf.ready.then(async () => {
-                const settings = JSON.parse(await this.$mkf.get_settings());
+            try {
+                const mkf = await waitForMkf();
+                const settings = JSON.parse(await mkf.get_settings());
                 settings.painterSimpleLitz = true;
                 settings.painterAdvancedLitz = false;
-                await this.$mkf.set_settings(JSON.stringify(settings));
+                await mkf.set_settings(JSON.stringify(settings));
 
-                const result = await this.$mkf.plot_wire_losses(
+                const result = await mkf.plot_wire_losses(
                     JSON.stringify(this.modelValue.magnetic),
                     JSON.stringify(this.modelValue.inputs.operatingPoints[this.operatingPointIndex])
                 );
                 this.processSvgResult(result);
-            });
+            } catch (error) {
+                console.error('Error in calculateWiresLossesPlot:', error);
+            }
         },
         // Placeholder for turns colored by winding - TBD in WASM
         calculateColoredByWindingPlot() {
@@ -568,10 +582,19 @@ export default {
 
 .scaling-svg {
     object-fit: contain;
-    height: 100%; 
-    width: v-bind(width);
+    height: auto;
+    max-height: 50vh;
+    width: auto;
+    max-width: 100%;
     left: 0; 
     top: 0;
+}
+
+.scaling-svg-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-height: 50vh;
 }
 
 .plot-loading {

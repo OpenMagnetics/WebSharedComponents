@@ -880,14 +880,22 @@ export async function checkAndFixMas(mas, mkf=null) {
     if (mas.magnetic.core.functionalDescription.material != "" && mas.magnetic.core.functionalDescription.material != null) {
         if (mkf != null && (mas.magnetic.coil.bobbin == null || mas.magnetic.coil.bobbin == "Dummy" || mas.magnetic.core.processedDescription == null)) {
             try {
-                await mkf.ready;
-                const masJson = await mkf.mas_autocomplete(JSON.stringify(mas), false, "{}");
-                if (masJson.startsWith("Exception")) {
-                    console.error(masJson);
-                    return mas;
-                }
-                else {
-                    mas.magnetic.core = JSON.parse(masJson).magnetic.core;
+                // Check if mkf is a taskQueueStore (has masAutocomplete method)
+                if (typeof mkf.masAutocomplete === 'function') {
+                    // Use taskQueueStore
+                    const masResult = await mkf.masAutocomplete(mas, false, {});
+                    mas.magnetic.core = masResult.magnetic.core;
+                } else {
+                    // Legacy mkf direct usage
+                    await mkf.ready;
+                    const masJson = await mkf.mas_autocomplete(JSON.stringify(mas), false, "{}");
+                    if (masJson.startsWith("Exception")) {
+                        console.error(masJson);
+                        return mas;
+                    }
+                    else {
+                        mas.magnetic.core = JSON.parse(masJson).magnetic.core;
+                    }
                 }
 
                 return mas;

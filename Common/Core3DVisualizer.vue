@@ -4,6 +4,7 @@ import {Camera, EffectComposer, InstancedMesh, PhongMaterial, Renderer, RenderPa
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clean, deepCopy, hexToRgb, base64ToArrayBuffer } from '../assets/js/utils.js'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
+import { waitForMkf } from '../assets/js/mkfRuntime.js'
 </script>
 
 <script>
@@ -223,13 +224,13 @@ export default {
         async computeShape() {
             if (!this.posting && this.core['functionalDescription']['shape'] != "" && this.core['functionalDescription']['material'] != "") {
                 try {
-                    await this.$mkf.ready;
+                    const mkf = await waitForMkf();
 
                     const aux = deepCopy(this.core);
                     aux['geometricalDescription'] = null;
                     aux['processedDescription'] = null;
                     if (typeof(aux['functionalDescription']['shape']) == "string") {
-                        aux['functionalDescription']['shape'] = JSON.parse(await this.$mkf.get_shape_data(aux['functionalDescription']['shape']));
+                        aux['functionalDescription']['shape'] = JSON.parse(await mkf.get_shape_data(aux['functionalDescription']['shape']));
 
                     }
 
@@ -237,7 +238,7 @@ export default {
                     if ('familySubtype' in aux['functionalDescription']['shape']){
                         aux['functionalDescription']['shape']['familySubtype'] = String(aux['functionalDescription']['shape']['familySubtype']);
                     }
-                    const result = await this.$mkf.calculate_core_data(JSON.stringify(aux), false);
+                    const result = await mkf.calculate_core_data(JSON.stringify(aux), false);
 
                     if (result.startsWith("Exception")) {
                         console.error(result);

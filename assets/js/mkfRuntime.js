@@ -110,37 +110,16 @@ export function terminateWorker() {
 /**
  * Creates a proxy object that translates synchronous-looking calls 
  * to async worker calls. This maintains API compatibility.
+ * 
+ * All MKF methods are routed through the worker's generic callMethod(),
+ * which automatically handles Embind type conversion (vectors, booleans, numbers).
  */
 function createMkfProxy(workerProxy) {
-    // List of methods that are explicitly defined in mkfWorker.js
-    const directMethods = new Set([
-        'init', 'waitReady', 'callMethod',
+    // Only methods explicitly defined in mkfWorker.js
+    // Everything else goes through callMethod() which handles any MKF method
+    const workerExplicitMethods = new Set([
+        'init', 'waitReady', 'callMethod', 'getAvailableMethods',
         'load_core_materials', 'load_core_shapes', 'load_wires', 'load_cores',
-        'get_shape_data', 'get_material_data', 'calculate_core_data', 'calculate_core_data_from_shape',
-        'calculate_all_core_data_from_shapes',
-        'get_available_core_shape_families', 'get_shape_family_subtypes', 'get_shape_family_dimensions',
-        'get_available_core_shapes_by_manufacturer', 'get_available_core_shapes_by_family',
-        'get_available_core_manufacturers', 'get_available_core_materials',
-        'get_core_temperature_dependant_parameters', 'calculate_inductance_from_number_turns_and_gapping',
-        'calculate_core_losses', 'check_requirement', 'get_settings', 'set_settings',
-        'calculate_advised_cores', 'resolve_dimension_with_tolerance', 'calculate_number_turns',
-        'calculate_complex_permeability', 'get_defaults', 'get_constants',
-        'get_only_frequency_dependent_indexes', 'get_only_magnetic_field_dc_bias_dependent_indexes',
-        'get_only_temperature_dependent_indexes', 'get_initial_permeability_equations',
-        'get_core_volumetric_losses_equations', 'get_wire_data', 'get_coating_label',
-        'get_wire_data_by_name', 'get_wire_coating_by_label', 'get_wire_data_by_standard_name',
-        'get_available_wire_types', 'get_available_wire_standards', 'get_unique_wire_diameters',
-        'get_coating_labels_by_type', 'get_equivalent_wire', 'get_outer_dimensions',
-        'calculate_dc_resistance_per_meter', 'calculate_skin_ac_resistance_per_meter',
-        'calculate_skin_ac_factor', 'calculate_dc_losses_per_meter', 'calculate_skin_ac_losses_per_meter',
-        'calculate_effective_current_density', 'calculate_effective_skin_depth',
-        'get_wire_outer_diameter_bare_litz', 'get_wire_outer_diameter_served_litz',
-        'get_wire_outer_diameter_insulated_litz', 'get_wire_outer_height_rectangular',
-        'get_wire_outer_width_rectangular', 'create_simple_bobbin_from_core',
-        'create_simple_bobbin_from_core_with_custom_thickness', 'create_simple_bobbin_from_core_with_custom_thicknesses',
-        'plot_turns', 'plot_magnetic_field', 'plot_electric_field', 'plot_wire_losses',
-        'calculate_leakage_inductance', 'get_available_winding_orientations', 'get_available_coil_alignments',
-        'are_sections_and_layers_fitting', 'check_if_fits',
     ]);
 
     return new Proxy({}, {
@@ -166,11 +145,11 @@ function createMkfProxy(workerProxy) {
                 const startTime = performance.now();
                 let result;
                 
-                // Use direct method if available, otherwise use generic callMethod
-                if (directMethods.has(prop)) {
+                // Use explicit worker method if defined, otherwise use generic callMethod
+                if (workerExplicitMethods.has(prop)) {
                     result = await workerProxy[prop](...args);
                 } else {
-                    // Use the generic callMethod for unknown methods
+                    // callMethod handles any MKF method with automatic type conversion
                     result = await workerProxy.callMethod(prop, ...args);
                 }
                 
