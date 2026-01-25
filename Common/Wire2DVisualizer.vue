@@ -107,51 +107,61 @@ export default {
                 });
             }
         },
-        computeWireLocally() {
+        async computeWireLocally() {
             if (!this.posting && this.wire != null) {
-                this.$mkf.ready.then(_ => {
+                try {
+                    await this.$mkf.ready;
                     const aux = deepCopy(this.wire);
                     this.posting = true;
-                    this.$mkf.ready.then(_ => {
-                        const result = this.$mkf.plot_wire(JSON.stringify(this.wire));
-                        this.$refs.wire2DPlotView.innerHTML = result;
+                    await this.$mkf.ready;
+                    const result = await this.$mkf.plot_wire(JSON.stringify(this.wire));
+                    if (!result || !result.startsWith("<svg")) {
                         this.posting = false;
+                        console.error("Invalid SVG result from plot_wire");
+                        return;
+                    }
+                    this.$refs.wire2DPlotView.innerHTML = result;
+                    this.posting = false;
 
-                        const clientWidth = this.$refs.wire2DPlotViewContainer.clientWidth;
-                        const clientHeight = this.$refs.wire2DPlotViewContainer.clientHeight * 0.90;
-                        let originalWidth = 0;
-                        let originalHeight = 0;
-                        {
-                            const regex = /width="(\d*\.)?\d+"/i;
-                            const aux = this.$refs.wire2DPlotView.innerHTML.match(regex)[0];
+                    const clientWidth = this.$refs.wire2DPlotViewContainer.clientWidth;
+                    const clientHeight = this.$refs.wire2DPlotViewContainer.clientHeight * 0.90;
+                    let originalWidth = 0;
+                    let originalHeight = 0;
+                    {
+                        const regex = /width="(\d*\.)?\d+"/i;
+                        const matchResult = this.$refs.wire2DPlotView.innerHTML.match(regex);
+                        if (matchResult) {
+                            const aux = matchResult[0];
                             const regex2 = /(\d*\.)?\d+/g;
                             const match = aux.match(regex2);
                             originalWidth = Array.from(match)[0];
                         }
-                        {
-                            const regex = /height="(\d*\.)?\d+"/i;
-                            const aux = this.$refs.wire2DPlotView.innerHTML.match(regex)[0];
+                    }
+                    {
+                        const regex = /height="(\d*\.)?\d+"/i;
+                        const matchResult = this.$refs.wire2DPlotView.innerHTML.match(regex);
+                        if (matchResult) {
+                            const aux = matchResult[0];
                             const regex2 = /(\d*\.)?\d+/g;
                             const match = aux.match(regex2);
                             originalHeight = Array.from(match)[0];
                         }
+                    }
 
-                        if (originalWidth > originalHeight * 0.85) {
-                            this.widthProportion = "100%";
-                        }
-                        else {
-                            const originalProportion = originalWidth / (originalHeight * 0.85)
-                            this.widthProportion = `${originalProportion * 100}%`;
-                        }
+                    if (originalWidth > originalHeight * 0.85) {
+                        this.widthProportion = "100%";
+                    }
+                    else {
+                        const originalProportion = originalWidth / (originalHeight * 0.85)
+                        this.widthProportion = `${originalProportion * 100}%`;
+                    }
 
-                        this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`width=`, `class="scaling-wire-svg" width=`);
-                        this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`<svg`, `<svg class="h-100 w-100"`);
-                        this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = this.$refs.wire2DPlotView.innerHTML;
-                    })
-
-                }).catch(error => {
+                    this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`width=`, `class="scaling-wire-svg" width=`);
+                    this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`<svg`, `<svg class="h-100 w-100"`);
+                    this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = this.$refs.wire2DPlotView.innerHTML;
+                } catch(error) {
                     console.error(error);
-                });
+                }
             }
         },
 

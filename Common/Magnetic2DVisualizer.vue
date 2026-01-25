@@ -1,21 +1,56 @@
-<script setup>
-import { toTitleCase, removeTrailingZeroes, formatInductance, formatPower, formatTemperature, formatResistance, deepCopy } from '../assets/js/utils.js'
-</script>
-
 <script>
+// Constants
+const ASPECT_RATIO_THRESHOLD = 0.85;
+const OPTIONS_HEIGHT_MULTIPLIER = 0.90;
+const DEBOUNCE_DELAY_MS = 20;
+const WARNING_CHECK_DELAY_MS = 500;
+const PLOT_DELAY_MS = 10;
+
+// Plot modes - exported for external use
+export const PLOT_MODES = {
+    BASIC: 'basic',                         // Basic view with cores and wires
+    MAGNETIC_FIELD: 'magnetic_field',       // Magnetic field plot
+    ELECTRIC_FIELD: 'electric_field',       // Electric field plot
+    WIRES_LOSSES: 'wires_losses',           // Wire losses plot (TBD)
+    COLORED_BY_WINDING: 'colored_by_winding', // Turns colored by same winding (TBD)
+    COLORED_BY_PARALLEL: 'colored_by_parallel', // Turns colored by same parallel (TBD)
+    COLORED_BY_TURN: 'colored_by_turn',     // Turns colored by same turn (TBD)
+};
+
+// Human-readable labels for plot modes
+const PLOT_MODE_LABELS = {
+    [PLOT_MODES.BASIC]: 'Basic',
+    [PLOT_MODES.MAGNETIC_FIELD]: 'H Field',
+    [PLOT_MODES.ELECTRIC_FIELD]: 'E Field',
+    [PLOT_MODES.WIRES_LOSSES]: 'Wire Losses',
+    [PLOT_MODES.COLORED_BY_WINDING]: 'By Winding',
+    [PLOT_MODES.COLORED_BY_PARALLEL]: 'By Parallel',
+    [PLOT_MODES.COLORED_BY_TURN]: 'By Turn',
+};
+
+// Utility function to extract dimension from SVG string
+function extractSvgDimension(svgHtml, dimension) {
+    const regex = new RegExp(`${dimension}="(\\d*\\.)?\\d+"`, 'i');
+    const match = svgHtml.match(regex);
+    if (match && match.length > 0) {
+        const numberMatch = match[0].match(/(\d*\.)?\d+/g);
+        if (numberMatch) {
+            return parseFloat(numberMatch[0]);
+        }
+    }
+    return 0;
+}
 
 export default {
-    emits: ["zoomIn", "zoomOut", "swapFieldPlot", "swapIncludeFringing", "errorInImage"],
-    components: {
-    },
+    emits: ["zoomIn", "zoomOut", "plotModeChange", "swapIncludeFringing", "errorInImage"],
     props: {
-        modelValue:{
+        modelValue: {
             type: Object,
-            required: true
+            required: true,
         },
-        forceUpdate:{
+        forceUpdate: {
             type: Number,
-            default: 0
+            default: 0,
         },
         enableZoom: {
             type: Boolean,
@@ -33,9 +68,18 @@ export default {
             type: String,
             default: '',
         },
-        showFieldPlotInit: {
-            type: Boolean,
-            default: false,
+        plotModeInit: {
+            type: String,
+            default: PLOT_MODES.BASIC,
+            validator: (value) => Object.values(PLOT_MODES).includes(value),
+        },
+        availablePlotModes: {
+            type: Array,
+            default: () => [
+                PLOT_MODES.BASIC,
+                PLOT_MODES.MAGNETIC_FIELD,
+                PLOT_MODES.ELECTRIC_FIELD,
+            ],
         },
         includeFringingInit: {
             type: Boolean,
@@ -49,6 +93,10 @@ export default {
             type: String,
             default: "#1a1a1a",
         },
+        textColor: {
+            type: String,
+            default: "#ffffff",
+        },
         buttonStyle: {
             type: [Object, String],
             default: "",
@@ -61,332 +109,378 @@ export default {
             type: String,
             default: "/images/loading.gif",
         },
+        zoomedInit: {
+            type: Boolean,
+            default: false,
+        },
     },
     data() {
-        const lastSimulatedInputs = "";
-        const lastSimulatedMagnetics = "";
-        const errorMessage = "";
-        const width = "75%"
         return {
             posting: false,
-            zoomingPlot: false,
-            showFieldPlot: this.showFieldPlotInit,
+            zoomingPlot: this.zoomedInit,
+            currentPlotMode: this.plotModeInit,
             includeFringing: this.includeFringingInit,
             blockingRebounds: false,
             recentChange: false,
             tryingToPlot: false,
             showWarning: false,
-            lastSimulatedInputs,
-            lastSimulatedMagnetics,
-            errorMessage,
-            width,
-        }
+            lastSimulatedInputs: "",
+            lastSimulatedMagnetics: "",
+            errorMessage: "",
+            width: "75%",
+            PLOT_MODES,
+            PLOT_MODE_LABELS,
+        };
+    },
+    computed: {
+        showFringingOption() {
+            return this.currentPlotMode === PLOT_MODES.MAGNETIC_FIELD;
+        },
+        currentModeLabel() {
+            return PLOT_MODE_LABELS[this.currentPlotMode] || 'Basic';
+        },
     },
     watch: {
-        'forceUpdate': {
-            handler(newValue, oldValue) {
-                if (!this.blockingRebounds) {
-
-                    if (this.modelValue.magnetic == null) {
-                        return;
-                    }
-                    if (this.modelValue.inputs == null) {
-                        return;
-                    }
-                    const inputsString = JSON.stringify(this.modelValue.inputs);
-                    const magneticsString = JSON.stringify(this.modelValue.magnetic);
-
-                    if (inputsString != this.lastSimulatedInputs || magneticsString != this.lastSimulatedMagnetics) {
-
-                        this.blockingRebounds = true;
-                        this.zoomingPlot = false;
-                        this.showFieldPlot = this.showFieldPlotInit;
-                        this.includeFringing = this.includeFringingInit;
-                        this.zoomOut();
-                        this.recentChange = true;
-                        this.tryToPlot();
-                        setTimeout(() => this.blockingRebounds = false, 20);
-                        setTimeout(() => this.checkShowWarning(), 500);
-
-                        this.lastSimulatedInputs = inputsString;
-                        this.lastSimulatedMagnetics = magneticsString;
-                    }
-                }
+        forceUpdate: {
+            handler() {
+                this.handleModelChange(true);
             },
-          deep: true
+            deep: true,
         },
-        'operatingPointIndex': {
-            handler(newValue, oldValue) {
-                if (!this.blockingRebounds) {
-
-                    if (this.modelValue.magnetic == null) {
-                        return;
-                    }
-                    if (this.modelValue.inputs == null) {
-                        return;
-                    }
-                    const inputsString = JSON.stringify(this.modelValue.inputs);
-                    const magneticsString = JSON.stringify(this.modelValue.magnetic);
-
-                    if (inputsString != this.lastSimulatedInputs || magneticsString != this.lastSimulatedMagnetics) {
-                        this.blockingRebounds = true;
-                        this.zoomingPlot = false;
-                        this.showFieldPlot = this.showFieldPlotInit;
-                        this.includeFringing = this.includeFringingInit;
-                        this.zoomOut();
-                        this.recentChange = true;
-                        this.tryToPlot();
-                        setTimeout(() => this.blockingRebounds = false, 20);
-                    }
-                }
+        operatingPointIndex: {
+            handler() {
+                this.handleModelChange(false);
             },
-          deep: true
+            deep: true,
         },
-        'showFieldPlotInit': {
-            handler(newValue, oldValue) {
-                this.showFieldPlot = this.showFieldPlotInit;
-            },
-          deep: true
+        plotModeInit(newValue) {
+            this.currentPlotMode = newValue;
         },
-        'includeFringingInit': {
-            handler(newValue, oldValue) {
-                this.includeFringing = this.includeFringingInit;
-            },
-          deep: true
+        includeFringingInit(newValue) {
+            this.includeFringing = newValue;
         },
     },
     methods: {
+        handleModelChange(checkWarning = false) {
+            if (this.blockingRebounds) {
+                return;
+            }
+            if (this.modelValue.magnetic == null || this.modelValue.inputs == null) {
+                return;
+            }
+
+            const inputsString = JSON.stringify(this.modelValue.inputs);
+            const magneticsString = JSON.stringify(this.modelValue.magnetic);
+
+            if (inputsString === this.lastSimulatedInputs && magneticsString === this.lastSimulatedMagnetics) {
+                return;
+            }
+
+            // Set posting immediately to dim the old image
+            this.posting = true;
+            this.blockingRebounds = true;
+            this.zoomingPlot = false;
+            this.currentPlotMode = this.plotModeInit;
+            this.includeFringing = this.includeFringingInit;
+            this.zoomOut();
+            this.recentChange = true;
+            this.tryToPlot();
+
+            setTimeout(() => { this.blockingRebounds = false; }, DEBOUNCE_DELAY_MS);
+            if (checkWarning) {
+                setTimeout(() => this.checkShowWarning(), WARNING_CHECK_DELAY_MS);
+            }
+
+            this.lastSimulatedInputs = inputsString;
+            this.lastSimulatedMagnetics = magneticsString;
+        },
         checkShowWarning() {
-            if (!this.coilFits && !(this.posting || this.tryingToPlot || this.recentChange)) {
-                this.showWarning = true;
-            }
-            else {
-                this.showWarning = false;
-            }
+            this.showWarning = !this.coilFits && !(this.posting || this.tryingToPlot || this.recentChange);
         },
         tryToPlot() {
-            if (!this.tryingToPlot) {
-                this.recentChange = false
-                this.tryingToPlot = true
-                setTimeout(() => {
-                    if (this.recentChange) {
-                        this.tryingToPlot = false
-                        this.tryToPlot()
-                    }
-                    else {
-                        setTimeout(() => {
-                            this.posting = true;
-                            this.plot();
-                        }, 10);
-                    }
+            if (this.tryingToPlot) {
+                return;
+            }
+            this.recentChange = false;
+            this.tryingToPlot = true;
+            setTimeout(() => {
+                if (this.recentChange) {
+                    this.tryingToPlot = false;
+                    this.tryToPlot();
+                } else {
+                    setTimeout(() => {
+                        this.posting = true;
+                        this.plot();
+                    }, PLOT_DELAY_MS);
                 }
-                , this.$settingsStore.waitingTimeForPlottingAfterChange);
+            }, this.$settingsStore.waitingTimeForPlottingAfterChange);
+        },
+        processSvgResult(result) {
+            const isValidSvg = result.startsWith("<svg");
+            if (!isValidSvg) {
+                this.handlePlotError();
+                return;
+            }
+
+            this.$refs.plotView.innerHTML = result;
+
+            if (this.$refs.Magnetic2DVisualizerContainer == null) {
+                this.posting = false;
+                return;
+            }
+
+            const clientWidth = this.$refs.Magnetic2DVisualizerContainer.clientWidth;
+            const clientHeight = this.$refs.Magnetic2DVisualizerContainer.clientHeight * (this.enableOptions ? OPTIONS_HEIGHT_MULTIPLIER : 1);
+
+            const originalWidth = extractSvgDimension(result, 'width');
+            const originalHeight = extractSvgDimension(result, 'height');
+
+            this.width = this.calculateSvgWidth(originalWidth, originalHeight, clientWidth, clientHeight);
+            this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replace('width=', 'class="scaling-svg" width=');
+
+            this.errorMessage = "";
+            this.posting = false;
+        },
+        calculateSvgWidth(originalWidth, originalHeight, clientWidth, clientHeight) {
+            if (originalWidth > originalHeight * ASPECT_RATIO_THRESHOLD) {
+                return "100%";
+            }
+            const heightProportion = clientHeight / originalHeight;
+            return `${originalWidth * heightProportion}px`;
+        },
+        handlePlotError() {
+            this.posting = false;
+            this.$emit("errorInImage");
+            this.lastSimulatedInputs = "";
+            this.lastSimulatedMagnetics = "";
+        },
+        clearPlotViews() {
+            this.$refs.plotView.innerHTML = "";
+            if ("zoomPlotView" in this.$refs) {
+                this.$refs.zoomPlotView.innerHTML = "";
             }
         },
-        calculateMagneticSectionAndFieldPlot() {
+        calculateBasicPlot() {
             if (this.modelValue.magnetic == null) {
                 return;
             }
-            if (this.modelValue.magnetic.coil.turnsDescription != null) {
-
-                this.$mkf.ready.then(_ => {
-
-                    const settings = JSON.parse(this.$mkf.get_settings());
-                    settings["painterSimpleLitz"] = true;
-                    settings["painterAdvancedLitz"] = false;
-                    settings["painterIncludeFringing"] = this.includeFringing;
-                    this.$mkf.set_settings(JSON.stringify(settings));
-
-
-                    const result = this.$mkf.plot_magnetic_field(JSON.stringify(this.modelValue.magnetic), JSON.stringify(this.modelValue.inputs.operatingPoints[this.operatingPointIndex]));
-                    const validImage = result.startsWith("<svg");
-                    if (validImage) {
-                        this.$refs.plotView.innerHTML = result;
-
-                        if (this.$refs.Magnetic2DVisualizerContainer == null) {
-                            this.posting = false;
-                            return;
-                        }
-                        const clientWidth = this.$refs.Magnetic2DVisualizerContainer.clientWidth;
-                        const clientHeight = this.$refs.Magnetic2DVisualizerContainer.clientHeight * (this.enableOptions? 0.90 : 1);
-                        let originalWidth = 0;
-                        let originalHeight = 0;
-                        {
-                            const regex = /width="(\d*\.)?\d+"/i;
-                            const aux = this.$refs.plotView.innerHTML.match(regex);
-                            if (aux!= null && aux.length > 0) {
-                                const regex2 = /(\d*\.)?\d+/g;
-                                const match = aux[0].match(regex2);
-                                originalWidth = Array.from(match)[0];
-                            }
-                        }
-                        {
-                            const regex = /height="(\d*\.)?\d+"/i;
-                            const aux = this.$refs.plotView.innerHTML.match(regex);
-                            if (aux!= null && aux.length > 0) {
-                                const regex2 = /(\d*\.)?\d+/g;
-                                const match = aux[0].match(regex2);
-                                originalHeight = Array.from(match)[0];
-                            }
-                        }
-
-                        if (originalWidth > originalHeight * 0.85) {
-                            this.width = "100%";
-                        }
-                        else {
-                            const originalHeightProportion = clientHeight / originalHeight;
-                            const originalWidthProportion = clientWidth / originalWidth;
-                            const scaledWidth = originalWidth / originalHeightProportion
-                            this.width = `${originalWidth * originalHeightProportion}px`;
-                        }
-
-                        this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replace(`width=`, `class="scaling-svg" width=`);
-                        // this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
-                        // if ("zoomPlotView" in this.$refs) {
-                        //     this.$refs.zoomPlotView.innerHTML = response.data
-                        //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(`<svg`, `<svg class="h-100 w-100"`);
-                        //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(regex, `class="" width="${clientWidth}" height="${clientHeight}" viewBox=`);
-                        //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
-                        // }
-                        this.errorMessage = "";
-                        this.posting = false;
-                    }
-                    else {
-                        this.posting = false;
-                        this.$emit("errorInImage");
-                        this.lastSimulatedInputs = "";
-                        this.lastSimulatedMagnetics = "";
-                    }
-                })
+            if (this.modelValue.magnetic.coil.turnsDescription == null) {
+                this.clearPlotViews();
+                return;
             }
-            else {
-                this.$refs.plotView.innerHTML = ""
-                if ("zoomPlotView" in this.$refs) {
-                    this.$refs.zoomPlotView.innerHTML = ""
-                }
-            }
+
+            this.$mkf.ready.then(async () => {
+                const result = await this.$mkf.plot_turns(JSON.stringify(this.modelValue.magnetic));
+                this.processSvgResult(result);
+            });
         },
-        calculateMagneticSectionPlot() {
+        calculateMagneticFieldPlot() {
             if (this.modelValue.magnetic == null) {
                 return;
             }
-            if (this.modelValue.magnetic.coil.turnsDescription != null) {
-
-                this.$mkf.ready.then(_ => {
-                    const result = this.$mkf.plot_turns(JSON.stringify(this.modelValue.magnetic));
-                    const validImage = result.startsWith("<svg");
-                    if (validImage) {
-                        this.$refs.plotView.innerHTML = result;
-
-                        if (this.$refs.Magnetic2DVisualizerContainer == null) {
-                            this.posting = false;
-                            return;
-                        }
-                        const clientWidth = this.$refs.Magnetic2DVisualizerContainer.clientWidth;
-                        const clientHeight = this.$refs.Magnetic2DVisualizerContainer.clientHeight * (this.enableOptions? 0.90 : 1);
-                        let originalWidth = 0;
-                        let originalHeight = 0;
-                        {
-                            const regex = /width="(\d*\.)?\d+"/i;
-                            const aux = this.$refs.plotView.innerHTML.match(regex);
-                            if (aux!= null && aux.length > 0) {
-                                const regex2 = /(\d*\.)?\d+/g;
-                                const match = aux[0].match(regex2);
-                                originalWidth = Array.from(match)[0];
-                            }
-                        }
-                        {
-                            const regex = /height="(\d*\.)?\d+"/i;
-                            const aux = this.$refs.plotView.innerHTML.match(regex);
-                            if (aux!= null && aux.length > 0) {
-                                const regex2 = /(\d*\.)?\d+/g;
-                                const match = aux[0].match(regex2);
-                                originalHeight = Array.from(match)[0];
-                            }
-                        }
-
-                        if (originalWidth > originalHeight * 0.85) {
-                            this.width = "100%";
-                        }
-                        else {
-                            const originalHeightProportion = clientHeight / originalHeight;
-                            const originalWidthProportion = clientWidth / originalWidth;
-                            const scaledWidth = originalWidth / originalHeightProportion
-                            this.width = `${originalWidth * originalHeightProportion}px`;
-                        }
-
-                        this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replace(`width=`, `class="scaling-svg" width=`);
-                        // this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
-                        // if ("zoomPlotView" in this.$refs) {
-                        //     this.$refs.zoomPlotView.innerHTML = response.data
-                        //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(`<svg`, `<svg class="h-100 w-100"`);
-                        //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replace(regex, `class="" width="${clientWidth}" height="${clientHeight}" viewBox=`);
-                        //     this.$refs.zoomPlotView.innerHTML = this.$refs.zoomPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
-                        // }
-                        this.errorMessage = "";
-                        this.posting = false;
-                    }
-                    else {
-                        this.posting = false;
-                        this.$emit("errorInImage");
-                        this.lastSimulatedInputs = "";
-                        this.lastSimulatedMagnetics = "";
-                    }
-                })
+            if (this.modelValue.magnetic.coil.turnsDescription == null) {
+                this.clearPlotViews();
+                return;
             }
-            else {
-                this.$refs.plotView.innerHTML = ""
-                if ("zoomPlotView" in this.$refs) {
-                    this.$refs.zoomPlotView.innerHTML = ""
-                }
-            }
+
+            this.$mkf.ready.then(async () => {
+                const settings = JSON.parse(await this.$mkf.get_settings());
+                settings.painterSimpleLitz = true;
+                settings.painterAdvancedLitz = false;
+                settings.painterIncludeFringing = this.includeFringing;
+                await this.$mkf.set_settings(JSON.stringify(settings));
+
+                const result = await this.$mkf.plot_magnetic_field(
+                    JSON.stringify(this.modelValue.magnetic),
+                    JSON.stringify(this.modelValue.inputs.operatingPoints[this.operatingPointIndex])
+                );
+                this.processSvgResult(result);
+            });
         },
+        calculateElectricFieldPlot() {
+            if (this.modelValue.magnetic == null) {
+                return;
+            }
+            if (this.modelValue.magnetic.coil.turnsDescription == null) {
+                this.clearPlotViews();
+                return;
+            }
 
+            this.$mkf.ready.then(async () => {
+                const settings = JSON.parse(await this.$mkf.get_settings());
+                settings.painterSimpleLitz = true;
+                settings.painterAdvancedLitz = false;
+                await this.$mkf.set_settings(JSON.stringify(settings));
+
+                const result = await this.$mkf.plot_electric_field(
+                    JSON.stringify(this.modelValue.magnetic),
+                    JSON.stringify(this.modelValue.inputs.operatingPoints[this.operatingPointIndex])
+                );
+                this.processSvgResult(result);
+            });
+        },
+        // Wire losses plot - uses existing WASM function
+        calculateWiresLossesPlot() {
+            if (this.modelValue.magnetic == null) {
+                return;
+            }
+            if (this.modelValue.magnetic.coil.turnsDescription == null) {
+                this.clearPlotViews();
+                return;
+            }
+
+            this.$mkf.ready.then(async () => {
+                const settings = JSON.parse(await this.$mkf.get_settings());
+                settings.painterSimpleLitz = true;
+                settings.painterAdvancedLitz = false;
+                await this.$mkf.set_settings(JSON.stringify(settings));
+
+                const result = await this.$mkf.plot_wire_losses(
+                    JSON.stringify(this.modelValue.magnetic),
+                    JSON.stringify(this.modelValue.inputs.operatingPoints[this.operatingPointIndex])
+                );
+                this.processSvgResult(result);
+            });
+        },
+        // Placeholder for turns colored by winding - TBD in WASM
+        calculateColoredByWindingPlot() {
+            if (this.modelValue.magnetic == null) {
+                return;
+            }
+            if (this.modelValue.magnetic.coil.turnsDescription == null) {
+                this.clearPlotViews();
+                return;
+            }
+
+            // TODO: Implement when WASM function is available
+            // this.$mkf.ready.then(() => {
+            //     const result = this.$mkf.plot_turns_colored_by_winding(JSON.stringify(this.modelValue.magnetic));
+            //     this.processSvgResult(result);
+            // });
+            console.warn('Colored by winding plot not yet implemented in WASM');
+            this.calculateBasicPlot(); // Fallback to basic plot
+        },
+        // Placeholder for turns colored by parallel - TBD in WASM
+        calculateColoredByParallelPlot() {
+            if (this.modelValue.magnetic == null) {
+                return;
+            }
+            if (this.modelValue.magnetic.coil.turnsDescription == null) {
+                this.clearPlotViews();
+                return;
+            }
+
+            // TODO: Implement when WASM function is available
+            // this.$mkf.ready.then(() => {
+            //     const result = this.$mkf.plot_turns_colored_by_parallel(JSON.stringify(this.modelValue.magnetic));
+            //     this.processSvgResult(result);
+            // });
+            console.warn('Colored by parallel plot not yet implemented in WASM');
+            this.calculateBasicPlot(); // Fallback to basic plot
+        },
+        // Placeholder for turns colored by turn - TBD in WASM
+        calculateColoredByTurnPlot() {
+            if (this.modelValue.magnetic == null) {
+                return;
+            }
+            if (this.modelValue.magnetic.coil.turnsDescription == null) {
+                this.clearPlotViews();
+                return;
+            }
+
+            // TODO: Implement when WASM function is available
+            // this.$mkf.ready.then(() => {
+            //     const result = this.$mkf.plot_turns_colored_by_turn(JSON.stringify(this.modelValue.magnetic));
+            //     this.processSvgResult(result);
+            // });
+            console.warn('Colored by turn plot not yet implemented in WASM');
+            this.calculateBasicPlot(); // Fallback to basic plot
+        },
         zoomIn() {
             this.zoomingPlot = true;
+            // Wait for Vue to render the modal before copying the content
+            this.$nextTick(() => {
+                if (this.$refs.plotView && this.$refs.zoomPlotView) {
+                    this.$refs.zoomPlotView.innerHTML = this.$refs.plotView.innerHTML;
+                    // Make the SVG fill the modal
+                    const svg = this.$refs.zoomPlotView.querySelector('svg');
+                    if (svg) {
+                        svg.style.width = '100%';
+                        svg.style.height = '100%';
+                        svg.style.maxWidth = '100%';
+                        svg.style.maxHeight = '100%';
+                    }
+                }
+            });
             this.$emit("zoomIn");
         },
         zoomOut() {
             this.zoomingPlot = false;
             this.$emit("zoomOut");
         },
-        swapFieldPlot() {
-            this.showFieldPlot = !this.showFieldPlot;
+        setPlotMode(mode) {
+            if (this.currentPlotMode === mode) {
+                // Toggle back to basic if clicking the same mode
+                this.currentPlotMode = PLOT_MODES.BASIC;
+            } else {
+                this.currentPlotMode = mode;
+            }
             setTimeout(() => {
                 this.posting = true;
                 this.plot();
-            }, 10);
-            this.$emit("swapFieldPlot", this.showFieldPlot);
+            }, PLOT_DELAY_MS);
+            this.$emit("plotModeChange", this.currentPlotMode);
         },
         swapIncludeFringing() {
             this.includeFringing = !this.includeFringing;
             setTimeout(() => {
                 this.posting = true;
                 this.plot();
-            }, 10);
+            }, PLOT_DELAY_MS);
             this.$emit("swapIncludeFringing", this.includeFringing);
         },
         plot() {
             this.errorMessage = "";
-            this.tryingToPlot = false
-            if (this.showFieldPlot) {
-                this.calculateMagneticSectionAndFieldPlot();
-            }
-            else {
-                this.calculateMagneticSectionPlot();
+            this.tryingToPlot = false;
+            switch (this.currentPlotMode) {
+                case PLOT_MODES.MAGNETIC_FIELD:
+                    this.calculateMagneticFieldPlot();
+                    break;
+                case PLOT_MODES.ELECTRIC_FIELD:
+                    this.calculateElectricFieldPlot();
+                    break;
+                case PLOT_MODES.WIRES_LOSSES:
+                    this.calculateWiresLossesPlot();
+                    break;
+                case PLOT_MODES.COLORED_BY_WINDING:
+                    this.calculateColoredByWindingPlot();
+                    break;
+                case PLOT_MODES.COLORED_BY_PARALLEL:
+                    this.calculateColoredByParallelPlot();
+                    break;
+                case PLOT_MODES.COLORED_BY_TURN:
+                    this.calculateColoredByTurnPlot();
+                    break;
+                case PLOT_MODES.BASIC:
+                default:
+                    this.calculateBasicPlot();
             }
         },
         showCoilAnyway() {
             this.$stateStore.wire2DVisualizerState.showAnyway = true;
         },
-    },
-    computed: {
+        getModeLabel(mode) {
+            return PLOT_MODE_LABELS[mode] || mode;
+        },
+        isModeActive(mode) {
+            return this.currentPlotMode === mode;
+        },
     },
     mounted() {
         setTimeout(() => {
             this.posting = true;
             this.plot();
-        }, 10);
+        }, PLOT_DELAY_MS);
     },
 }
 
@@ -408,45 +502,53 @@ export default {
     </div>
 
     <div v-else class="m-0 p-0 Magnetic2DVisualizer text-center mx-auto" ref="Magnetic2DVisualizerContainer" style="height: 100%; width: 100%;">
-        <div v-if="enableZoom" v-show="zoomingPlot" class="row mx-1" style="height: 100%;">
-            <button class="btn" @click="zoomOut()">
-                <label class="col-12 text-info fw-lighter" >(Click on image to go back)</label>
-                <div data-cy="MagneticAdvise-core-field-plot-zoom-image" ref="zoomPlotView" :class="showFieldPlot? '' : ''" class="m-0" style="width: 100%;" />
-            </button>
+        <!-- Zoom Modal -->
+        <div v-if="enableZoom && zoomingPlot" class="zoom-modal-overlay" @click.self="zoomOut()">
+            <div class="zoom-modal-overlay-bg" :style="{ backgroundColor: backgroundColor }">
+            </div>
+            <div class="zoom-modal-content" :style="{ backgroundColor: backgroundColor }">
+                <button class="zoom-modal-close" :style="{ color: textColor }" @click="zoomOut()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="zoom-modal-image" ref="zoomPlotView"></div>
+            </div>
         </div>
 
         <div v-show="!zoomingPlot">
-            <img data-cy="CorePublish-loading" v-if="posting" class="mx-auto d-block container" alt="loading" style="height: auto;" :src="loadingGif">
-
-            <div v-show="!posting">
-                <div>
-                    <button
-                        v-if="enableZoom"
-                        class="btn"
-                        @click="zoomIn()"
-                    >
-                        <label class="col-12 text-info fw-lighter">(Click on image to zoom in)</label>
-                        <div data-cy="MagneticAdvise-core-field-plot-image" ref="plotView" :class="showFieldPlot? '' : ''" class="col-12 mt-2 scaling-svg-container"  style="padding-bottom: 92% /* 100% * 55/60 */"/>
-                    </button>
-                    <div v-else data-cy="MagneticAdvise-core-field-plot-zoom-image" ref="plotView" :class="showFieldPlot? '' : ''" class="m-0 " style="height: 100%" />
+            <div class="position-relative">
+                <!-- Loading overlay -->
+                <div v-if="posting" class="loading-overlay">
+                    <img data-cy="CorePublish-loading" class="loading-spinner" alt="loading" :src="loadingGif">
                 </div>
-                <div class="text-center">
-                    <button
-                        :style="buttonStyle"
-                        v-if="modelValue.magnetic != null && enableOptions && modelValue.magnetic.coil.turnsDescription != null"
-                        class="btn btn-primary mt-1"
-                        @click="swapFieldPlot()"
-                    >
-                        {{showFieldPlot? 'Hide H field' : 'Show H field'}}
-                    </button>
-                    <button
-                        :style="buttonStyle"
-                        v-if="modelValue.magnetic != null && showFieldPlot && enableOptions && modelValue.magnetic.coil.turnsDescription != null"
-                        class="btn btn-primary ms-1 mt-1"
-                        @click="swapIncludeFringing()"
-                    >
-                        {{includeFringing? 'Exclude Fringing H field' : 'Include Fringing H field'}}
-                    </button>
+                <!-- Plot content with dimmed effect when loading -->
+                <div :class="{ 'plot-loading': posting }">
+                    <div data-cy="MagneticAdvise-core-field-plot-image" ref="plotView" class="mt-2 scaling-svg-container"/>
+                    <div v-if="enableZoom" class="text-center mt-1">
+                        <button class="btn btn-sm btn-outline-secondary" @click="zoomIn()">
+                            <i class="fas fa-expand"></i> Expand
+                        </button>
+                    </div>
+                    <div v-if="modelValue.magnetic != null && enableOptions && modelValue.magnetic.coil.turnsDescription != null" class="text-center">
+                        <template v-for="mode in availablePlotModes" :key="mode">
+                            <button
+                                v-if="mode !== PLOT_MODES.BASIC"
+                                :style="buttonStyle"
+                                class="btn mt-1 ms-1"
+                                :class="isModeActive(mode) ? 'btn-success' : 'btn-primary'"
+                                @click="setPlotMode(mode)"
+                            >
+                                {{ isModeActive(mode) ? 'Hide ' : 'Show ' }}{{ getModeLabel(mode) }}
+                            </button>
+                        </template>
+                        <button
+                            :style="buttonStyle"
+                            v-if="showFringingOption"
+                            class="btn btn-primary ms-1 mt-1"
+                            @click="swapIncludeFringing()"
+                        >
+                            {{ includeFringing ? 'Exclude Fringing' : 'Include Fringing' }}
+                        </button>
+                    </div>
                 </div>
             </div>
             <label :data-cy="dataTestLabel + '-ErrorMessage'" class="text-danger m-0" style="font-size: 0.9em"> {{errorMessage}}</label>
@@ -459,7 +561,7 @@ export default {
 
     .Magnetic2DVisualizer {
 /*        overflow-y: auto; */
-        overflow: hidden;
+        overflow: visible;
         width: auto;
         height: auto;
     }
@@ -470,5 +572,88 @@ export default {
     width: v-bind(width);
     left: 0; 
     top: 0;
+}
+
+.plot-loading {
+    opacity: 0.3;
+    filter: brightness(0.5);
+    transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    pointer-events: none;
+}
+
+.loading-spinner {
+    height: auto;
+    max-width: 100px;
+}
+
+/* Zoom Modal Styles */
+.zoom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.zoom-modal-overlay-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.zoom-modal-content {
+    border-radius: 8px;
+    padding: 20px;
+    width: 90vw;
+    height: 90vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.zoom-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.zoom-modal-close:hover {
+    opacity: 0.7;
+}
+
+.zoom-modal-image {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.zoom-modal-image svg {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
 }
 </style>

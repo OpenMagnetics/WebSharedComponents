@@ -220,15 +220,16 @@ export default {
                 orbitControls.maxDistance = cameraToFarEdge * 20;
             }
         },
-        computeShape() {
+        async computeShape() {
             if (!this.posting && this.core['functionalDescription']['shape'] != "" && this.core['functionalDescription']['material'] != "") {
-                this.$mkf.ready.then(_ => {
+                try {
+                    await this.$mkf.ready;
 
                     const aux = deepCopy(this.core);
                     aux['geometricalDescription'] = null;
                     aux['processedDescription'] = null;
                     if (typeof(aux['functionalDescription']['shape']) == "string") {
-                        aux['functionalDescription']['shape'] = JSON.parse(this.$mkf.get_shape_data(aux['functionalDescription']['shape']));
+                        aux['functionalDescription']['shape'] = JSON.parse(await this.$mkf.get_shape_data(aux['functionalDescription']['shape']));
 
                     }
 
@@ -236,7 +237,7 @@ export default {
                     if ('familySubtype' in aux['functionalDescription']['shape']){
                         aux['functionalDescription']['shape']['familySubtype'] = String(aux['functionalDescription']['shape']['familySubtype']);
                     }
-                    const result = this.$mkf.calculate_core_data(JSON.stringify(aux), false);
+                    const result = await this.$mkf.calculate_core_data(JSON.stringify(aux), false);
 
                     if (result.startsWith("Exception")) {
                         console.error(result);
@@ -279,10 +280,9 @@ export default {
                             this.$emit("errorInDimensions");
                         });
                     }
-
-                }).catch(error => {
+                } catch(error) {
                     console.error(error);
-                });
+                }
             }
         },
 

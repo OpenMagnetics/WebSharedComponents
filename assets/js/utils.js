@@ -879,8 +879,9 @@ export async function checkAndFixMas(mas, mkf=null) {
 
     if (mas.magnetic.core.functionalDescription.material != "" && mas.magnetic.core.functionalDescription.material != null) {
         if (mkf != null && (mas.magnetic.coil.bobbin == null || mas.magnetic.coil.bobbin == "Dummy" || mas.magnetic.core.processedDescription == null)) {
-            await mkf.ready.then(_ => {
-                const masJson = mkf.mas_autocomplete(JSON.stringify(mas), false, "{}");
+            try {
+                await mkf.ready;
+                const masJson = await mkf.mas_autocomplete(JSON.stringify(mas), false, "{}");
                 if (masJson.startsWith("Exception")) {
                     console.error(masJson);
                     return mas;
@@ -890,11 +891,11 @@ export async function checkAndFixMas(mas, mkf=null) {
                 }
 
                 return mas;
-            })
-            .catch(error => {
+            }
+            catch(error) {
                 console.error(error)
                 return mas;
-            });
+            }
         }
         else {
             return mas;
