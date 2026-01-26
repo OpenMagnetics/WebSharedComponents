@@ -62,6 +62,10 @@ export default {
             type: Boolean,
             default: true,
         },
+        enableFringingOption: {
+            type: Boolean,
+            default: false,
+        },
         enableHideOnFitting: {
             type: Boolean,
             default: true,
@@ -136,7 +140,7 @@ export default {
     },
     computed: {
         showFringingOption() {
-            return this.currentPlotMode === PLOT_MODES.MAGNETIC_FIELD;
+            return this.currentPlotMode === PLOT_MODES.MAGNETIC_FIELD && (this.enableOptions || this.enableFringingOption);
         },
         currentModeLabel() {
             return PLOT_MODE_LABELS[this.currentPlotMode] || 'Basic';
@@ -554,9 +558,10 @@ export default {
                                 {{ isModeActive(mode) ? 'Hide ' : 'Show ' }}{{ getModeLabel(mode) }}
                             </button>
                         </template>
+                    </div>
+                    <div v-if="modelValue.magnetic != null && showFringingOption && modelValue.magnetic.coil.turnsDescription != null" class="text-center">
                         <button
                             :style="buttonStyle"
-                            v-if="showFringingOption"
                             class="btn btn-primary ms-1 mt-1"
                             @click="swapIncludeFringing()"
                         >
