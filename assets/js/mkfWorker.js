@@ -150,8 +150,11 @@ const workerApi = {
             const result = mkf[methodName](...args);
             return convertEmbindResult(result);
         } catch (error) {
-            console.error(`[MKF Worker] Error calling ${methodName}:`, error);
-            throw error;
+            // Convert Embind exception to a serializable Error object
+            // Embind exceptions may not be serializable through Comlink's postMessage
+            const message = error?.message || (typeof error === 'string' ? error : `Error calling ${methodName}`);
+            console.error(`[MKF Worker] Error calling ${methodName}:`, message);
+            throw new Error(message);
         }
     },
 

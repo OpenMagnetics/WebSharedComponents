@@ -180,16 +180,6 @@ export default {
             }
             return shortenedButtonLabels
         },
-        styleTooltip() {
-            const relative_placement = 'top';
-            return {
-                theme: {
-                    placement: relative_placement,
-                    width: '400px',
-                    "text-align": "start",
-                },
-            }
-        },
     },
     watch: { 
     },
@@ -347,11 +337,10 @@ export default {
 
 
 <template>
-    <div v-tooltip="styleTooltip" class="container-flex m-0 p-0 text-start">
+    <div class="container-flex m-0 p-0 text-start">
         <div class="row m-0 p-0">
             <input
                 :style="combinedStyle([labelBgColor, textColor, titleFontSize])"
-                v-tooltip="tooltipsMagneticSynthesisDesignRequirements['changeNameWindings']"
                 v-if="varText"
                 :data-cy="dataTestLabel + '-title'"
                 type="text"

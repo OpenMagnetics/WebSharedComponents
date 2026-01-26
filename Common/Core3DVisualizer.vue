@@ -271,13 +271,14 @@ export default {
                         .then(response => {
                             this.posting = false
                             this.updating = false
-                            this.getPiece(response.data);
+                            if (this.$refs.scene != null && this.$refs.scene.scene != null) {
+                                this.getPiece(response.data);
+                            }
                         })
                         .catch(error => {
                             this.posting = false
                             this.updating = false
                             this.hasFreeCADError = true
-                            console.error(error);
                             this.$emit("errorInDimensions");
                         });
                     }

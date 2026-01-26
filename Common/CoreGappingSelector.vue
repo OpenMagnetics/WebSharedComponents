@@ -79,16 +79,6 @@ export default {
         }
     },
     computed: {
-        styleTooltip() {
-            const relative_placement = 'top';
-            return {
-                theme: {
-                    placement: relative_placement,
-                    width: '200px',
-                    "text-align": "start",
-                },
-            }
-        },
     },
     watch: {
         forceUpdate(newValue, oldValue) {
@@ -182,7 +172,7 @@ export default {
 
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex" ref="container">
-        <div class="row" v-tooltip="styleTooltip">
+        <div class="row">
             <label
                 :style="combinedStyle([labelFontSize, labelBgColor, textColor])"
                 v-tooltip="tooltipsMagneticBuilder.coreGapping"

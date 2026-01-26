@@ -107,16 +107,6 @@ export default {
                 return chosen;
             }
         },
-        styleTooltip() {
-            const relative_placement = 'top';
-            return {
-                theme: {
-                    placement: relative_placement,
-                    width: '400px',
-                    "text-align": "start",
-                },
-            }
-        },
     },
     watch: {
         'options': {
@@ -178,8 +168,8 @@ export default {
 </script>
 
 <template>
-    <div :data-cy="dataTestLabel + '-container'" v-tooltip="styleTooltip" class="container-flex">
-        <div v-tooltip="tooltipsMagneticSynthesisDesignRequirements['changeNameWindings']" class="row">
+    <div :data-cy="dataTestLabel + '-container'" class="container-flex">
+        <div class="row">
             <input
                 :style="combinedStyle([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
                 v-if="altText != null && !titleSameRow"
