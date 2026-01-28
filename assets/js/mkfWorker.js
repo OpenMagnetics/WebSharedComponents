@@ -29,8 +29,27 @@ function vectorToArray(vec) {
 }
 
 /**
+ * Convert Embind map to JS object
+ */
+function mapToObject(map) {
+    if (map == null) return null;
+    if (typeof map.keys !== 'function') return map;
+    
+    const obj = {};
+    const keys = map.keys();
+    for (let i = 0; i < keys.size(); i++) {
+        const embindKey = keys.get(i);
+        // Use the original embind key for map.get(), then convert to string for JS object key
+        const value = map.get(embindKey);
+        const jsKey = String(embindKey);
+        obj[jsKey] = convertEmbindResult(value);
+    }
+    return obj;
+}
+
+/**
  * Convert any Embind result to a plain JS value that can be serialized via postMessage.
- * Handles: vectors, booleans, numbers, strings, and nested structures.
+ * Handles: vectors, maps, booleans, numbers, strings, and nested structures.
  */
 function convertEmbindResult(result) {
     // Null/undefined pass through
@@ -38,7 +57,12 @@ function convertEmbindResult(result) {
         return result;
     }
     
-    // Embind vectors have .size() and .get() methods
+    // Embind maps have .keys() method - check this BEFORE vectors since maps may also have .size()
+    if (typeof result.keys === 'function' && typeof result.get === 'function') {
+        return mapToObject(result);
+    }
+    
+    // Embind vectors have .size() and .get() methods (but not .keys())
     if (typeof result.size === 'function' && typeof result.get === 'function') {
         return vectorToArray(result);
     }
