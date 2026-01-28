@@ -2,6 +2,18 @@
 import { Tooltip } from 'bootstrap';
 
 /**
+ * Create a tooltip and ensure _activeTrigger is always initialized
+ */
+function createSafeTooltip(el, options) {
+    const tooltip = new Tooltip(el, options);
+    // Ensure _activeTrigger is always an object to prevent Object.values() errors
+    if (!tooltip._activeTrigger || typeof tooltip._activeTrigger !== 'object') {
+        tooltip._activeTrigger = {};
+    }
+    return tooltip;
+}
+
+/**
  * Safely dispose a Bootstrap tooltip, avoiding _isWithActiveTrigger errors
  */
 function safeDisposeTooltip(el) {
@@ -55,7 +67,7 @@ export const tooltipDirective = {
         
         if (!tooltipText) return;
         
-        el._tooltip = new Tooltip(el, {
+        el._tooltip = createSafeTooltip(el, {
             title: tooltipText,
             placement: placement,
             trigger: 'hover focus',
@@ -86,7 +98,7 @@ export const tooltipDirective = {
         // Delay creation slightly to ensure old tooltip is fully disposed
         setTimeout(() => {
             if (!el._tooltip) {
-                el._tooltip = new Tooltip(el, {
+                el._tooltip = createSafeTooltip(el, {
                     title: tooltipText,
                     placement: placement,
                     trigger: 'hover focus',
