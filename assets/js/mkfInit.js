@@ -26,7 +26,9 @@ export async function initMkf(options = {}) {
         // Worker mode - non-blocking
         onProgress('Initializing Web Worker...');
         
-        const wasmJsUrl = new URL('/src/assets/js/libMKF.wasm.js', window.location.origin).href;
+        // Note: wasmJsUrl should be passed in options or resolved at the app level
+        // using: new URL('./assets/js/libMKF.wasm.js', import.meta.url).href
+        const wasmJsUrl = options.wasmJsUrl || new URL('/assets/js/libMKF.wasm.js', window.location.origin).href;
         mkf = await initWorker(wasmJsUrl);
         
         if (app) {

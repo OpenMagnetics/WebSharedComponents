@@ -73,7 +73,7 @@ export default {
         },
     },
     data() {
-        const localData = this.assignLocalData(this.options)
+        const localData = this.modelValue ? this.assignLocalData(this.options) : null;
 
         return {
             localData
@@ -126,6 +126,8 @@ export default {
     },
     methods: {
         assignLocalData(options) {
+            if (!this.modelValue) return null;
+            
             let localData;
             if (options.constructor.name === "Array") {
                 localData = this.modelValue[this.name];

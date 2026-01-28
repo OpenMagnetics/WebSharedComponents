@@ -4,6 +4,7 @@ import DimensionUnit from './DimensionUnit.vue'
 </script>
 <script>
 export default {
+    emits: ['update'],
     props: {
         name:{
             type: String,
