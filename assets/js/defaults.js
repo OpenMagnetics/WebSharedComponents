@@ -615,6 +615,27 @@ export const defaultCmcWizardInputs = {
     }
 };
 
+export const defaultDmcWizardInputs = {
+    configuration: 'Single phase',
+    ambientTemperature: 25,
+    lineFrequency: 50,
+    operatingCurrent: 10,
+    minimumInductance: 100e-6,
+    filterCapacitance: 1e-6,
+    numberAttenuationPoints: 1,
+    attenuationPoints: [
+        {
+            frequency: 150000,
+            attenuation: 40,
+        }
+    ],
+    maximumDimensions: {
+        width: null,
+        height: null,
+        depth: null,
+    }
+};
+
 export const defaultFlybackWizardInputs = {
     inputVoltage: {
         minimum: 120,
@@ -741,7 +762,7 @@ export const defaultIsolatedBuckBoostWizardInputs = {
             turnsRatio: 0.5,
         },
         {
-            voltage: 5,
+            voltage: 3.3,
             current: 0.3,
             turnsRatio: 0.5,
         }

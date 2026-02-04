@@ -32,7 +32,7 @@ async function init() {
         const [opencascadeModule, replicad, mvb] = await Promise.all([
             import('replicad-opencascadejs/src/replicad_single.js'),
             import('replicad'),
-            import('open-magnetics-virtual-builder')
+            import('@openmagnetics/magnetic-virtual-builder')
         ]);
         
         // Get WASM URL - Vite handles this with ?url suffix
@@ -152,6 +152,29 @@ async function buildTurn(turnDesc, wireDesc, bobbinProcessed, isToroidal, stlOpt
 }
 
 /**
+ * Build FR4 board geometry for planar transformers
+ * @param {Object} groupDesc - Group description data
+ * @param {Object} bobbinProcessed - Bobbin processed description
+ * @param {number} boardThickness - Optional board thickness override
+ * @param {boolean} forceBuild - If true, skip PCB type check
+ * @param {Object} stlOptions - STL export options
+ * @returns {ArrayBuffer} STL data or null if not a PCB group
+ */
+async function buildFR4Board(groupDesc, bobbinProcessed, boardThickness, forceBuild = false, stlOptions = { tolerance: 0.5, angularTolerance: 0.5, binary: true }) {
+    await waitReady();
+    
+    const shape = builder.getFR4Board(groupDesc, bobbinProcessed, boardThickness, forceBuild);
+    
+    if (!shape) {
+        return null;
+    }
+    
+    const blob = shape.blobSTL(stlOptions);
+    const buffer = await blob.arrayBuffer();
+    return buffer;
+}
+
+/**
  * Build complete magnetic assembly
  * @param {Object} magneticData - Full magnetic data with core, coil, etc.
  * @param {string} projectName - Project name for export
@@ -190,6 +213,7 @@ Comlink.expose({
     buildSpacers,
     buildBobbin,
     buildTurn,
+    buildFR4Board,
     buildMagnetic,
     callBuilderMethod
 });

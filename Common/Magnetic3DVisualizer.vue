@@ -5,7 +5,7 @@ import { Camera, Renderer, SpotLight, Scene, AmbientLight } from 'troisjs';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 import { deepCopy, hexToRgb } from '../assets/js/utils.js';
 import { waitForMkf } from '../assets/js/mkfRuntime.js';
-import { initMvbWorker, buildCoreSTL, buildSpacersSTL, buildBobbinSTL, buildTurnSTL, terminateWorker } from '../assets/js/mvbRuntime.js';
+import { initMvbWorker, buildCoreSTL, buildSpacersSTL, buildBobbinSTL, buildTurnSTL, buildFR4BoardSTL, terminateWorker } from '../assets/js/mvbRuntime.js';
 </script>
 
 <script>
@@ -53,6 +53,13 @@ function getWireColorFromCoating(turnData, coil, windingIndex) {
   
   if (functionalDesc && windingName) {
     const windingData = functionalDesc.find(w => w.name === windingName);
+    
+    // Check wire type first - foil wires should be copper colored
+    const wireType = windingData?.wire?.type?.toLowerCase();
+    if (wireType === 'foil') {
+      return COMPONENT_COLORS.copper;
+    }
+    
     if (windingData?.wire?.coating) {
       const coating = windingData.wire.coating;
       // Check coating material first (e.g., "ETFE", "FEP")
@@ -205,6 +212,16 @@ export default {
       }
     },
   },
+  computed: {
+    hasMagneticLoaded() {
+      // Check if there's a valid magnetic with core data
+      const core = this.magnetic?.core;
+      const hasProcessedCore = core?.processedDescription?.columns?.length > 0 ||
+                               core?.geometricalDescription?.length > 0;
+      const hasFunctionalCore = core?.functionalDescription?.shape?.name;
+      return hasProcessedCore || hasFunctionalCore;
+    }
+  },
   methods: {
     getTheme() {
       const style = getComputedStyle(document.body);
@@ -333,6 +350,9 @@ export default {
         this.updating = false;
         return;
       }
+
+      // Clear scene before building new magnetic to prevent old designs from persisting
+      this.clearScene();
 
       // Need core data with shape and material
       const core = magnetic.core;
@@ -470,6 +490,61 @@ export default {
           coil.bobbin.processedDescription.columnDepth !== undefined &&
           coil.bobbin.processedDescription.columnWidth !== undefined;
         
+        // Check if any wire is planar type (as fallback if groupsDescription type isn't set correctly)
+        const hasPlanarWires = coil.functionalDescription?.some(
+          winding => winding?.wire?.type?.toLowerCase() === 'planar'
+        );
+        
+        // Build FR4 boards for planar transformer groups
+        const hasGroupsDescription = coil.groupsDescription != null && coil.groupsDescription.length > 0;
+        
+        if (this.showTurns && hasGroupsDescription && hasValidBobbinForTurns) {
+          try {
+            const bobbinProcessed = JSON.parse(JSON.stringify(coil.bobbin.processedDescription));
+            
+            for (let i = 0; i < coil.groupsDescription.length; i++) {
+              const groupDesc = coil.groupsDescription[i];
+              
+              // Build FR4 for PCB/planar groups:
+              // - Explicit type === "Printed"
+              // - OR hasPlanarWires as fallback (MKF might not set type correctly)
+              const shouldBuildFR4 = groupDesc.type === "Printed" || hasPlanarWires;
+              
+              if (shouldBuildFR4) {
+                try {
+                  // Deep clone groupDesc to remove Vue reactivity (required for Worker postMessage)
+                  const groupDescClone = JSON.parse(JSON.stringify(groupDesc));
+                  const fr4ArrayBuffer = await buildFR4BoardSTL(
+                    groupDescClone,
+                    bobbinProcessed,
+                    null, // Use default board thickness from group
+                    hasPlanarWires // forceBuild = true if planar wires detected
+                  );
+                  
+                  if (fr4ArrayBuffer) {
+                    const fr4Mesh = this.addMeshFromSTL(fr4ArrayBuffer, COATING_COLORS.fr4, {
+                      metalness: 0.0,
+                      roughness: 0.8,
+                      transparent: true,
+                      opacity: 0.4
+                    });
+                    if (fr4Mesh) {
+                      fr4Mesh.visible = this.internalShowTurns;
+                      group.add(fr4Mesh);
+                      this.turnsMeshes.push(fr4Mesh);
+                    }
+                  }
+                } catch (err) {
+                  console.warn(`Could not build FR4 board for group ${i}:`, err.message);
+                  console.error(err);
+                }
+              }
+            }
+          } catch (err) {
+            console.warn('Could not build FR4 boards:', err.message);
+          }
+        }
+        
         if (this.showTurns && hasTurnsData && hasValidBobbinForTurns) {
           try {
             // Deep clone to remove Vue reactivity and circular references
@@ -589,7 +664,7 @@ export default {
     </Renderer>
 
     <!-- Visibility toggle buttons below canvas -->
-    <div class="visibility-controls" v-if="!updating">
+    <div class="visibility-controls" v-if="!updating && hasMagneticLoaded">
       <button 
         :class="['btn btn-sm visibility-btn', internalShowCore ? 'active' : '']"
         @click="internalShowCore = !internalShowCore"

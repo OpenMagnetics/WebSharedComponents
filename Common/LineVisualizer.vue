@@ -48,6 +48,18 @@ export default {
         title: {
             type: String,
         },
+        titleFontSize: {
+            type: Number,
+            default: 25,
+        },
+        axisLabelFontSize: {
+            type: Number,
+            default: 13,
+        },
+        legendLabels: {
+            type: Array,
+            default: null,
+        },
         textColor: {
             type: String,
         },
@@ -84,6 +96,22 @@ export default {
             type: Boolean,
             default: true
         },
+        showGrid:{
+            type: Boolean,
+            default: true
+        },
+        showYAxisName:{
+            type: Boolean,
+            default: false
+        },
+        forceAxisMin:{
+            type: Array,
+            default: null
+        },
+        forceAxisMax:{
+            type: Array,
+            default: null
+        },
     },
     emits: [
         'click',
@@ -96,11 +124,11 @@ export default {
                 left: 'center',
                 text: this.title,
                 textStyle: {
-                    fontSize: 25,
+                    fontSize: this.titleFontSize,
                     color: this.textColor,
                 },
                 subtextStyle: {
-                    fontSize: 17,
+                    fontSize: Math.round(this.titleFontSize * 0.68),
                     color: this.textColor,
                 }
             },
@@ -155,8 +183,11 @@ export default {
                 min: limits.xAxis.min,
                 max: limits.xAxis.max,
                 type: this.xAxisOptions.type,
+                splitLine: {
+                    show: this.showGrid,
+                },
                 axisLabel: {
-                    fontSize: 13,
+                    fontSize: this.axisLabelFontSize,
                     color: this.textColor,
 
                     formatter: (value) => {
@@ -186,22 +217,55 @@ export default {
 
         this.data.forEach((datum, index) => {
             options.yAxis.push({
-                min: limits.yAxis.min,
-                max: limits.yAxis.max,
-                // name: datum.label,
+                min: limits.yAxis[index].min,
+                max: limits.yAxis[index].max,
+                name: this.showYAxisName ? (datum.unit || '') : '',
+                nameLocation: 'middle',
+                nameGap: 25,
+                nameTextStyle: {
+                    color: datum.colorLabel || this.lineColor,
+                    fontSize: this.axisLabelFontSize,
+                },
                 type: datum.type,
+                position: datum.position || (index === 0 ? 'left' : 'right'),
+                splitLine: {
+                    show: index === 0 ? this.showGrid : false,  // Only first yAxis shows grid lines (if enabled)
+                },
                 axisLabel: {
-                    fontSize: 13,
-                    color: this.lineColor,
+                    fontSize: this.axisLabelFontSize,
+                    color: datum.colorLabel || this.lineColor,
 
-                    margin: 0,
+                    margin: 5,
                     formatter: (value) => {
-                        if (this.data.length > 1 && this.data[0].unit == this.data[1].unit && index == 1) {
-                            return '';
+                        // Hide right axis labels only if same unit AND similar scale (unless forceAxisMin/Max which indicates dual display)
+                        const hasForceAxis = (this.forceAxisMin && this.forceAxisMin.some(v => v !== null && v !== undefined)) || (this.forceAxisMax && this.forceAxisMax.some(v => v !== null && v !== undefined));
+                        if (!hasForceAxis && this.data.length > 1 && this.data[0].unit == this.data[1].unit && index == 1) {
+                            // Check if scales are similar (within 10x of each other)
+                            const scale0 = Math.max(...this.data[0].data.y) - Math.min(...this.data[0].data.y);
+                            const scale1 = Math.max(...this.data[1].data.y) - Math.min(...this.data[1].data.y);
+                            const scaleRatio = scale0 > 0 && scale1 > 0 ? Math.max(scale0/scale1, scale1/scale0) : 1;
+                            if (scaleRatio < 10) {
+                                return '';
+                            }
                         }
                         const aux = formatUnit(value, datum.unit);
-                        const text = datum.unit == null? value : `${removeTrailingZeroes(aux.label, 1)} ${aux.unit}`;
-                        return `${text}`;
+                        // Smart decimal limiting based on value magnitude
+                        let decimals = 0;
+                        const absLabel = Math.abs(aux.label);
+                        if (absLabel === 0) {
+                            decimals = 0;
+                        } else if (absLabel < 0.01) {
+                            decimals = 3;
+                        } else if (absLabel < 0.1) {
+                            decimals = 2;
+                        } else if (absLabel < 10) {
+                            decimals = 1;
+                        } else {
+                            decimals = 0;
+                        }
+                        const formattedLabel = Number(aux.label).toFixed(decimals);
+                        const text = datum.unit == null ? formattedLabel : `${formattedLabel} ${aux.unit}`;
+                        return text;
                     },
                 }
             })
@@ -244,14 +308,26 @@ export default {
 
             let xMinimum = Number.MAX_VALUE;
             let xMaximum = Number.MIN_VALUE;
-            let yMinimum = Number.MAX_VALUE;
-            let yMaximum = Number.MIN_VALUE;
 
+            // Calculate x limits across all data
             this.data.forEach((datum) => {
                 datum.data.x.forEach((elem) => {
                     xMaximum = Math.max(xMaximum, elem);
                     xMinimum = Math.min(xMinimum, elem);
                 })
+            })
+            
+            this.points.forEach((elem) => {
+                xMaximum = Math.max(xMaximum, elem.data.x);
+                xMinimum = Math.min(xMinimum, elem.data.x);
+            })
+
+            // Calculate separate y limits for each data series (each yAxis)
+            limits.yAxis = []
+            this.data.forEach((datum, index) => {
+                let yMinimum = Number.MAX_VALUE;
+                let yMaximum = Number.MIN_VALUE;
+                
                 datum.data.y.forEach((elem) => {
                     yMaximum = Math.max(yMaximum, elem);
                     if (datum.type == "log" && elem > Number.MIN_VALUE) {
@@ -260,21 +336,18 @@ export default {
                         yMinimum = Math.min(yMinimum, elem);
                     }
                 })
-                this.points.forEach((elem) => {
-                    xMaximum = Math.max(xMaximum, elem.data.x);
-                    xMinimum = Math.min(xMinimum, elem.data.x);
+                
+                // Include points that belong to this axis
+                this.points.forEach((point) => {
+                    if (point.unit === datum.unit) {
+                        yMaximum = Math.max(yMaximum, point.data.y);
+                        yMinimum = Math.min(yMinimum, point.data.y);
+                    }
                 })
-                this.points.forEach((elem) => {
-                    yMaximum = Math.max(yMaximum, elem.data.y);
-                    yMinimum = Math.min(yMinimum, elem.data.y);
-                })
-            })
-
-            limits.yAxis = []
-            this.data.forEach((datum) => {
+                
                 limits.yAxis.push({
-                    min: yMinimum,
-                    max: yMaximum,
+                    min: (this.forceAxisMin && this.forceAxisMin[index] !== null && this.forceAxisMin[index] !== undefined) ? this.forceAxisMin[index] : yMinimum,
+                    max: (this.forceAxisMax && this.forceAxisMax[index] !== null && this.forceAxisMax[index] !== undefined) ? this.forceAxisMax[index] : yMaximum,
                 });
             })
 
@@ -293,6 +366,53 @@ export default {
             this.data.forEach((datum, index) => {
                 options.yAxis.push({
                     type: datum.type,
+                    name: this.showYAxisName ? (datum.unit || '') : '',
+                    nameLocation: 'middle',
+                    nameGap: 25,
+                    nameTextStyle: {
+                        color: datum.colorLabel || this.lineColor,
+                        fontSize: this.axisLabelFontSize,
+                    },
+                    position: datum.position || (index === 0 ? 'left' : 'right'),
+                    splitLine: {
+                        show: index === 0 ? this.showGrid : false,
+                    },
+                    axisLabel: {
+                        fontSize: this.axisLabelFontSize,
+                        color: datum.colorLabel || this.lineColor,
+                        margin: 5,
+                        formatter: (value) => {
+                            // Hide right axis labels only if same unit AND similar scale (unless forceAxisMin/Max which indicates dual display)
+                            const hasForceAxis = (this.forceAxisMin && this.forceAxisMin.some(v => v !== null && v !== undefined)) || (this.forceAxisMax && this.forceAxisMax.some(v => v !== null && v !== undefined));
+                            if (!hasForceAxis && this.data.length > 1 && this.data[0].unit == this.data[1].unit && index == 1) {
+                                // Check if scales are similar (within 10x of each other)
+                                const scale0 = Math.max(...this.data[0].data.y) - Math.min(...this.data[0].data.y);
+                                const scale1 = Math.max(...this.data[1].data.y) - Math.min(...this.data[1].data.y);
+                                const scaleRatio = scale0 > 0 && scale1 > 0 ? Math.max(scale0/scale1, scale1/scale0) : 1;
+                                if (scaleRatio < 10) {
+                                    return '';
+                                }
+                            }
+                            const aux = formatUnit(value, datum.unit);
+                            // Smart decimal limiting based on value magnitude
+                            let decimals = 0;
+                            const absLabel = Math.abs(aux.label);
+                            if (absLabel === 0) {
+                                decimals = 0;
+                            } else if (absLabel < 0.01) {
+                                decimals = 3;
+                            } else if (absLabel < 0.1) {
+                                decimals = 2;
+                            } else if (absLabel < 10) {
+                                decimals = 1;
+                            } else {
+                                decimals = 0;
+                            }
+                            const formattedLabel = Number(aux.label).toFixed(decimals);
+                            const text = datum.unit == null ? formattedLabel : `${formattedLabel} ${aux.unit}`;
+                            return text;
+                        },
+                    },
                 })
 
                 let showPoints;
@@ -308,9 +428,10 @@ export default {
                         data: this.processData(index),
                         type: 'line',
                         smooth: datum.smooth,
-                        name: datum.label,
+                        name: this.legendLabels && this.legendLabels[index] ? this.legendLabels[index] : datum.label,
                         color: datum.colorLabel,
                         showSymbol: showPoints,
+                        yAxisIndex: index,
                         lineStyle: {
                             type: datum.lineStyle ?? 'solid'  // 'solid', 'dashed', 'dotted'
                         }

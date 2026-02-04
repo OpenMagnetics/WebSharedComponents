@@ -5,7 +5,7 @@
 // REQUIRED DEPENDENCIES (must be installed in main project):
 // - replicad
 // - replicad-opencascadejs  
-// - open-magnetics-virtual-builder (MVB.js)
+// - @openmagnetics/magnetic-virtual-builder
 // - comlink
 
 import * as Comlink from 'comlink';
@@ -139,6 +139,21 @@ export async function buildBobbinSTL(bobbinProcessed, stlOptions = { tolerance: 
 export async function buildTurnSTL(turnDesc, wireDesc, bobbinProcessed, isToroidal, stlOptions = { tolerance: 0.5, angularTolerance: 0.5, binary: true }) {
     const api = await waitForMvb();
     return await api.buildTurn(turnDesc, wireDesc, bobbinProcessed, isToroidal, stlOptions);
+}
+
+/**
+ * Build FR4 board geometry for planar transformers and return STL ArrayBuffer
+ * FR4 boards are the PCB substrate for planar transformer windings.
+ * @param {Object} groupDesc - Group description with type, dimensions, coordinates
+ * @param {Object} bobbinProcessed - Bobbin processed description for column dimensions
+ * @param {number} boardThickness - Optional board thickness override (meters)
+ * @param {boolean} forceBuild - If true, skip PCB type check (use when wire type is planar)
+ * @param {Object} stlOptions - STL export options
+ * @returns {Promise<ArrayBuffer|null>} STL data as ArrayBuffer or null if not a PCB group
+ */
+export async function buildFR4BoardSTL(groupDesc, bobbinProcessed, boardThickness = null, forceBuild = false, stlOptions = { tolerance: 0.5, angularTolerance: 0.5, binary: true }) {
+    const api = await waitForMvb();
+    return await api.buildFR4Board(groupDesc, bobbinProcessed, boardThickness, forceBuild, stlOptions);
 }
 
 /**
