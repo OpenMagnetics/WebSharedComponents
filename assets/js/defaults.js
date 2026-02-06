@@ -781,15 +781,15 @@ export const defaultPushPullWizardInputs = {
     diodeVoltageDrop: 0.7,
     maximumSwitchCurrent: 1,
     currentRippleRatio: 0.3,
-    dutyCycle: 0.45,
-    inductance: 10e-6,
+    dutyCycle: 0.40,
+    inductance: 50e-6,  // 50µH - better for 100kHz push-pull operation
     efficiency: 0.9,
     numberOutputs: 1,
     outputsParameters: [
         {
             voltage: 48,
             current: 0.7,
-            turnsRatio: 1,
+            turnsRatio: 2.0,  // Ns/Np = 2.0 for 20-30V → 48V at D≈40%
         }
     ],
     switchingFrequency: 100000,
@@ -799,25 +799,48 @@ export const defaultPushPullWizardInputs = {
 
 export const defaultForwardWizardInputs = {
     inputVoltage: {
-        minimum: 100,
-        maximum: 190
+        minimum: 36,
+        maximum: 72
     },
     designLevel: 'Help me with the design',
     diodeVoltageDrop: 0.7,
-    maximumSwitchCurrent: 1,
+    maximumSwitchCurrent: 3,
     currentRippleRatio: 0.3,
-    dutyCycle: 0.42,
-    inductance: 10e-6,
-    efficiency: 0.9,
+    dutyCycle: 0.40,  // 40% duty cycle - good balance for 36-72V input range
+    inductance: 200e-6,  // 200µH - better for 200kHz forward converter
+    efficiency: 0.92,
     numberOutputs: 1,
     outputsParameters: [
         {
-            voltage: 5,
-            current: 5,
-            turnsRatio: 10,
+            voltage: 12,
+            current: 3,
+            turnsRatio: 0.35,  // Ns/Np = 0.35 for 36-72V → 12V at D≈40%
         }
     ],
     switchingFrequency: 200000,
     ambientTemperature: 25,
     insulationType: 'Basic'
+};
+
+export const defaultPfcWizardInputs = {
+    inputVoltage: {
+        minimum: 85,
+        maximum: 265
+    },
+    designLevel: 'Help me with the design',
+    mode: 'Continuous Conduction Mode',
+    outputVoltage: 400,
+    outputPower: 300,
+    switchingFrequency: 65000,
+    lineFrequency: 50,
+    currentRippleRatio: 0.3,
+    inductance: 200e-6,
+    diodeVoltageDrop: 0.6,
+    efficiency: 0.95,
+    ambientTemperature: 25,
+    maximumDimensions: {
+        width: null,
+        height: null,
+        depth: null,
+    }
 };
