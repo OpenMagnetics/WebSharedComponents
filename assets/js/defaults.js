@@ -829,12 +829,12 @@ export const defaultPfcWizardInputs = {
     },
     designLevel: 'Help me with the design',
     mode: 'Continuous Conduction Mode',
-    outputVoltage: 400,
-    outputPower: 300,
-    switchingFrequency: 65000,
+    outputVoltage: 400,      // 400V DC bus for universal input PFC
+    outputPower: 300,        // 300W - typical for small-medium PFC
+    switchingFrequency: 65000,  // 65kHz - good balance of size/losses
     lineFrequency: 50,
-    currentRippleRatio: 0.3,
-    inductance: 200e-6,
+    currentRippleRatio: 0.3,    // 30% ripple - good for CCM
+    inductance: 250e-6,      // 250µH - calculated for CCM at 85V, 300W, 30% ripple
     diodeVoltageDrop: 0.6,
     efficiency: 0.95,
     ambientTemperature: 25,

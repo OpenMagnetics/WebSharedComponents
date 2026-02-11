@@ -1,5 +1,5 @@
 <script setup>
-import { markRaw } from 'vue';
+import { markRaw, toRaw } from 'vue';
 import { MeshPhysicalMaterial, Object3D, Group, Mesh, Box3, Vector3 } from 'three';
 import { Camera, Renderer, SpotLight, Scene, AmbientLight } from 'troisjs';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
@@ -497,47 +497,28 @@ export default {
         
         // Build FR4 boards for planar transformer groups
         const hasGroupsDescription = coil.groupsDescription != null && coil.groupsDescription.length > 0;
-        
-        if (this.showTurns && hasGroupsDescription && hasValidBobbinForTurns) {
+        const shouldBuildFR4 = hasGroupsDescription && (
+          coil.groupsDescription.some(g => g.type === "Printed" || g.type?.toLowerCase() === 'printed') ||
+          hasPlanarWires
+        );
+
+        if (this.showTurns && shouldBuildFR4 && hasValidBobbinForTurns) {
           try {
-            const bobbinProcessed = JSON.parse(JSON.stringify(coil.bobbin.processedDescription));
-            
-            for (let i = 0; i < coil.groupsDescription.length; i++) {
-              const groupDesc = coil.groupsDescription[i];
-              
-              // Build FR4 for PCB/planar groups:
-              // - Explicit type === "Printed"
-              // - OR hasPlanarWires as fallback (MKF might not set type correctly)
-              const shouldBuildFR4 = groupDesc.type === "Printed" || hasPlanarWires;
-              
-              if (shouldBuildFR4) {
-                try {
-                  // Deep clone groupDesc to remove Vue reactivity (required for Worker postMessage)
-                  const groupDescClone = JSON.parse(JSON.stringify(groupDesc));
-                  const fr4ArrayBuffer = await buildFR4BoardSTL(
-                    groupDescClone,
-                    bobbinProcessed,
-                    null, // Use default board thickness from group
-                    hasPlanarWires // forceBuild = true if planar wires detected
-                  );
-                  
-                  if (fr4ArrayBuffer) {
-                    const fr4Mesh = this.addMeshFromSTL(fr4ArrayBuffer, COATING_COLORS.fr4, {
-                      metalness: 0.0,
-                      roughness: 0.8,
-                      transparent: true,
-                      opacity: 0.4
-                    });
-                    if (fr4Mesh) {
-                      fr4Mesh.visible = this.internalShowTurns;
-                      group.add(fr4Mesh);
-                      this.turnsMeshes.push(fr4Mesh);
-                    }
-                  }
-                } catch (err) {
-                  console.warn(`Could not build FR4 board for group ${i}:`, err.message);
-                  console.error(err);
-                }
+            // Deep clone coil to remove Vue reactivity (required for Worker postMessage)
+            const coilClone = JSON.parse(JSON.stringify(coil));
+            const fr4ArrayBuffer = await buildFR4BoardSTL(coilClone);
+
+            if (fr4ArrayBuffer) {
+              const fr4Mesh = this.addMeshFromSTL(fr4ArrayBuffer, COATING_COLORS.fr4, {
+                metalness: 0.0,
+                roughness: 0.8,
+                transparent: true,
+                opacity: 0.4
+              });
+              if (fr4Mesh) {
+                fr4Mesh.visible = this.internalShowTurns;
+                group.add(fr4Mesh);
+                this.turnsMeshes.push(fr4Mesh);
               }
             }
           } catch (err) {

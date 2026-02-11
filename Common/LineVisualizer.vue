@@ -287,8 +287,18 @@ export default {
             },
           deep: true
         },
+        'data': {
+            handler(newValue, oldValue) {
+                this.processOptions(this.options);
+            },
+            deep: true
+        },
     },
     mounted() {
+        // Initialize series and yAxis from data prop
+        if (this.data && this.data.length > 0) {
+            this.processOptions(this.options);
+        }
     },
     created() {
     },
