@@ -112,6 +112,10 @@ export default {
             type: Array,
             default: null
         },
+        forceAxisUniquePerSide:{
+            type: Boolean,
+            default: false
+        },
     },
     emits: [
         'click',
@@ -215,62 +219,6 @@ export default {
             ]
         };
 
-        this.data.forEach((datum, index) => {
-            options.yAxis.push({
-                min: limits.yAxis[index].min,
-                max: limits.yAxis[index].max,
-                name: this.showYAxisName ? (datum.unit || '') : '',
-                nameLocation: 'middle',
-                nameGap: 25,
-                nameTextStyle: {
-                    color: datum.colorLabel || this.lineColor,
-                    fontSize: this.axisLabelFontSize,
-                },
-                type: datum.type,
-                position: datum.position || (index === 0 ? 'left' : 'right'),
-                splitLine: {
-                    show: index === 0 ? this.showGrid : false,  // Only first yAxis shows grid lines (if enabled)
-                },
-                axisLabel: {
-                    fontSize: this.axisLabelFontSize,
-                    color: datum.colorLabel || this.lineColor,
-
-                    margin: 5,
-                    formatter: (value) => {
-                        // Hide right axis labels only if same unit AND similar scale (unless forceAxisMin/Max which indicates dual display)
-                        const hasForceAxis = (this.forceAxisMin && this.forceAxisMin.some(v => v !== null && v !== undefined)) || (this.forceAxisMax && this.forceAxisMax.some(v => v !== null && v !== undefined));
-                        if (!hasForceAxis && this.data.length > 1 && this.data[0].unit == this.data[1].unit && index == 1) {
-                            // Check if scales are similar (within 10x of each other)
-                            const scale0 = Math.max(...this.data[0].data.y) - Math.min(...this.data[0].data.y);
-                            const scale1 = Math.max(...this.data[1].data.y) - Math.min(...this.data[1].data.y);
-                            const scaleRatio = scale0 > 0 && scale1 > 0 ? Math.max(scale0/scale1, scale1/scale0) : 1;
-                            if (scaleRatio < 10) {
-                                return '';
-                            }
-                        }
-                        const aux = formatUnit(value, datum.unit);
-                        // Smart decimal limiting based on value magnitude
-                        let decimals = 0;
-                        const absLabel = Math.abs(aux.label);
-                        if (absLabel === 0) {
-                            decimals = 0;
-                        } else if (absLabel < 0.01) {
-                            decimals = 3;
-                        } else if (absLabel < 0.1) {
-                            decimals = 2;
-                        } else if (absLabel < 10) {
-                            decimals = 1;
-                        } else {
-                            decimals = 0;
-                        }
-                        const formattedLabel = Number(aux.label).toFixed(decimals);
-                        const text = datum.unit == null ? formattedLabel : `${formattedLabel} ${aux.unit}`;
-                        return text;
-                    },
-                }
-            })
-        })
-
         const updateOpts = {
             notMerge: true,
         }
@@ -373,7 +321,14 @@ export default {
 
             options.series = []
             options.yAxis = []
+            const firstIndexPerSide = {}
             this.data.forEach((datum, index) => {
+
+                const side = datum.position || (index === 0 ? 'left' : 'right');
+                if (firstIndexPerSide[side] === undefined) {
+                    firstIndexPerSide[side] = index;
+                }
+                
                 options.yAxis.push({
                     type: datum.type,
                     name: this.showYAxisName ? (datum.unit || '') : '',
@@ -383,7 +338,7 @@ export default {
                         color: datum.colorLabel || this.lineColor,
                         fontSize: this.axisLabelFontSize,
                     },
-                    position: datum.position || (index === 0 ? 'left' : 'right'),
+                    position: side,
                     splitLine: {
                         show: index === 0 ? this.showGrid : false,
                     },
@@ -441,7 +396,7 @@ export default {
                         name: this.legendLabels && this.legendLabels[index] ? this.legendLabels[index] : datum.label,
                         color: datum.colorLabel,
                         showSymbol: showPoints,
-                        yAxisIndex: index,
+                        yAxisIndex: this.forceAxisUniquePerSide ? firstIndexPerSide[side] : index,
                         lineStyle: {
                             type: datum.lineStyle ?? 'solid'  // 'solid', 'dashed', 'dotted'
                         }
@@ -466,6 +421,10 @@ export default {
             options.xAxis.max = limits.xAxis.max * this.linePaddings.right;
             options.xAxis.type = this.xAxisOptions.type;
 
+            var yAxisLimits = {
+                min: Number.MAX_VALUE,
+                max: Number.MIN_VALUE,
+            };
             limits.yAxis.forEach((elem, index) => {
                 let numberDecimals = 2;
                 let numberDecimalsPointer = numberDecimals
@@ -486,9 +445,24 @@ export default {
                     options.tooltip.axisPointer.label.precision = numberDecimalsPointer;
                 }
 
-                options.yAxis[index].min = removeTrailingZeroes(roundWithDecimals(elem.min * (elem.min < 0? this.linePaddings.bottom : 1.0 / this.linePaddings.bottom), 1.0 / Math.pow(10, numberDecimals)), numberDecimals);
-                options.yAxis[index].max = removeTrailingZeroes(roundWithDecimals(elem.max * this.linePaddings.top, 1.0 / Math.pow(10, numberDecimals)), numberDecimals);
+                let minimumValue = removeTrailingZeroes(roundWithDecimals(elem.min * (elem.min < 0? this.linePaddings.bottom : 1.0 / this.linePaddings.bottom), 1.0 / Math.pow(10, numberDecimals)), numberDecimals);
+                let maximumValue = removeTrailingZeroes(roundWithDecimals(elem.max * this.linePaddings.top, 1.0 / Math.pow(10, numberDecimals)), numberDecimals);
+                yAxisLimits.min = Math.min(yAxisLimits.min, minimumValue);
+                yAxisLimits.max = Math.max(yAxisLimits.max, maximumValue);
             })
+
+            options.yAxis.forEach((_, index) => {
+                options.yAxis[index].min = yAxisLimits.min;
+                options.yAxis[index].max = yAxisLimits.max;
+            })
+
+            if (this.forceAxisUniquePerSide) {
+                const uniqueYAxis = []
+                Object.entries(firstIndexPerSide).forEach(([_, axisIndex]) => {
+                    uniqueYAxis.push(options.yAxis[axisIndex])
+                })
+                options.yAxis = uniqueYAxis
+            }
         },
         onClick(event) {
             this.$emit('click', event);
