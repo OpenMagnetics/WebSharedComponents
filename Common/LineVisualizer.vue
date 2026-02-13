@@ -116,6 +116,10 @@ export default {
             type: Boolean,
             default: false
         },
+        forceAxisIndependentLimits:{
+            type: Boolean,
+            default: false
+        },
     },
     emits: [
         'click',
@@ -421,6 +425,8 @@ export default {
             options.xAxis.max = limits.xAxis.max * this.linePaddings.right;
             options.xAxis.type = this.xAxisOptions.type;
 
+            // Store individual axis limits
+            const individualAxisLimits = [];
             var yAxisLimits = {
                 min: Number.MAX_VALUE,
                 max: Number.MIN_VALUE,
@@ -449,11 +455,25 @@ export default {
                 let maximumValue = removeTrailingZeroes(roundWithDecimals(elem.max * this.linePaddings.top, 1.0 / Math.pow(10, numberDecimals)), numberDecimals);
                 yAxisLimits.min = Math.min(yAxisLimits.min, minimumValue);
                 yAxisLimits.max = Math.max(yAxisLimits.max, maximumValue);
+                
+                // Store individual limits
+                individualAxisLimits.push({
+                    min: minimumValue,
+                    max: maximumValue
+                });
             })
 
+            // Apply limits to Y-axes
             options.yAxis.forEach((_, index) => {
-                options.yAxis[index].min = yAxisLimits.min;
-                options.yAxis[index].max = yAxisLimits.max;
+                if (this.forceAxisIndependentLimits && individualAxisLimits[index]) {
+                    // Use individual limits for each axis
+                    options.yAxis[index].min = individualAxisLimits[index].min;
+                    options.yAxis[index].max = individualAxisLimits[index].max;
+                } else {
+                    // Use shared limits (original behavior)
+                    options.yAxis[index].min = yAxisLimits.min;
+                    options.yAxis[index].max = yAxisLimits.max;
+                }
             })
 
             if (this.forceAxisUniquePerSide) {
