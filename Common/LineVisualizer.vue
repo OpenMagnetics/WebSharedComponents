@@ -259,10 +259,24 @@ export default {
     methods: {
         processData(index) {
             const data = [];
-            this.data[index].data.x.forEach((_, pointIndex) => {
-                const aux = [this.data[index].data.x[pointIndex], this.data[index].data.y[pointIndex]];
-                data.push(aux);
-            });
+            if (!this.data || !Array.isArray(this.data) || index < 0 || index >= this.data.length) {
+                return data;
+            }
+            const datum = this.data[index];
+            if (!datum || !datum.data || !datum.data.x || !Array.isArray(datum.data.x) || 
+                !datum.data.y || !Array.isArray(datum.data.y)) {
+                return data;
+            }
+            const minLength = Math.min(datum.data.x.length, datum.data.y.length);
+            for (let pointIndex = 0; pointIndex < minLength; pointIndex++) {
+                const xVal = datum.data.x[pointIndex];
+                const yVal = datum.data.y[pointIndex];
+                if (xVal !== undefined && xVal !== null && Number.isFinite(xVal) &&
+                    yVal !== undefined && yVal !== null && Number.isFinite(yVal)) {
+                    const aux = [xVal, yVal];
+                    data.push(aux);
+                }
+            }
             return data;
         },
         processLimits() {
@@ -272,46 +286,65 @@ export default {
             let xMaximum = Number.MIN_VALUE;
 
             // Calculate x limits across all data
-            this.data.forEach((datum) => {
-                datum.data.x.forEach((elem) => {
-                    xMaximum = Math.max(xMaximum, elem);
-                    xMinimum = Math.min(xMinimum, elem);
+            if (this.data && Array.isArray(this.data)) {
+                this.data.forEach((datum) => {
+                    if (datum && datum.data && datum.data.x && Array.isArray(datum.data.x)) {
+                        datum.data.x.forEach((elem) => {
+                            if (elem !== undefined && elem !== null && !Number.isNaN(elem)) {
+                                xMaximum = Math.max(xMaximum, elem);
+                                xMinimum = Math.min(xMinimum, elem);
+                            }
+                        })
+                    }
                 })
-            })
-            
-            this.points.forEach((elem) => {
-                xMaximum = Math.max(xMaximum, elem.data.x);
-                xMinimum = Math.min(xMinimum, elem.data.x);
-            })
+            }
+
+            // Include points that belong to this axis
+            if (this.points && Array.isArray(this.points)) {
+                this.points.forEach((elem) => {
+                    if (elem && elem.data && elem.data.x !== undefined && elem.data.x !== null && !Number.isNaN(elem.data.x)) {
+                        xMaximum = Math.max(xMaximum, elem.data.x);
+                        xMinimum = Math.min(xMinimum, elem.data.x);
+                    }
+                })
+            }
 
             // Calculate separate y limits for each data series (each yAxis)
             limits.yAxis = []
-            this.data.forEach((datum, index) => {
-                let yMinimum = Number.MAX_VALUE;
-                let yMaximum = Number.MIN_VALUE;
-                
-                datum.data.y.forEach((elem) => {
-                    yMaximum = Math.max(yMaximum, elem);
-                    if (datum.type == "log" && elem > Number.MIN_VALUE) {
-                        yMinimum = Math.min(yMinimum, elem);
-                    } else if (datum.type != "log") {
-                        yMinimum = Math.min(yMinimum, elem);
+            if (this.data && Array.isArray(this.data)) {
+                this.data.forEach((datum, index) => {
+                    let yMinimum = Number.MAX_VALUE;
+                    let yMaximum = Number.MIN_VALUE;
+
+                    if (datum && datum.data && datum.data.y && Array.isArray(datum.data.y)) {
+                        datum.data.y.forEach((elem) => {
+                            if (elem !== undefined && elem !== null && Number.isFinite(elem)) {
+                                yMaximum = Math.max(yMaximum, elem);
+                                if (datum.type == "log" && elem > Number.MIN_VALUE) {
+                                    yMinimum = Math.min(yMinimum, elem);
+                                } else if (datum.type != "log") {
+                                    yMinimum = Math.min(yMinimum, elem);
+                                }
+                            }
+                        })
                     }
-                })
-                
-                // Include points that belong to this axis
-                this.points.forEach((point) => {
-                    if (point.unit === datum.unit) {
-                        yMaximum = Math.max(yMaximum, point.data.y);
-                        yMinimum = Math.min(yMinimum, point.data.y);
+
+                    // Include points that belong to this axis
+                    if (this.points && Array.isArray(this.points)) {
+                        this.points.forEach((point) => {
+                            if (point && point.unit === datum.unit && point.data && point.data.y !== undefined && point.data.y !== null && !Number.isNaN(point.data.y)) {
+                                yMaximum = Math.max(yMaximum, point.data.y);
+                                yMinimum = Math.min(yMinimum, point.data.y);
+                            }
+                        })
                     }
+
+                    limits.yAxis.push({
+                        min: (this.forceAxisMin && this.forceAxisMin[index] !== null && this.forceAxisMin[index] !== undefined) ? this.forceAxisMin[index] : yMinimum,
+                        max: (this.forceAxisMax && this.forceAxisMax[index] !== null && this.forceAxisMax[index] !== undefined) ? this.forceAxisMax[index] : yMaximum,
+                    });
                 })
-                
-                limits.yAxis.push({
-                    min: (this.forceAxisMin && this.forceAxisMin[index] !== null && this.forceAxisMin[index] !== undefined) ? this.forceAxisMin[index] : yMinimum,
-                    max: (this.forceAxisMax && this.forceAxisMax[index] !== null && this.forceAxisMax[index] !== undefined) ? this.forceAxisMax[index] : yMaximum,
-                });
-            })
+            }
 
             limits.xAxis = {
                 min: xMinimum,

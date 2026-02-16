@@ -18,6 +18,10 @@ export default {
             type: Array[String],
             required: false
         },
+        replaceTitle:{
+            type: Array[String],
+            default: [null, null]
+        },
         mins:{
             type: Array[Number],
             default: 1e-12
@@ -135,7 +139,7 @@ export default {
         <div class="row">
             <Dimension class="col-3 offset-0 mb-1 text-start"
                 :name="names[0]"
-                :replaceTitle="toTitleCase(names[0])"
+                :replaceTitle="replaceTitle[0] == null? toTitleCase(names[0]) : replaceTitle[0]"
                 :unit="units[0]"
                 :dataTestLabel="dataTestLabel + ' ' + names[0]"
                 :min="mins[0]"
@@ -157,7 +161,7 @@ export default {
             />
             <Dimension class="col-3 offset-1 mb-1 text-start"
                 :name="names[1]"
-                :replaceTitle="toTitleCase(names[1])"
+                :replaceTitle="replaceTitle[1] == null? toTitleCase(names[1]) : replaceTitle[1]"
                 :unit="units[1]"
                 :dataTestLabel="dataTestLabel + ' ' + names[1]"
                 :min="mins[1]"
@@ -179,7 +183,7 @@ export default {
             />
             <Dimension class="col-3 offset-1 mb-1 text-start"
                 :name="names[2]"
-                :replaceTitle="toTitleCase(names[2])"
+                :replaceTitle="replaceTitle[2] == null? toTitleCase(names[2]) : replaceTitle[2]"
                 :unit="units[2]"
                 :dataTestLabel="dataTestLabel + ' ' + names[2]"
                 :min="mins[2]"

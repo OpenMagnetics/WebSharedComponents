@@ -78,54 +78,39 @@ export default {
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: 'bg-dark'
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: 'bg-dark'
         },
         textColor: {
             type: [String, Object],
-            default: "text-white",
+            default: 'text-white'
+        },
+        labelFontSize: {
+            type: [String, Object],
+            default: 'fs-6'
         },
     },
     data() {
-        const localData = {
-            multiplier: null,
-            scaledValue: null
-        };
-
-        if (this.value != null) {
-            let aux;
-            if (this.unit != null) {
-                aux = getMultiplier(Number(this.value), 0.001, false, this.power);
-                localData.scaledValue = removeTrailingZeroes(aux.scaledValue, this.numberDecimals);
-            }
-            else {
-                localData.scaledValue = removeTrailingZeroes(Number(this.value), this.numberDecimals);
-            }
-            if (this.value == 0) {
-                localData.multiplier = 1;
-            }
-            else {
-                if (this.unit != null) {
-                    localData.multiplier = aux.multiplier;
-                }
-                else {
-                    localData.multiplier = 1;
-                }
-            }
-        }
-
-
-        let shortenedName = this.name;
-
         return {
-            localData,
-            shortenedName,
+            localData: {
+                scaledValue: null,
+                multiplier: 1,
+            },
+            title: "",
         }
     },
     computed: {
+        shortenedName() {
+            if (this.disableShortenLabels)
+                return this.name;
+            else if (this.name.length < 12)
+                return this.name;
+            else
+                return this.name.slice(0, 9) + "...";
+        },
         visuallyScaledValue() {
             const value = removeTrailingZeroes(Number(this.localData.scaledValue * this.visualScale), this.numberDecimals)
             return value;
@@ -137,39 +122,12 @@ export default {
                 this.update(newValue);
         },
     },
-    mounted () {
-        this.shortenedName = this.shortenName();
-    },
     methods: {
-        shortenName() {
-            if (this.$refs.container == undefined || this.disableShortenLabels)
-                if (this.useTitleCase) {
-                    return toTitleCase(this.name);
-                }
-                else {
-                    return this.name;
-                }
-
-            let shortenName = this.name;
-            if (this.useTitleCase) {
-                shortenName = toTitleCase(this.name);
-            }
-            if (this.$refs.container.clientWidth < 400 && this.name.length > 10) {
-                let slice = 7;
-                if (this.$refs.container.clientWidth < 310)
-                    slice = 6;
-                if (this.$refs.container.clientWidth < 250)
-                    slice = 4;
-
-                shortenName = shortenName.split(' ')
-                    .map(item => item.length < slice? item + ' ' : item.slice(0, slice) + '. ')
-                    .join('')
-            }
-            return shortenName
+        changeValue(event) {
         },
         update(actualValue) {
             if (this.unit != null) {
-                const aux = getMultiplier(actualValue, 0.001, false, this.power);
+                const aux = getMultiplier(actualValue, 0.001, false, this.power)
                 this.$refs.inputRef.value = removeTrailingZeroes(aux.scaledValue, this.numberDecimals)
                 this.localData.scaledValue = aux.scaledValue;
                 this.localData.multiplier = aux.multiplier;
@@ -232,34 +190,40 @@ export default {
                         :unit="unit"
                         class="m-0 py-0 px-0 col-4 border-0 "
                     />
-                    <label
-                        :style="combinedStyle([labelBgColor, textColor, valueFontSize])"
-                        :data-cy="dataTestLabel + '-DimensionUnit-text'"
-                        v-if="unit == null"
-                        class="ms-2 pt-1 px-0 col-2"
-                    >
-                        {{altUnit}}
-                    </label>
                 </div>
             </div>
         </div>
     </div>
 </template>
 
-<style scoped type="text/css">
 
-/* Chrome, Safari, Edge, Opera */
+<style scoped>
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
 }
 
-/* Firefox */
 input[type=number] {
-  -moz-appearance: textfield;
+    -moz-appearance:textfield; /* Firefox */
+    appearance: none;
+}
+
+input:focus {
+    outline: none;
+}
+
+input {
+    font-family: inherit;
+    width: 100%;
+    background: transparent;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    color: inherit;
+    text-align: right;
+    cursor: default;
 }
 
 </style>
-
-

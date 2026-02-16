@@ -657,13 +657,8 @@ export const defaultFlybackWizardInputs = {
     outputsParameters: [
         {
             voltage: 12,
-            current: 3,
-            turnsRatio: 8,
-        },
-        {
-            voltage: 5,
             current: 5,
-            turnsRatio: 10,
+            turnsRatio: 8,
         }
     ],
     switchingFrequency: 100000,
@@ -779,17 +774,17 @@ export const defaultPushPullWizardInputs = {
     },
     designLevel: 'Help me with the design',
     diodeVoltageDrop: 0.7,
-    maximumSwitchCurrent: 1,
+    maximumSwitchCurrent: 3,
     currentRippleRatio: 0.3,
     dutyCycle: 0.40,
-    inductance: 50e-6,  // 50µH - better for 100kHz push-pull operation
+    inductance: 100e-6,
     efficiency: 0.9,
     numberOutputs: 1,
     outputsParameters: [
         {
-            voltage: 48,
-            current: 0.7,
-            turnsRatio: 2.0,  // Ns/Np = 2.0 for 20-30V → 48V at D≈40%
+            voltage: 12,
+            current: 1.0,
+            turnsRatio: 1.25,
         }
     ],
     switchingFrequency: 100000,
@@ -806,7 +801,11 @@ export const defaultForwardWizardInputs = {
     diodeVoltageDrop: 0.7,
     maximumSwitchCurrent: 3,
     currentRippleRatio: 0.3,
-    dutyCycle: 0.40,  // 40% duty cycle - good balance for 36-72V input range
+    dutyCycle: {
+        minimum: null,
+        nominal: 0.40,  // 40% duty cycle - good balance for 36-72V input range
+        maximum: null
+    },
     inductance: 200e-6,  // 200µH - better for 200kHz forward converter
     efficiency: 0.92,
     numberOutputs: 1,
