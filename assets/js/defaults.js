@@ -653,7 +653,7 @@ export const defaultFlybackWizardInputs = {
     },
     deadTime: 0,
     efficiency: 0.85,
-    numberOutputs: 2,
+    numberOutputs: 1,
     outputsParameters: [
         {
             voltage: 12,
