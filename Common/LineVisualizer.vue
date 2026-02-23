@@ -60,6 +60,10 @@ export default {
             type: Array,
             default: null,
         },
+        showLegend: {
+            type: Boolean,
+            default: true,
+        },
         textColor: {
             type: String,
         },
@@ -180,6 +184,7 @@ export default {
                     }
                 },
             legend: {
+                show: this.showLegend,
                 orient: 'horizontal',
                 left: 'left',
                 top: 'top',
