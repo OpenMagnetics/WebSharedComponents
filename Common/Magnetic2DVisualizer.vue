@@ -134,6 +134,7 @@ export default {
             lastSimulatedMagnetics: "",
             errorMessage: "",
             width: "75%",
+            isMounted: false,
             PLOT_MODES,
             PLOT_MODE_LABELS,
         };
@@ -168,7 +169,7 @@ export default {
     },
     methods: {
         handleModelChange(checkWarning = false) {
-            if (this.blockingRebounds) {
+            if (this.blockingRebounds || !this.isMounted) {
                 return;
             }
             if (this.modelValue.magnetic == null || this.modelValue.inputs == null) {
@@ -204,27 +205,44 @@ export default {
             this.showWarning = !this.coilFits && !(this.posting || this.tryingToPlot || this.recentChange);
         },
         tryToPlot() {
-            if (this.tryingToPlot) {
+            if (this.tryingToPlot || !this.isMounted) {
                 return;
             }
             this.recentChange = false;
             this.tryingToPlot = true;
             setTimeout(() => {
+                if (!this.isMounted) {
+                    this.tryingToPlot = false;
+                    return;
+                }
                 if (this.recentChange) {
                     this.tryingToPlot = false;
                     this.tryToPlot();
                 } else {
                     setTimeout(() => {
-                        this.posting = true;
-                        this.plot();
+                        if (this.isMounted) {
+                            this.posting = true;
+                            this.plot();
+                        }
                     }, PLOT_DELAY_MS);
                 }
             }, this.$settingsStore.waitingTimeForPlottingAfterChange);
         },
         processSvgResult(result) {
+            // Check if component is still mounted
+            if (!this.isMounted) {
+                return;
+            }
+
             const isValidSvg = result.startsWith("<svg");
             if (!isValidSvg) {
                 this.handlePlotError();
+                return;
+            }
+
+            // Check refs are available
+            if (!this.$refs.plotView) {
+                this.posting = false;
                 return;
             }
 
@@ -261,17 +279,29 @@ export default {
             this.lastSimulatedMagnetics = "";
         },
         clearPlotViews() {
-            this.$refs.plotView.innerHTML = "";
-            if ("zoomPlotView" in this.$refs) {
+            if (!this.isMounted) {
+                return;
+            }
+            if (this.$refs.plotView) {
+                this.$refs.plotView.innerHTML = "";
+            }
+            if (this.$refs.zoomPlotView) {
                 this.$refs.zoomPlotView.innerHTML = "";
             }
         },
         async calculateBasicPlot() {
             if (this.modelValue.magnetic == null) {
+                this.posting = false;
+                this.tryingToPlot = false;
                 return;
             }
             if (this.modelValue.magnetic.coil.turnsDescription == null) {
                 this.clearPlotViews();
+                this.posting = false;
+                this.tryingToPlot = false;
+                // Reset cache so next plot will definitely execute when turns are populated
+                this.lastSimulatedInputs = "";
+                this.lastSimulatedMagnetics = "";
                 return;
             }
 
@@ -281,14 +311,23 @@ export default {
                 this.processSvgResult(result);
             } catch (error) {
                 console.error('Error in calculateBasicPlot:', error);
+                this.posting = false;
+                this.tryingToPlot = false;
             }
         },
         async calculateMagneticFieldPlot() {
             if (this.modelValue.magnetic == null) {
+                this.posting = false;
+                this.tryingToPlot = false;
                 return;
             }
             if (this.modelValue.magnetic.coil.turnsDescription == null) {
                 this.clearPlotViews();
+                this.posting = false;
+                this.tryingToPlot = false;
+                // Reset cache so next plot will definitely execute when turns are populated
+                this.lastSimulatedInputs = "";
+                this.lastSimulatedMagnetics = "";
                 return;
             }
 
@@ -307,14 +346,23 @@ export default {
                 this.processSvgResult(result);
             } catch (error) {
                 console.error('Error in calculateMagneticFieldPlot:', error);
+                this.posting = false;
+                this.tryingToPlot = false;
             }
         },
         async calculateElectricFieldPlot() {
             if (this.modelValue.magnetic == null) {
+                this.posting = false;
+                this.tryingToPlot = false;
                 return;
             }
             if (this.modelValue.magnetic.coil.turnsDescription == null) {
                 this.clearPlotViews();
+                this.posting = false;
+                this.tryingToPlot = false;
+                // Reset cache so next plot will definitely execute when turns are populated
+                this.lastSimulatedInputs = "";
+                this.lastSimulatedMagnetics = "";
                 return;
             }
 
@@ -332,15 +380,24 @@ export default {
                 this.processSvgResult(result);
             } catch (error) {
                 console.error('Error in calculateElectricFieldPlot:', error);
+                this.posting = false;
+                this.tryingToPlot = false;
             }
         },
         // Wire losses plot - uses existing WASM function
         async calculateWiresLossesPlot() {
             if (this.modelValue.magnetic == null) {
+                this.posting = false;
+                this.tryingToPlot = false;
                 return;
             }
             if (this.modelValue.magnetic.coil.turnsDescription == null) {
                 this.clearPlotViews();
+                this.posting = false;
+                this.tryingToPlot = false;
+                // Reset cache so next plot will definitely execute when turns are populated
+                this.lastSimulatedInputs = "";
+                this.lastSimulatedMagnetics = "";
                 return;
             }
 
@@ -355,9 +412,12 @@ export default {
                     JSON.stringify(this.modelValue.magnetic),
                     JSON.stringify(this.modelValue.inputs.operatingPoints[this.operatingPointIndex])
                 );
+
                 this.processSvgResult(result);
             } catch (error) {
                 console.error('Error in calculateWiresLossesPlot:', error);
+                this.posting = false;
+                this.tryingToPlot = false;
             }
         },
         // Placeholder for turns colored by winding - TBD in WASM
@@ -444,20 +504,27 @@ export default {
                 this.currentPlotMode = mode;
             }
             setTimeout(() => {
-                this.posting = true;
-                this.plot();
+                if (this.isMounted) {
+                    this.posting = true;
+                    this.plot();
+                }
             }, PLOT_DELAY_MS);
             this.$emit("plotModeChange", this.currentPlotMode);
         },
         swapIncludeFringing() {
             this.includeFringing = !this.includeFringing;
             setTimeout(() => {
-                this.posting = true;
-                this.plot();
+                if (this.isMounted) {
+                    this.posting = true;
+                    this.plot();
+                }
             }, PLOT_DELAY_MS);
             this.$emit("swapIncludeFringing", this.includeFringing);
         },
         plot() {
+            if (!this.isMounted) {
+                return;
+            }
             this.errorMessage = "";
             this.tryingToPlot = false;
             switch (this.currentPlotMode) {
@@ -495,10 +562,20 @@ export default {
         },
     },
     mounted() {
+        this.isMounted = true;
         setTimeout(() => {
-            this.posting = true;
-            this.plot();
+            if (this.isMounted) {
+                this.posting = true;
+                this.plot();
+            }
         }, PLOT_DELAY_MS);
+    },
+    beforeUnmount() {
+        this.isMounted = false;
+        // Reset loading state to prevent stuck loading when component is destroyed
+        this.posting = false;
+        this.tryingToPlot = false;
+        this.blockingRebounds = false;
     },
 }
 

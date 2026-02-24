@@ -164,6 +164,7 @@ export default {
             this.modelValue[this.name] = chosen;
             this.localData = event.target.value;
             this.$emit("update", chosen, this.name);
+            this.$emit("model-changed", chosen, this.name);
         },
     }
 }
