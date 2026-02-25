@@ -17,7 +17,6 @@ export async function initMvbWorker() {
             workerApi = Comlink.wrap(worker);
             await workerApi.waitReady();
             isInitialized = true;
-            console.log('[MVB Runtime] Worker initialized');
             return workerApi;
         } catch (e) { 
             console.error('[MVB Runtime] Worker initialization failed:', e);
@@ -33,7 +32,6 @@ export function terminateWorker() {
     if (worker) {
         worker.terminate();
         worker = null; workerApi = null; isInitialized = false; initPromise = null;
-        console.log('[MVB Runtime] Worker terminated');
     }
 }
 

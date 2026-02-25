@@ -8,6 +8,7 @@
 // Only essential startup methods (load_*) are defined explicitly.
 
 import * as Comlink from 'comlink';
+import { getVersionedWasmUrl } from '/src/stores/storeVersioning';
 
 let mkf = null;
 let readyResolve = null;
@@ -104,10 +105,14 @@ const workerApi = {
         }
 
         try {
-            const baseUrl = wasmJsUrl.substring(0, wasmJsUrl.lastIndexOf('/') + 1);
+            // Append cache-busting version to force reload when version changes
+            const versionedUrl = getVersionedWasmUrl(wasmJsUrl);
+            const baseUrl = versionedUrl.substring(0, versionedUrl.lastIndexOf('/') + 1);
+            
+            console.log(`[MKF Worker] Loading WASM from: ${versionedUrl}`);
             
             // Dynamically import the WASM module
-            const response = await fetch(wasmJsUrl);
+            const response = await fetch(versionedUrl);
             const moduleCode = await response.text();
             
             const blob = new Blob([moduleCode], { type: 'application/javascript' });
@@ -120,7 +125,8 @@ const workerApi = {
                 ModuleFactory({
                     locateFile(path) {
                         if (path.endsWith('.wasm')) {
-                            return baseUrl + path;
+                            // Append cache-busting version to WASM binary URL
+                            return getVersionedWasmUrl(baseUrl + path);
                         }
                         return path;
                     },

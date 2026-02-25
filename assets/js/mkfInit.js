@@ -1,5 +1,6 @@
 // mkfInit.js - Helper to initialize MKF in either main-thread or worker mode
 import { initWorker, setMkf, waitForMkf, isWorkerMode } from '/WebSharedComponents/assets/js/mkfRuntime';
+import { getVersionedWasmUrl } from '/src/stores/storeVersioning';
 
 /**
  * Initialize MKF WASM module
@@ -43,10 +44,20 @@ export async function initMkf(options = {}) {
         onProgress('Loading WASM module...');
         
         // Dynamic import to avoid loading if using worker
-        const { default: Module } = await import('/src/assets/js/libMKF.wasm.js');
+        // Append cache-busting version to force reload when version changes
+        const versionedWasmUrl = getVersionedWasmUrl('/src/assets/js/libMKF.wasm.js');
+        console.log(`[MKF Init] Loading WASM from: ${versionedWasmUrl}`);
+        const { default: Module } = await import(/* @vite-ignore */ versionedWasmUrl);
         
         mkf = await new Promise((resolve) => {
             Module({
+                locateFile(path) {
+                    if (path.endsWith('.wasm')) {
+                        // Append cache-busting version to WASM binary URL
+                        return getVersionedWasmUrl('/src/assets/js/' + path);
+                    }
+                    return path;
+                },
                 onRuntimeInitialized() {
                     const instance = Object.assign(this, {
                         ready: Promise.resolve()

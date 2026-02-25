@@ -17,7 +17,6 @@ async function init() {
             replicadModule = rep;
             builder = new mvb.ReplicadBuilder(replicadModule);
             isReady = true;
-            console.log('[MVB Worker] Initialized successfully.');
         } catch (e) { console.error('[MVB Worker] Initialization failed:', e); initPromise = null; throw e; }
     })();
     return initPromise;

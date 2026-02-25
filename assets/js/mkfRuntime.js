@@ -17,7 +17,6 @@ let useWorker = true; // Worker mode enabled - WASM runs in background thread
  */
 export function setWorkerMode(enable) {
     if (mkf || mkfProxy) {
-        console.warn('[MKF Runtime] Cannot change worker mode after initialization');
         return;
     }
     useWorker = enable;
@@ -61,7 +60,6 @@ export async function initWorker(wasmJsUrl) {
     mkf.ready = Promise.resolve();
 
     resolveReady(mkf);
-    console.log('[MKF Runtime] Worker initialized successfully');
     
     return mkf;
 }
@@ -72,7 +70,6 @@ export async function initWorker(wasmJsUrl) {
  */
 export function setMkf(newMkf) {
     if (useWorker) {
-        console.warn('[MKF Runtime] setMkf called but worker mode is enabled');
         return;
     }
     mkf = newMkf;
@@ -155,7 +152,6 @@ function createMkfProxy(workerProxy) {
                 
                 const elapsed = performance.now() - startTime;
                 if (elapsed > 100) {
-                    console.log(`[MKF] ${prop} took ${elapsed.toFixed(1)}ms`);
                 }
                 
                 return result;
