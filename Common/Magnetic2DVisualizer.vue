@@ -410,13 +410,16 @@ export default {
                 settings.painterAdvancedLitz = false;
                 await mkf.set_settings(JSON.stringify(settings));
 
+                console.log('[Temperature Plot] Calling plot_temperature_field...');
                 const result = await mkf.plot_temperature_field(
                     JSON.stringify(this.modelValue.magnetic),
                     JSON.stringify(this.modelValue.inputs.operatingPoints[this.operatingPointIndex])
                 );
+                console.log('[Temperature Plot] Result received, length:', result?.length || 0);
+                console.log('[Temperature Plot] Result starts with:', result?.substring(0, 100) || 'empty');
                 this.processSvgResult(result);
             } catch (error) {
-                console.error('Error in calculateTemperatureFieldPlot:', error);
+                console.error('[Temperature Plot] Error:', error);
                 this.posting = false;
                 this.tryingToPlot = false;
             }
