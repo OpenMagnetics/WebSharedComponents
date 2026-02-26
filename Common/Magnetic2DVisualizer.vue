@@ -260,8 +260,13 @@ export default {
 
             const originalWidth = extractSvgDimension(result, 'width');
             const originalHeight = extractSvgDimension(result, 'height');
+            
+            console.log('[processSvgResult] Original dimensions:', originalWidth, 'x', originalHeight);
+            console.log('[processSvgResult] Client dimensions:', clientWidth, 'x', clientHeight);
 
             this.width = this.calculateSvgWidth(originalWidth, originalHeight, clientWidth, clientHeight);
+            
+            console.log('[processSvgResult] Calculated width:', this.width);
             this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replace('width=', 'class="scaling-svg" width=');
 
             this.errorMessage = "";
