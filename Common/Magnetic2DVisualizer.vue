@@ -13,6 +13,7 @@ export const PLOT_MODES = {
     BASIC: 'basic',                         // Basic view with cores and wires
     MAGNETIC_FIELD: 'magnetic_field',       // Magnetic field plot
     ELECTRIC_FIELD: 'electric_field',       // Electric field plot
+    TEMPERATURE_FIELD: 'temperature_field', // Temperature field plot
     WIRES_LOSSES: 'wires_losses',           // Wire losses plot (TBD)
     COLORED_BY_WINDING: 'colored_by_winding', // Turns colored by same winding (TBD)
     COLORED_BY_PARALLEL: 'colored_by_parallel', // Turns colored by same parallel (TBD)
@@ -24,6 +25,7 @@ const PLOT_MODE_LABELS = {
     [PLOT_MODES.BASIC]: 'Basic',
     [PLOT_MODES.MAGNETIC_FIELD]: 'H Field',
     [PLOT_MODES.ELECTRIC_FIELD]: 'E Field',
+    [PLOT_MODES.TEMPERATURE_FIELD]: 'Temperature',
     [PLOT_MODES.WIRES_LOSSES]: 'Wire Losses',
     [PLOT_MODES.COLORED_BY_WINDING]: 'By Winding',
     [PLOT_MODES.COLORED_BY_PARALLEL]: 'By Parallel',
@@ -384,6 +386,41 @@ export default {
                 this.tryingToPlot = false;
             }
         },
+        // Temperature field plot - uses existing WASM function
+        async calculateTemperatureFieldPlot() {
+            if (this.modelValue.magnetic == null) {
+                this.posting = false;
+                this.tryingToPlot = false;
+                return;
+            }
+            if (this.modelValue.magnetic.coil.turnsDescription == null) {
+                this.clearPlotViews();
+                this.posting = false;
+                this.tryingToPlot = false;
+                // Reset cache so next plot will definitely execute when turns are populated
+                this.lastSimulatedInputs = "";
+                this.lastSimulatedMagnetics = "";
+                return;
+            }
+
+            try {
+                const mkf = await waitForMkf();
+                const settings = JSON.parse(await mkf.get_settings());
+                settings.painterSimpleLitz = true;
+                settings.painterAdvancedLitz = false;
+                await mkf.set_settings(JSON.stringify(settings));
+
+                const result = await mkf.plot_temperature_field(
+                    JSON.stringify(this.modelValue.magnetic),
+                    JSON.stringify(this.modelValue.inputs.operatingPoints[this.operatingPointIndex])
+                );
+                this.processSvgResult(result);
+            } catch (error) {
+                console.error('Error in calculateTemperatureFieldPlot:', error);
+                this.posting = false;
+                this.tryingToPlot = false;
+            }
+        },
         // Wire losses plot - uses existing WASM function
         async calculateWiresLossesPlot() {
             if (this.modelValue.magnetic == null) {
@@ -533,6 +570,9 @@ export default {
                     break;
                 case PLOT_MODES.ELECTRIC_FIELD:
                     this.calculateElectricFieldPlot();
+                    break;
+                case PLOT_MODES.TEMPERATURE_FIELD:
+                    this.calculateTemperatureFieldPlot();
                     break;
                 case PLOT_MODES.WIRES_LOSSES:
                     this.calculateWiresLossesPlot();
