@@ -113,7 +113,7 @@ export default {
 
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex ">
-        <div class="row">
+        <div class="row" :class="justifyContent ? 'ms-0 ps-0' : ''">
             <label
                 :style="combinedStyle([labelBgColor, textColor, labelFontSize])"
                 :data-cy="dataTestLabel + '-title'"

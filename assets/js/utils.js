@@ -885,6 +885,7 @@ export async function checkAndFixMas(mas, mkf=null) {
                     // Use taskQueueStore
                     const masResult = await mkf.masAutocomplete(mas, false, {});
                     mas.magnetic.core = masResult.magnetic.core;
+                    if (masResult.magnetic?.coil?.bobbin && masResult.magnetic.coil.bobbin !== 'Dummy') mas.magnetic.coil.bobbin = masResult.magnetic.coil.bobbin;
                 } else {
                     // Legacy mkf direct usage
                     await mkf.ready;
@@ -894,7 +895,9 @@ export async function checkAndFixMas(mas, mkf=null) {
                         return mas;
                     }
                     else {
-                        mas.magnetic.core = JSON.parse(masJson).magnetic.core;
+                        const _masR = JSON.parse(masJson);
+                        mas.magnetic.core = _masR.magnetic.core;
+                        if (_masR.magnetic?.coil?.bobbin && _masR.magnetic.coil.bobbin !== 'Dummy') mas.magnetic.coil.bobbin = _masR.magnetic.coil.bobbin;
                     }
                 }
 

@@ -475,7 +475,7 @@ export default {
             // Deep clone to remove Vue reactivity and circular references
             const bobbinProcessed = JSON.parse(JSON.stringify(coil.bobbin.processedDescription));
             const bobbinArrayBuffer = await buildBobbinSTL(bobbinProcessed, stlOptions);
-              
+
             if (bobbinArrayBuffer) {
               this.bobbinMesh = this.addMeshFromSTL(bobbinArrayBuffer, this.bobbinColor, {
                 metalness: 0.1,
