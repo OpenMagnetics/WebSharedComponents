@@ -52,6 +52,7 @@ export default {
             recentChange,
             tryingToSend,
             lastUsedWire,
+            isMounted: false,
         }
     },
     watch: {
@@ -90,6 +91,7 @@ export default {
 
                     this.$axios.post(url, data)
                     .then(response => {
+                        if (!this.isMounted) return;
                         this.posting = false
                         // console.log(response.data)
                         this.$refs.wire2DPlotView.innerHTML = response.data
@@ -100,6 +102,7 @@ export default {
                         this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = this.$refs.wire2DPlotView.innerHTML;
                     })
                     .catch(error => {
+                        if (!this.isMounted) return;
                         this.$refs.wire2DPlotView.innerHTML = "Error in wire";
                         this.posting = false
                     });
@@ -116,6 +119,7 @@ export default {
                     const aux = deepCopy(this.wire);
                     this.posting = true;
                     const result = await mkf.plot_wire(JSON.stringify(this.wire));
+                    if (!this.isMounted) return;
                     if (!result || !result.startsWith("<svg")) {
                         this.posting = false;
                         console.error("Invalid SVG result from plot_wire");
@@ -172,6 +176,10 @@ export default {
                     this.recentChange = false;
                     this.tryingToSend = true;
                     setTimeout(() => {
+                        if (!this.isMounted) {
+                            this.tryingToSend = false;
+                            return;
+                        }
                         if (!this.hasError) {
                             if (this.recentChange) {
                                 this.tryingToSend = false;
@@ -192,13 +200,18 @@ export default {
                 }
             }
             else {
+                if (!this.isMounted) return;
                 this.$refs.wire2DPlotView.innerHTML = this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex];
             }
         },
 
     },
     mounted() {
+        this.isMounted = true;
         this.tryToSend();
+    },
+    beforeUnmount() {
+        this.isMounted = false;
     },
     computed: {
     },

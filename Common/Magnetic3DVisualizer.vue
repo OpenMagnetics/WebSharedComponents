@@ -164,6 +164,7 @@ export default {
       currentMagnetic: null,
       mvbInitialized: false,
       theme: this.getTheme(),
+      isMounted: false,
       // Internal visibility state (can be toggled by UI)
       internalShowCore: this.showCore,
       internalShowBobbin: this.showBobbin,
@@ -343,8 +344,8 @@ export default {
     },
 
     async buildMagnetic() {
-      if (this.building) return;
-      
+      if (this.building || !this.isMounted) return;
+
       const magnetic = this.magnetic;
       if (!magnetic) {
         this.updating = false;
@@ -400,11 +401,17 @@ export default {
         }
 
         const processedCore = JSON.parse(coreResult);
-        
+
+        if (!this.isMounted) {
+          this.building = false;
+          this.updating = false;
+          return;
+        }
+
         // Build components in scene
         const scene = this.$refs.scene?.scene;
         const camera = this.$refs.camera?.camera;
-        
+
         if (!scene || !camera) {
           this.building = false;
           this.updating = false;
@@ -579,8 +586,10 @@ export default {
         console.error('Error building magnetic:', error);
         this.$emit("errorInDimensions");
       } finally {
-        this.building = false;
-        this.updating = false;
+        if (this.isMounted) {
+          this.building = false;
+          this.updating = false;
+        }
       }
     },
 
@@ -589,6 +598,10 @@ export default {
         this.recentChange = false;
         this.tryingToSend = true;
         setTimeout(() => {
+          if (!this.isMounted) {
+            this.tryingToSend = false;
+            return;
+          }
           if (this.recentChange) {
             this.tryingToSend = false;
             this.tryToSend();
@@ -609,10 +622,12 @@ export default {
   },
 
   mounted() {
+    this.isMounted = true;
     this.tryToSend();
   },
 
   beforeUnmount() {
+    this.isMounted = false;
     this.clearScene();
   },
 };

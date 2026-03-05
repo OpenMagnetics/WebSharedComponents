@@ -134,6 +134,8 @@ export default {
             showWarning: false,
             lastSimulatedInputs: "",
             lastSimulatedMagnetics: "",
+            lastPlotMode: null,
+            lastForceUpdate: 0,
             errorMessage: "",
             width: "75%",
             isMounted: false,
@@ -180,8 +182,15 @@ export default {
 
             const inputsString = JSON.stringify(this.modelValue.inputs);
             const magneticsString = JSON.stringify(this.modelValue.magnetic);
+            const currentPlotMode = this.plotModeInit;
 
-            if (inputsString === this.lastSimulatedInputs && magneticsString === this.lastSimulatedMagnetics) {
+            // Check if anything has changed: inputs, magnetics, plot mode, or forceUpdate (models)
+            const inputsChanged = inputsString !== this.lastSimulatedInputs;
+            const magneticsChanged = magneticsString !== this.lastSimulatedMagnetics;
+            const plotModeChanged = currentPlotMode !== this.lastPlotMode;
+            const forceUpdateChanged = this.forceUpdate !== this.lastForceUpdate;
+
+            if (!inputsChanged && !magneticsChanged && !plotModeChanged && !forceUpdateChanged) {
                 return;
             }
 
@@ -202,6 +211,8 @@ export default {
 
             this.lastSimulatedInputs = inputsString;
             this.lastSimulatedMagnetics = magneticsString;
+            this.lastPlotMode = currentPlotMode;
+            this.lastForceUpdate = this.forceUpdate;
         },
         checkShowWarning() {
             this.showWarning = !this.coilFits && !(this.posting || this.tryingToPlot || this.recentChange);
@@ -284,6 +295,7 @@ export default {
             this.$emit("errorInImage");
             this.lastSimulatedInputs = "";
             this.lastSimulatedMagnetics = "";
+            this.lastForceUpdate = 0;
         },
         clearPlotViews() {
             if (!this.isMounted) {
@@ -309,6 +321,7 @@ export default {
                 // Reset cache so next plot will definitely execute when turns are populated
                 this.lastSimulatedInputs = "";
                 this.lastSimulatedMagnetics = "";
+                this.lastForceUpdate = 0;
                 return;
             }
 
@@ -335,6 +348,7 @@ export default {
                 // Reset cache so next plot will definitely execute when turns are populated
                 this.lastSimulatedInputs = "";
                 this.lastSimulatedMagnetics = "";
+                this.lastForceUpdate = 0;
                 return;
             }
 
@@ -370,6 +384,7 @@ export default {
                 // Reset cache so next plot will definitely execute when turns are populated
                 this.lastSimulatedInputs = "";
                 this.lastSimulatedMagnetics = "";
+                this.lastForceUpdate = 0;
                 return;
             }
 
@@ -405,6 +420,7 @@ export default {
                 // Reset cache so next plot will definitely execute when turns are populated
                 this.lastSimulatedInputs = "";
                 this.lastSimulatedMagnetics = "";
+                this.lastForceUpdate = 0;
                 return;
             }
 
@@ -416,12 +432,30 @@ export default {
                 await mkf.set_settings(JSON.stringify(settings));
 
                 console.log('[Temperature Plot] Calling plot_temperature_field...');
+                // Ensure color values are plain strings (not reactive objects)
+                const textColorStr = String(this.textColor || '#ffffff');
+                const bgColorStr = String(this.backgroundColor || '#1a1a1a');
+                console.log('[Temperature Plot] Colors being passed:', { textColor: textColorStr, bgColor: bgColorStr });
                 const result = await mkf.plot_temperature_field(
                     JSON.stringify(this.modelValue.magnetic),
-                    JSON.stringify(this.modelValue.inputs.operatingPoints[this.operatingPointIndex])
+                    JSON.stringify(this.modelValue.inputs.operatingPoints[this.operatingPointIndex]),
+                    textColorStr,
+                    bgColorStr
                 );
                 console.log('[Temperature Plot] Result received, length:', result?.length || 0);
                 console.log('[Temperature Plot] Result starts with:', result?.substring(0, 100) || 'empty');
+                // Check if result is an error message (doesn't start with <svg)
+                if (!result?.startsWith('<svg')) {
+                    console.error('[Temperature Plot] ERROR - Result is not an SVG:', result);
+                    this.posting = false;
+                    this.tryingToPlot = false;
+                    return;
+                }
+                // Check if result contains Core_Segment (for debugging missing toroidal core)
+                const hasCoreSegments = result?.includes('Core_Segment') || false;
+                const hasTurns = result?.includes('L_') || result?.includes('Turn_') || false;
+                console.log('[Temperature Plot] SVG contains Core_Segment:', hasCoreSegments);
+                console.log('[Temperature Plot] SVG contains turns:', hasTurns);
                 this.processSvgResult(result);
             } catch (error) {
                 console.error('[Temperature Plot] Error:', error);
@@ -443,6 +477,7 @@ export default {
                 // Reset cache so next plot will definitely execute when turns are populated
                 this.lastSimulatedInputs = "";
                 this.lastSimulatedMagnetics = "";
+                this.lastForceUpdate = 0;
                 return;
             }
 
@@ -611,6 +646,7 @@ export default {
     },
     mounted() {
         this.isMounted = true;
+        this.lastPlotMode = this.plotModeInit;
         setTimeout(() => {
             if (this.isMounted) {
                 this.posting = true;
