@@ -143,6 +143,10 @@ export default {
       type: String,
       default: "#1a1a1a",
     },
+    buttonColor: {
+      type: String,
+      default: "white",
+    },
   },
   components: {
     Camera,
@@ -663,6 +667,7 @@ export default {
     <div class="visibility-controls" v-if="!updating && hasMagneticLoaded">
       <button 
         :class="['btn btn-sm visibility-btn', internalShowCore ? 'active' : '']"
+        :style="{ color: buttonColor, borderColor: buttonColor }"
         @click="internalShowCore = !internalShowCore"
         title="Toggle Core visibility"
       >
@@ -670,6 +675,7 @@ export default {
       </button>
       <button 
         :class="['btn btn-sm visibility-btn', internalShowBobbin ? 'active' : '']"
+        :style="{ color: buttonColor, borderColor: buttonColor }"
         @click="internalShowBobbin = !internalShowBobbin"
         title="Toggle Bobbin visibility"
       >
@@ -677,6 +683,7 @@ export default {
       </button>
       <button 
         :class="['btn btn-sm visibility-btn', internalShowTurns ? 'active' : '']"
+        :style="{ color: buttonColor, borderColor: buttonColor }"
         @click="internalShowTurns = !internalShowTurns"
         title="Toggle Turns visibility"
       >
@@ -722,24 +729,16 @@ export default {
 }
 
 .visibility-btn {
-  color: white;
-  border-color: white;
   background: transparent;
 }
 
 .visibility-btn:hover {
-  color: white;
   background: rgba(255, 255, 255, 0.2);
-  border-color: white;
 }
 
 .visibility-btn.active {
-  color: white;
-  border-color: white;
 }
 
 .visibility-btn:not(.active) {
-  color: rgba(255, 255, 255, 0.5);
-  border-color: rgba(255, 255, 255, 0.5);
 }
 </style>

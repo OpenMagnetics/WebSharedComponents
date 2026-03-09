@@ -105,6 +105,10 @@ export default {
             type: String,
             default: ''
         },
+        defaultZeroUnit: {
+            type: Number,
+            default: null
+        },
     },
     data() {
         const localData = {
@@ -120,7 +124,7 @@ export default {
             localData.multiplier = aux.multiplier;
         }
 
-        if (this.modelValue[this.name] != null) {
+            if (this.modelValue[this.name] != null) {
             let aux;
             if (this.unit != null) {
                 aux = getMultiplier(this.modelValue[this.name], 0.001);
@@ -130,7 +134,11 @@ export default {
                 localData.scaledValue = removeTrailingZeroes(this.modelValue[this.name], this.numberDecimals);
             }
             if (this.modelValue[this.name] == 0) {
-                localData.multiplier = 1;
+                if (this.defaultZeroUnit != null) {
+                    localData.multiplier = this.defaultZeroUnit;
+                } else {
+                    localData.multiplier = 1;
+                }
             }
             else {
                 if (this.unit != null) {
@@ -240,6 +248,8 @@ export default {
                     this.localData.scaledValue = aux.scaledValue;
                     if (this.localData.scaledValue != 0) {
                         this.localData.multiplier = aux.multiplier;
+                    } else if (this.defaultZeroUnit != null) {
+                        this.localData.multiplier = this.defaultZeroUnit;
                     }
                 }
                 else {
