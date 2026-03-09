@@ -187,7 +187,7 @@ export default {
                 v-if="altText == null && !titleSameRow"
                 :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 p-0">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
+                class="rounded-2 p-0">{{replaceTitle == null? toTitleCase(name) : replaceTitle}}
             </label>
         </div>
         <div class="row" :class="justifyContent? 'd-flex justify-content-between' : ''">
@@ -196,7 +196,7 @@ export default {
                 :data-cy="dataTestLabel + '-same-row-label'"
                 v-if="titleSameRow"
                 :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
-                class="rounded-2 m-0 p-0">{{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
+                class="rounded-2 m-0 p-0">{{replaceTitle == null? toTitleCase(name) : replaceTitle}}
             </label>
             <div  v-if="!titleSameRow" class=" col-sm-0 col-md-2">
             </div>
