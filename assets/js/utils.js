@@ -812,6 +812,20 @@ export async function checkAndFixMas(mas, mkf=null) {
 
             })
         }
+
+        if (mas.inputs.operatingPoints != null) {
+            for (const op of mas.inputs.operatingPoints) {
+                if (op.excitationsPerWinding == null) continue;
+                for (const exc of op.excitationsPerWinding) {
+                    for (const signal of ['current', 'voltage']) {
+                        const harmonics = exc[signal]?.harmonics;
+                        if (harmonics == null) continue;
+                        if (harmonics.amplitudes != null) harmonics.amplitudes = harmonics.amplitudes.filter(v => v !== null);
+                        if (harmonics.frequencies != null) harmonics.frequencies = harmonics.frequencies.filter(v => v !== null);
+                    }
+                }
+            }
+        }
     }
 
     if (mas.magnetic.core != null) {
