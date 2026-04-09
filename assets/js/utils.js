@@ -875,6 +875,18 @@ export async function checkAndFixMas(mas, mkf=null) {
                 }
             }
         }
+        // Ensure excitationsPerWinding matches the number of windings
+        if (mas.inputs != null && mas.inputs.operatingPoints != null) {
+            for (const op of mas.inputs.operatingPoints) {
+                if (op.excitationsPerWinding == null) {
+                    op.excitationsPerWinding = [];
+                }
+                for (let i = op.excitationsPerWinding.length; i < numberWindings; i++) {
+                    op.excitationsPerWinding.push(null);
+                }
+            }
+        }
+
         if (mas.magnetic.coil.layersDescription != null) {
             for (let i = 0; i < mas.magnetic.coil.layersDescription.length; i++) {
                 if (mas.magnetic.coil.layersDescription[i].partialWindings == null) {
