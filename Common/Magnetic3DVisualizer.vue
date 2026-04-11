@@ -63,7 +63,10 @@ function getWireColorFromCoating(turnData, coil, windingIndex) {
     if (windingData?.wire?.coating) {
       const coating = windingData.wire.coating;
       // Check coating material first (e.g., "ETFE", "FEP")
-      const material = coating.material?.toLowerCase();
+      // coating.material may be a string or a full material object
+      const rawMaterial = coating.material;
+      const materialStr = typeof rawMaterial === 'string' ? rawMaterial : rawMaterial?.name ?? rawMaterial?.material ?? '';
+      const material = materialStr?.toLowerCase();
       if (material && COATING_COLORS[material]) {
         return COATING_COLORS[material];
       }
