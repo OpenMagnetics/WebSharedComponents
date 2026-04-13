@@ -75,28 +75,28 @@ export default {
             default: () => ({}),
         },
         removeButtonBgColor: {
-            type: String,
-            default: "bg-danger",
+            type: [String, Object],
+            default: () => ({ backgroundColor: 'var(--p-red-400)' }),
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         titleFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: () => ({ backgroundColor: 'var(--p-surface-800)' }),
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: () => ({ backgroundColor: 'var(--p-surface-600)' }),
         },
         textColor: {
             type: [String, Object],
-            default: "text-white",
+            default: () => ({ color: 'var(--p-surface-50)' }),
         },
         unitExtraStyleClass:{
             type: String,
@@ -344,7 +344,7 @@ export default {
                 v-if="varText"
                 :data-cy="dataTestLabel + '-title'"
                 type="text"
-                class="rounded-2 col-6 p-0 mb-2 border-0"
+                class="dwt-rounded col-6 p-0 mb-2 border-0"
                 :class="combinedClass([labelBgColor, textColor, titleFontSize])"
                 @change="$emit('changeText', $event.target.value)"
                 :value="name">
@@ -353,7 +353,7 @@ export default {
                 v-if="!varText"
                 :data-cy="dataTestLabel + '-title'"
                 :class="combinedClass([labelBgColor, textColor, titleFontSize])"
-                class="rounded-2 p-0">
+                class="dwt-rounded p-0">
                 {{toTitleCase(name)}}
             </label> 
         </div>
@@ -504,12 +504,20 @@ export default {
             </div>
         </div>
         <div class="row">
-            <label :data-cy="dataTestLabel + '-error-text'" class="text-danger text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
+            <label :data-cy="dataTestLabel + '-error-text'" class="dwt-error text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
         </div>
     </div>
 </template>
 
-<style type="text/css">
+<style scoped>
+.dwt-rounded {
+  border-radius: var(--p-border-radius);
+}
+
+.dwt-error {
+  color: var(--p-red-400);
+}
+
 .remove-button {
   display: block;
 }
@@ -518,9 +526,34 @@ export default {
   display: none;
 }
 .remove-button:hover {
-  background-color: var(--bs-danger) !important;
+  background-color: var(--p-red-400) !important;
 }
 
 .remove-button .icon {opacity:0;}
 .remove-button:hover .icon {opacity:1;}
+
+input[type="number"],
+input[type="text"] {
+  border: 1px solid var(--p-surface-400);
+  border-radius: var(--p-border-radius) 0 0 var(--p-border-radius);
+  border-right: none;
+  font-family: var(--p-font-family);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+  height: 1.75rem;
+  line-height: 1.25rem;
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus {
+  border-color: var(--p-primary-color);
+  box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--p-primary-color) 25%, transparent);
+}
+
+:deep(.unit-select) {
+  height: 1.75rem;
+  line-height: 1.25rem;
+  border-radius: 0 var(--p-border-radius) var(--p-border-radius) 0;
+}
 </style>

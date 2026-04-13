@@ -41,11 +41,11 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         labelFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         labelWidthProportionClass:{
             type: String,
@@ -57,15 +57,15 @@ export default {
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: () => ({ backgroundColor: 'var(--p-surface-800)' }),
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: () => ({ backgroundColor: 'var(--p-surface-600)' }),
         },
         textColor: {
             type: [String, Object],
-            default: "text-white",
+            default: () => ({ color: 'var(--p-surface-50)' }),
         },
     },
     data() {
@@ -111,7 +111,7 @@ export default {
                 v-if="altText != null && !titleSameRow"
                 type="text"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
-                class="rounded-2 p-0 mb-2 border-0"
+                class="element-radio-label p-0 mb-2 border-0"
                 @change="$emit('changeText', $event.target.value)"
                 :value="altText"
             >
@@ -120,7 +120,7 @@ export default {
                 :data-cy="dataTestLabel + '-title'"
                 v-if="altText == null && !titleSameRow"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
-                class="rounded-2 p-0"
+                class="element-radio-label p-0"
             >
                 {{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
             </label>
@@ -131,7 +131,7 @@ export default {
                 :data-cy="dataTestLabel + '-same-row-label'"
                 v-if="titleSameRow"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor, labelWidthProportionClass])"
-                class="rounded-2 p-0"
+                class="element-radio-label p-0"
             >
                 {{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
             </label>
@@ -172,4 +172,14 @@ export default {
         </div>
     </div>
 </template>
+
+<style scoped>
+.element-radio-label {
+    font-size: clamp(0.6rem, 2cqi, 0.875rem);
+    overflow: hidden;
+    white-space: nowrap;
+    container-type: inline-size;
+    border-radius: var(--p-border-radius);
+}
+</style>
 

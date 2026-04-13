@@ -48,23 +48,23 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         labelFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: () => ({ backgroundColor: 'var(--p-surface-800)' }),
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: () => ({ backgroundColor: 'var(--p-surface-600)' }),
         },
         textColor: {
             type: [String, Object],
-            default: "text-white",
+            default: () => ({ color: 'var(--p-surface-50)' }),
         },
     },
     data() {
@@ -117,7 +117,7 @@ export default {
             <label
                 :style="combinedStyle([labelBgColor, textColor, labelFontSize])"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 fs-5 "
+                class="several-elements-color-label "
                 :class="combinedClass([justifyContent? 'text-start ms-0' : 'ms-3', labelBgColor, textColor, labelFontSize])"
             >
                 {{toTitleCase(name)}}
@@ -153,5 +153,12 @@ export default {
     </div>
 </template>
 
-<style>
+<style scoped>
+.several-elements-color-label {
+    font-size: clamp(0.6rem, 2cqi, 0.875rem);
+    overflow: hidden;
+    white-space: nowrap;
+    container-type: inline-size;
+    border-radius: var(--p-border-radius);
+}
 </style>
