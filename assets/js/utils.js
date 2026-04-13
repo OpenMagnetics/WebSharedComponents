@@ -95,7 +95,13 @@ export function roundValue(chart, datasetIndex, index, value, xPrecision, yPreci
     chart.data.datasets[datasetIndex].data[index] = value
 }
 
-export function formatUnit(valueRaw, unitRaw, power=1, precision=0.001) {
+const baseToPrefix = {
+    0.000000000001: "p", 0.000000001: "n", 0.000001: "μ", 0.001: "m",
+    1: "", 1000: "k", 1000000: "M", 1000000000: "G",
+    1000000000000: "T", 1000000000000000: "P"
+};
+
+export function formatUnit(valueRaw, unitRaw, power=1, precision=0.001, minBase=null, maxBase=null) {
     let base
     let unit
     let label
@@ -139,8 +145,17 @@ export function formatUnit(valueRaw, unitRaw, power=1, precision=0.001) {
         base = 1000000000000000
         unit = "P" + unitRaw
     }
+
+    if (minBase != null && (base == null || base < minBase)) {
+        base = minBase
+        unit = (baseToPrefix[minBase] ?? "") + unitRaw
+    }
+    if (maxBase != null && base > maxBase) {
+        base = maxBase
+        unit = (baseToPrefix[maxBase] ?? "") + unitRaw
+    }
+
     label = roundWithDecimals(valueRaw / Math.pow(base, power), precision);
-    // label = valueRaw / base
     return {label, unit}
 }
 
@@ -259,11 +274,11 @@ export function formatVolume(dimension) {
 }
 
 export function formatCurrent(current) {
-    return formatUnit(current, "A")
+    return formatUnit(current, "A", 1, 0.001, 0.001, 1000)
 }
 
 export function formatVoltage(voltage) {
-    return formatUnit(voltage, "V")
+    return formatUnit(voltage, "V", 1, 0.001, 0.001, 1000)
 }
 
 export function formatTemperature(temperature) {
@@ -875,6 +890,18 @@ export async function checkAndFixMas(mas, mkf=null) {
                 }
             }
         }
+        // Ensure excitationsPerWinding matches the number of windings
+        if (mas.inputs != null && mas.inputs.operatingPoints != null) {
+            for (const op of mas.inputs.operatingPoints) {
+                if (op.excitationsPerWinding == null) {
+                    op.excitationsPerWinding = [];
+                }
+                for (let i = op.excitationsPerWinding.length; i < numberWindings; i++) {
+                    op.excitationsPerWinding.push(null);
+                }
+            }
+        }
+
         if (mas.magnetic.coil.layersDescription != null) {
             for (let i = 0; i < mas.magnetic.coil.layersDescription.length; i++) {
                 if (mas.magnetic.coil.layersDescription[i].partialWindings == null) {

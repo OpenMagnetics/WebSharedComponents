@@ -36,6 +36,14 @@ export default {
             type: Number,
             default: 1e+9
         },
+        unitMin:{
+            type: Number,
+            default: null
+        },
+        unitMax:{
+            type: Number,
+            default: null
+        },
         numberDecimals:{
             type: Number,
             default: 6
@@ -118,6 +126,22 @@ export default {
         }
 
 
+        // Clamp multiplier to unitMin/unitMax if specified
+        if (localData.multiplier != null) {
+            if (this.unitMin != null && localData.multiplier < this.unitMin) {
+                localData.multiplier = this.unitMin;
+                if (this.value != null && this.unit != null) {
+                    localData.scaledValue = removeTrailingZeroes(Number(this.value) / localData.multiplier, this.numberDecimals);
+                }
+            }
+            if (this.unitMax != null && localData.multiplier > this.unitMax) {
+                localData.multiplier = this.unitMax;
+                if (this.value != null && this.unit != null) {
+                    localData.scaledValue = removeTrailingZeroes(Number(this.value) / localData.multiplier, this.numberDecimals);
+                }
+            }
+        }
+
         let shortenedName = this.name;
 
         return {
@@ -170,9 +194,13 @@ export default {
         update(actualValue) {
             if (this.unit != null) {
                 const aux = getMultiplier(actualValue, 0.001, false, this.power);
-                this.$refs.inputRef.value = removeTrailingZeroes(aux.scaledValue, this.numberDecimals)
-                this.localData.scaledValue = aux.scaledValue;
-                this.localData.multiplier = aux.multiplier;
+                let mult = aux.multiplier;
+                let sv = aux.scaledValue;
+                if (this.unitMin != null && mult < this.unitMin) { mult = this.unitMin; sv = actualValue / mult; }
+                if (this.unitMax != null && mult > this.unitMax) { mult = this.unitMax; sv = actualValue / mult; }
+                this.$refs.inputRef.value = removeTrailingZeroes(sv, this.numberDecimals)
+                this.localData.scaledValue = sv;
+                this.localData.multiplier = mult;
             }
             else {
                 this.$refs.inputRef.value = removeTrailingZeroes(Number(actualValue), this.numberDecimals)
@@ -223,8 +251,8 @@ export default {
                         :disabled="true"
                         :readOnly="true"
                         :data-cy="dataTestLabel + '-DimensionUnit-input'"
-                        :min="min"
-                        :max="max"
+                        :min="unitMin != null ? unitMin : min"
+                        :max="unitMax != null ? unitMax : max"
                         :valueFontSize="valueFontSize"
                         :valueBgColor="labelBgColor"
                         :textColor="textColor"

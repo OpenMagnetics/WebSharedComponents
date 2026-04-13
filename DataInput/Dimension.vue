@@ -30,6 +30,14 @@ export default {
             type: Number,
             default: 1e+12
         },
+        unitMin:{
+            type: Number,
+            default: null
+        },
+        unitMax:{
+            type: Number,
+            default: null
+        },
         numberDecimals:{
             type: Number,
             default: 6
@@ -151,6 +159,22 @@ export default {
         }
 
 
+        // Clamp multiplier to unitMin/unitMax if specified
+        if (localData.multiplier != null) {
+            if (this.unitMin != null && localData.multiplier < this.unitMin) {
+                localData.multiplier = this.unitMin;
+                if (this.modelValue[this.name] != null && this.unit != null) {
+                    localData.scaledValue = removeTrailingZeroes(this.modelValue[this.name] / localData.multiplier, this.numberDecimals);
+                }
+            }
+            if (this.unitMax != null && localData.multiplier > this.unitMax) {
+                localData.multiplier = this.unitMax;
+                if (this.modelValue[this.name] != null && this.unit != null) {
+                    localData.scaledValue = removeTrailingZeroes(this.modelValue[this.name] / localData.multiplier, this.numberDecimals);
+                }
+            }
+        }
+
         const shortenedName = this.name;
 
         return {
@@ -244,10 +268,14 @@ export default {
             if (this.$refs.inputRef != null) {
                 if (this.unit != null) {
                     const aux = getMultiplier(actualValue, 0.001);
-                    this.$refs.inputRef.value = removeTrailingZeroes(aux.scaledValue, this.numberDecimals)
-                    this.localData.scaledValue = aux.scaledValue;
+                    let mult = aux.multiplier;
+                    let sv = aux.scaledValue;
+                    if (this.unitMin != null && mult < this.unitMin) { mult = this.unitMin; sv = actualValue / mult; }
+                    if (this.unitMax != null && mult > this.unitMax) { mult = this.unitMax; sv = actualValue / mult; }
+                    this.$refs.inputRef.value = removeTrailingZeroes(sv, this.numberDecimals)
+                    this.localData.scaledValue = sv;
                     if (this.localData.scaledValue != 0) {
-                        this.localData.multiplier = aux.multiplier;
+                        this.localData.multiplier = mult;
                     } else if (this.defaultZeroUnit != null) {
                         this.localData.multiplier = this.defaultZeroUnit;
                     }
@@ -313,8 +341,8 @@ export default {
                     v-model="localData.multiplier"
                     :disabled="disabled"
                     :data-cy="dataTestLabel + '-DimensionUnit-input'"
-                    :min="min"
-                    :max="max"
+                    :min="unitMin != null ? unitMin : min"
+                    :max="unitMax != null ? unitMax : max"
                     :unit="unit"
                     :useMetricPrefixes="useMetricPrefixes"
                     :extraStyleClass="unitExtraStyleClass"
