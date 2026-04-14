@@ -202,6 +202,10 @@ export default {
                 axisLabel: {
                     fontSize: this.axisLabelFontSize,
                     color: this.textColor,
+                    rotate: this.xAxisOptions.labelRotate ?? 0,
+                    interval: this.xAxisOptions.labelInterval ?? 'auto',
+                    hideOverlap: this.xAxisOptions.hideLabelOverlap ?? true,
+                    margin: this.xAxisOptions.labelMargin ?? 8,
 
                     formatter: (value) => {
                         const aux = formatUnit(value, this.xAxisOptions.unit);
