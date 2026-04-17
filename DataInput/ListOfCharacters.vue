@@ -182,7 +182,7 @@ export default {
                 type="text"
                 :disabled="disabled"
                 :class="combinedClass([valueBgColor, textColor, valueFontSize])"
-                class="m-0 px-0 col-4"
+                class="list-chars-input m-0 col-4 text-center"
                 :id="name + '-text-input'"
                 @change="changeText($event.target.value)"
                 :value="localData"
@@ -200,6 +200,31 @@ export default {
     container-type: inline-size;
     border-radius: var(--p-border-radius);
 }
+
+.list-chars-input {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid var(--p-surface-400);
+    border-radius: var(--p-border-radius);
+    font-family: var(--p-font-family);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+    height: 1.75rem;
+    line-height: 1.25rem;
+    padding: 0 0.5rem;
+}
+
+.list-chars-input:focus {
+    border-color: var(--p-primary-color);
+    box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--p-primary-color) 25%, transparent);
+}
+
+.list-chars-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .list-chars-error {
     color: var(--p-red-400);
 }

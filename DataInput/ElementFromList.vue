@@ -229,6 +229,8 @@ export default {
 
 .efl-select {
     appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
     border: 1px solid var(--p-surface-400);
     border-radius: var(--p-border-radius);
     font-family: var(--p-font-family);
@@ -237,6 +239,14 @@ export default {
     box-sizing: border-box;
     height: 1.75rem;
     line-height: 1.25rem;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e9ecef' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 12px 9px;
+}
+
+.efl-select:disabled {
+    background-image: none;
 }
 
 .efl-select:focus {

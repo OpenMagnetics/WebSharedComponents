@@ -398,14 +398,12 @@ export default {
             </div>
             <div v-if="localData.minimum.scaledValue == null" :class="severalRows? 'col-12 px-5' : 'col-md-3 px-xl-3 px-md-0'" class="row m-0">
                 <button
-                    :style="addButtonStyle"
                     :data-cy="dataTestLabel + '-minimum-add-button'"
-                    :class="(halfSize? 'mx-0 px-0' : '') + ' ' + valueFontSize"
-                    class="btn float-end"
-                    style="max-height: 2.5em"
+                    :class="[halfSize ? 'mx-0 px-0' : '', 'dwt-add-btn']"
                     @click="add('minimum')"
                 >
-                    {{shortenedButtonLabels.minimum}}
+                    <i class="fa-solid fa-plus"></i>
+                    <span>{{shortenedButtonLabels.minimum}}</span>
                 </button>
             </div>
 
@@ -447,12 +445,11 @@ export default {
             </div>
             <div v-if="localData.nominal.scaledValue == null" :class="severalRows? 'col-12 px-5' : 'col-md-3 px-xl-3 px-md-0'" class="row m-0">
                 <button
-                    :style="addButtonStyle"
                     :data-cy="dataTestLabel + '-nominal-add-button'"
-                    :class="(halfSize? 'mx-0 px-0' : '') + ' ' + valueFontSize"
-                    class="btn float-end"
-                    style="max-height: 2.5em"
-                    @click="add('nominal')">{{shortenedButtonLabels.nominal}}
+                    :class="[halfSize ? 'mx-0 px-0' : '', 'dwt-add-btn']"
+                    @click="add('nominal')">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>{{shortenedButtonLabels.nominal}}</span>
                 </button>
             </div>
 
@@ -494,12 +491,11 @@ export default {
             </div>
             <div v-if="localData.maximum.scaledValue == null" :class="severalRows? 'col-12 px-5' : 'col-md-3 px-xl-3 px-md-0'" class="row m-0">
                 <button
-                    :style="addButtonStyle"
                     :data-cy="dataTestLabel + '-maximum-add-button'"
-                    :class="(halfSize? 'mx-0 px-0' : '') + ' ' + valueFontSize"
-                    class="btn float-end "
-                    style="max-height: 2.5em"
-                    @click="add('maximum')">{{shortenedButtonLabels.maximum}}
+                    :class="[halfSize ? 'mx-0 px-0' : '', 'dwt-add-btn']"
+                    @click="add('maximum')">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>{{shortenedButtonLabels.maximum}}</span>
                 </button>
             </div>
         </div>
@@ -516,26 +512,44 @@ export default {
 
 .dwt-error {
   color: var(--p-red-400);
+  font-size: 0.78rem !important;
 }
 
+/* ============ Min / Nom / Max "remove" pill ============ */
 .remove-button {
-  display: block;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(var(--bs-primary-rgb), 0.45) !important;
+  border-right: none !important;
+  border-radius: 999px 0 0 999px !important;
+  background: rgba(var(--bs-primary-rgb), 0.12) !important;
+  color: var(--bs-primary) !important;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 0 0.55rem !important;
+  height: 1.75rem !important;
+  line-height: 1.25rem;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .remove-button:hover .normal-text {
   display: none;
 }
 .remove-button:hover {
-  background-color: var(--p-red-400) !important;
+  background: rgb(var(--bs-danger-rgb) / 0.25) !important;
+  border-color: rgb(var(--bs-danger-rgb) / 0.65) !important;
+  color: var(--bs-danger) !important;
 }
 
-.remove-button .icon {opacity:0;}
-.remove-button:hover .icon {opacity:1;}
+.remove-button .icon { opacity: 0; }
+.remove-button:hover .icon { opacity: 1; }
 
+/* ============ Value input ============ */
 input[type="number"],
 input[type="text"] {
-  border: 1px solid var(--p-surface-400);
-  border-radius: var(--p-border-radius) 0 0 var(--p-border-radius);
+  border: 1px solid rgba(var(--bs-primary-rgb), 0.25);
+  border-radius: 0;
   border-right: none;
   font-family: var(--p-font-family);
   outline: none;
@@ -543,17 +557,98 @@ input[type="text"] {
   box-sizing: border-box;
   height: 1.75rem;
   line-height: 1.25rem;
+  padding: 0 0.5rem;
 }
 
 input[type="number"]:focus,
 input[type="text"]:focus {
-  border-color: var(--p-primary-color);
-  box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--p-primary-color) 25%, transparent);
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.15rem rgba(var(--bs-primary-rgb), 0.25);
+  position: relative;
+  z-index: 1;
 }
 
+/* ============ Unit select on the right ============ */
 :deep(.unit-select) {
+  height: 1.75rem !important;
+  min-height: 1.75rem !important;
+  max-height: 1.75rem !important;
+  /* Match line-height to the box height so the option text vertically
+     centers inside the select — `align-items: center` doesn't apply to
+     text inside <select> in any browser. */
+  line-height: 1.75rem !important;
+  padding: 0 1.25rem 0 0.5rem !important; /* leave room for the chevron */
+  margin: 0 !important;
+  vertical-align: middle !important;
+  border-radius: 0 999px 999px 0 !important;
+  border: 1px solid rgba(var(--bs-primary-rgb), 0.25) !important;
+  box-sizing: border-box !important;
+  text-align: left !important;
+  text-align-last: left !important;
+}
+
+/* Force the input/select pair to share the same baseline regardless of any
+   parent's residual padding from `col-form-label`. */
+input[type="number"],
+input[type="text"] {
+  vertical-align: middle;
+  margin: 0 !important;
+}
+
+.row.align-items-center {
+  align-items: center !important;
+}
+
+.row.align-items-center > * {
+  align-self: center !important;
+}
+
+/* ============ "Add min./nom./max." pill button ============ */
+button.dwt-add-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.9rem !important;
+  border-radius: 999px !important;
+  font-size: 0.78rem !important;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  border: 1px solid rgba(var(--bs-primary-rgb), 0.85) !important;
+  background-color: var(--bs-primary) !important;
+  background-image: linear-gradient(135deg,
+      rgba(var(--bs-primary-rgb), 1) 0%,
+      rgba(var(--bs-primary-rgb), 0.8) 100%) !important;
+  color: #ffffff !important;
+  box-shadow:
+      0 0 0 1px rgb(var(--bs-primary-rgb) / 0.3),
+      0 2px 6px rgb(var(--bs-primary-rgb) / 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+  transition: filter 0.15s, transform 0.1s, box-shadow 0.2s;
+  white-space: nowrap;
+  min-height: 1.75rem;
   height: 1.75rem;
-  line-height: 1.25rem;
-  border-radius: 0 var(--p-border-radius) var(--p-border-radius) 0;
+  width: auto;
+  line-height: 1 !important;
+  outline: none;
+}
+
+.dwt-add-btn:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.dwt-add-btn i {
+  font-size: 0.68rem;
+}
+
+/* ============ Title label ============ */
+.dwt-rounded {
+  color: var(--bs-primary) !important;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  background: transparent !important;
 }
 </style>

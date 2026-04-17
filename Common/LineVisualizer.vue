@@ -146,10 +146,20 @@ export default {
             },
             tooltip: {
                 trigger: 'item',
+                backgroundColor: 'rgba(20, 20, 20, 0.92)',
+                borderColor: 'rgba(83, 151, 150, 0.6)',
+                borderWidth: 1,
+                padding: 8,
+                textStyle: { color: '#f2f2f2', fontSize: 11, fontWeight: 600 },
+                extraCssText: 'border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);',
                 axisPointer: {
                     type: 'cross',
+                    lineStyle: { color: 'rgba(255, 255, 255, 0.25)', type: 'dashed' },
+                    crossStyle: { color: 'rgba(255, 255, 255, 0.25)' },
                     label: {
-                        precision: 2
+                        precision: 2,
+                        backgroundColor: 'rgba(83, 151, 150, 0.85)',
+                        color: '#ffffff',
                     }
                 },
                 formatter: (params) => {
@@ -186,10 +196,16 @@ export default {
             legend: {
                 show: this.showLegend,
                 orient: 'horizontal',
-                left: 'left',
-                top: 'top',
+                left: 'center',
+                top: 6,
+                icon: 'circle',
+                itemWidth: 8,
+                itemHeight: 8,
+                itemGap: 14,
                 textStyle: {
-                    color: this.textColor
+                    color: this.textColor,
+                    fontSize: 11,
+                    fontWeight: 600,
                 }
             },
             xAxis: {
@@ -198,10 +214,16 @@ export default {
                 type: this.xAxisOptions.type,
                 splitLine: {
                     show: this.showGrid,
+                    lineStyle: { color: 'rgba(255, 255, 255, 0.05)' },
                 },
+                axisLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.18)' } },
+                axisTick: { show: false },
                 axisLabel: {
                     fontSize: this.axisLabelFontSize,
                     color: this.textColor,
+                    fontWeight: 500,
+                    margin: 8,
+                    hideOverlap: true,
 
                     formatter: (value) => {
                         const aux = formatUnit(value, this.xAxisOptions.unit);
@@ -383,11 +405,15 @@ export default {
                     position: side,
                     splitLine: {
                         show: index === 0 ? this.showGrid : false,
+                        lineStyle: { color: 'rgba(255, 255, 255, 0.05)' },
                     },
+                    axisLine: { show: false },
+                    axisTick: { show: false },
                     axisLabel: {
                         fontSize: this.axisLabelFontSize,
                         color: datum.colorLabel || this.lineColor,
-                        margin: 5,
+                        fontWeight: 500,
+                        margin: 8,
                         formatter: (value) => {
                             // Hide right axis labels only if same unit AND similar scale (unless forceAxisMin/Max which indicates dual display)
                             const hasForceAxis = (this.forceAxisMin && this.forceAxisMin.some(v => v !== null && v !== undefined)) || (this.forceAxisMax && this.forceAxisMax.some(v => v !== null && v !== undefined));
@@ -430,18 +456,41 @@ export default {
                     showPoints = this.showPoints[index];
                 }
 
+                const seriesColor = datum.colorLabel || this.lineColor;
                 options.series.push(
                     {
                         data: this.processData(index),
                         type: 'line',
-                        smooth: datum.smooth,
+                        smooth: datum.smooth ?? 0.15,
                         name: this.legendLabels && this.legendLabels[index] ? this.legendLabels[index] : datum.label,
-                        color: datum.colorLabel,
+                        color: seriesColor,
                         showSymbol: showPoints,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        sampling: 'lttb',
                         yAxisIndex: this.forceAxisUniquePerSide ? firstIndexPerSide[side] : index,
                         lineStyle: {
-                            type: datum.lineStyle ?? 'solid'  // 'solid', 'dashed', 'dotted'
-                        }
+                            type: datum.lineStyle ?? 'solid',
+                            width: 2,
+                            shadowColor: seriesColor,
+                            shadowBlur: 4,
+                            shadowOffsetY: 1,
+                        },
+                        emphasis: {
+                            focus: 'series',
+                            lineStyle: { width: 2.5 },
+                        },
+                        areaStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [
+                                    { offset: 0, color: seriesColor + '33' },
+                                    { offset: 1, color: seriesColor + '00' },
+                                ],
+                            },
+                            opacity: 1,
+                        },
                     }
                 );
 
@@ -450,11 +499,18 @@ export default {
             this.points.forEach((point) => {
                 options.series.push(
                     {
-                        symbolSize: 20,
+                        symbolSize: 14,
+                        symbol: 'circle',
                         data: [[point.data.x, point.data.y]],
-                        type: 'scatter',
+                        type: 'effectScatter',
+                        rippleEffect: { brushType: 'stroke', scale: 2.5 },
                         color: this.pointsColor,
+                        itemStyle: {
+                            borderColor: '#ffffff',
+                            borderWidth: 1.5,
+                        },
                         showSymbol: true,
+                        z: 10,
                     }
                 );
             })
