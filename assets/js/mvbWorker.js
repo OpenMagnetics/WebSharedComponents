@@ -1,56 +1,146 @@
 
 import * as Comlink from 'comlink';
-let builder, replicadModule, isReady = false, initPromise;
 
+let _mvbpp = null;
+let _initPromise = null;
+
+// mvbpp.js is compiled with MODULARIZE=1 (UMD) without EXPORT_ES6.
+// In a module worker there is no importScripts(), so we fetch the script
+// text and wrap it in new Function() to capture the createMvbpp factory.
 async function init() {
-    if (initPromise) return initPromise;
-    initPromise = (async () => {
+    if (_initPromise) return _initPromise;
+    _initPromise = (async () => {
         try {
-            const [ocModule, rep, mvb] = await Promise.all([
-                import('replicad-opencascadejs/src/replicad_single.js'),
-                import('replicad'),
-                import('@openmagnetics/magnetic-virtual-builder')
-            ]);
-            const wasmUrl = (await import('replicad-opencascadejs/src/replicad_single.wasm?url')).default;
-            const OC = await ocModule.default({ locateFile: () => wasmUrl });
-            rep.setOC(OC);
-            replicadModule = rep;
-            builder = new mvb.ReplicadBuilder(replicadModule);
-            isReady = true;
-        } catch (e) { console.error('[MVB Worker] Initialization failed:', e); initPromise = null; throw e; }
+            const code = await (await fetch('/wasm/mvbpp.js')).text();
+            const createMvbpp = new Function(code + '\nreturn createMvbpp;')();
+            _mvbpp = await createMvbpp({ locateFile: (f) => `/wasm/${f}` });
+        } catch (e) {
+            _initPromise = null;
+            console.error('[MVB Worker] init failed:', e);
+            throw e;
+        }
     })();
-    return initPromise;
+    return _initPromise;
 }
 
-async function waitReady() { if (!isReady) await init(); }
-
-const DEFAULT_STL_OPTIONS = { tolerance: 0.1, angularTolerance: 0.2, binary: true };
-
-async function toSTL(shape, options) {
-    if (!shape) return null;
-    return await shape.blobSTL(options).arrayBuffer();
+function toBuffer(u8) {
+    if (!u8 || !u8.length) return null;
+    return u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
 }
+
+const DEFAULTS = { scale: 1.0, wireSeg: 16, coreSeg: 32, tolMm: 0.5, angTol: 0.5, binary: true };
+
+function o(opts) { return { ...DEFAULTS, ...opts }; }
 
 Comlink.expose({
-    waitReady,
-    buildCore: async (geom, options=DEFAULT_STL_OPTIONS) => {
-        await waitReady();
-        const { getCore } = await import('@openmagnetics/magnetic-virtual-builder');
-        return toSTL(getCore(replicadModule, geom), options);
+    waitReady: () => init(),
+
+    buildMagneticSTL: async (magnetic, opts = {}) => {
+        await init();
+        const d = o(opts);
+        return toBuffer(_mvbpp.buildMagneticSTL(
+            JSON.stringify(magnetic), opts.includeBobbin ?? true,
+            d.scale, opts.symmetryPlanes ?? 0, d.wireSeg, d.coreSeg,
+            d.tolMm, d.angTol, d.binary,
+        ));
     },
-    buildSpacers: async (geom, options=DEFAULT_STL_OPTIONS) => {
-        await waitReady();
-        const { getSpacers } = await import('@openmagnetics/magnetic-virtual-builder');
-        return toSTL(getSpacers(replicadModule, geom), options);
+
+    buildMagneticSTEP: async (magnetic, opts = {}) => {
+        await init();
+        const d = o(opts);
+        return toBuffer(_mvbpp.buildMagneticSTEP(
+            JSON.stringify(magnetic), opts.includeBobbin ?? true,
+            d.scale, opts.symmetryPlanes ?? 0, d.wireSeg, d.coreSeg,
+        ));
     },
-    buildBobbin: (bobbin, options = DEFAULT_STL_OPTIONS) => waitReady().then(() => toSTL(builder.getBobbin(bobbin), options)),
-    buildTurn: (turn, wire, bobbin, isToroidal = false, options = DEFAULT_STL_OPTIONS) => waitReady().then(() => toSTL(builder.getTurn(turn, wire, bobbin, isToroidal), options)),
-    buildFR4Board: async (coil, options = DEFAULT_STL_OPTIONS) => {
-        await waitReady();
-        const shape = builder.getFR4Board(coil);
-        return toSTL(shape, options);
+
+    buildCoreSTL: async (magnetic, opts = {}) => {
+        await init();
+        const d = o(opts);
+        return toBuffer(_mvbpp.buildCoreSTL(
+            JSON.stringify(magnetic), d.scale, d.coreSeg, d.tolMm, d.angTol, d.binary,
+        ));
     },
-    buildMagnetic: (magnetic, name, options = DEFAULT_STL_OPTIONS) => waitReady().then(() => toSTL(builder.getMagnetic(magnetic, name), options)),
+
+    buildSpacersSTL: async (magnetic, opts = {}) => {
+        await init();
+        const d = o(opts);
+        return toBuffer(_mvbpp.buildSpacersSTL(
+            JSON.stringify(magnetic), d.scale, d.tolMm, d.angTol, d.binary,
+        ));
+    },
+
+    buildBobbinSTL: async (magnetic, opts = {}) => {
+        await init();
+        const d = o(opts);
+        return toBuffer(_mvbpp.buildBobbinSTL(
+            JSON.stringify(magnetic), d.scale, d.tolMm, d.angTol, d.binary,
+        ));
+    },
+
+    buildTurnsSTL: async (magnetic, opts = {}) => {
+        await init();
+        const d = o(opts);
+        return toBuffer(_mvbpp.buildTurnsSTL(
+            JSON.stringify(magnetic), d.scale, d.wireSeg, d.tolMm, d.angTol, d.binary,
+        ));
+    },
+
+    buildFR4BoardSTL: async (magnetic, opts = {}) => {
+        await init();
+        const d = o(opts);
+        return toBuffer(_mvbpp.buildFR4BoardSTL(
+            JSON.stringify(magnetic), d.scale,
+            opts.borderToWireDistance ?? 1.0,
+            opts.coreToLayerDistance ?? 0.5,
+            d.tolMm, d.angTol, d.binary,
+        ));
+    },
+
+    getSymmetryPlanes: async (magnetic) => {
+        await init();
+        return Array.from(_mvbpp.getSymmetryPlanes(JSON.stringify(magnetic)));
+    },
+
+    getSupportedFamilies: async () => {
+        await init();
+        return Array.from(_mvbpp.getSupportedFamilies());
+    },
+
+    drawDimensionedFrontView: async (magnetic, widthPx = 800, labelPx = 14, projColor = '#000000', dimColor = '#0000ff') => {
+        await init();
+        return _mvbpp.drawDimensionedFrontView(JSON.stringify(magnetic), widthPx, labelPx, projColor, dimColor);
+    },
+
+    drawDimensionedTopView: async (magnetic, widthPx = 800, labelPx = 14, projColor = '#000000', dimColor = '#0000ff') => {
+        await init();
+        return _mvbpp.drawDimensionedTopView(JSON.stringify(magnetic), widthPx, labelPx, projColor, dimColor);
+    },
+
+    drawCoreGappingTechnicalDrawing: async (magnetic, widthPx = 800, labelPx = 14, projColor = '#000000', dimColor = '#0000ff') => {
+        await init();
+        return _mvbpp.drawCoreGappingTechnicalDrawing(JSON.stringify(magnetic), widthPx, labelPx, projColor, dimColor);
+    },
+
+    drawCoreProjection: async (magnetic, plane = 'XZ', coreSeg = 32, widthPx = 800, strokeWidth = 1.5, strokeColor = '#000000') => {
+        await init();
+        return _mvbpp.drawCoreProjection(JSON.stringify(magnetic), plane, coreSeg, widthPx, strokeWidth, strokeColor);
+    },
+
+    drawCoreCrossSection: async (magnetic, plane = 'XZ', sectionOffset = 0, coreSeg = 32, widthPx = 800, strokeWidth = 1.5, strokeColor = '#000000') => {
+        await init();
+        return _mvbpp.drawCoreCrossSection(JSON.stringify(magnetic), plane, sectionOffset, coreSeg, widthPx, strokeWidth, strokeColor);
+    },
+
+    drawAssemblyProjection: async (magnetic, plane = 'XZ', components = 7, symmetryPlanes = 0, wireSeg = 16, coreSeg = 32, widthPx = 800, strokeWidth = 1.5, strokeColor = '#000000') => {
+        await init();
+        return _mvbpp.drawAssemblyProjection(JSON.stringify(magnetic), plane, components, symmetryPlanes, wireSeg, coreSeg, widthPx, strokeWidth, strokeColor);
+    },
+
+    drawAssemblyCrossSection: async (magnetic, plane = 'XZ', sectionOffset = 0, components = 7, symmetryPlanes = 0, wireSeg = 16, coreSeg = 32, widthPx = 800, strokeWidth = 1.5, strokeColor = '#000000') => {
+        await init();
+        return _mvbpp.drawAssemblyCrossSection(JSON.stringify(magnetic), plane, sectionOffset, components, symmetryPlanes, wireSeg, coreSeg, widthPx, strokeWidth, strokeColor);
+    },
 });
 
-init().catch(err => {});
+init().catch(() => {});

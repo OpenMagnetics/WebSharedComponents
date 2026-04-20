@@ -289,13 +289,28 @@ export default {
                         } catch { /* some elements don't support getBBox */ }
                     }
                     if (isFinite(minX) && isFinite(minY) && isFinite(maxX) && isFinite(maxY)) {
-                        // Small padding so strokes at the edges aren't cut.
-                        const padX = (maxX - minX) * 0.02;
-                        const padY = (maxY - minY) * 0.02;
-                        const vbX = minX - padX;
-                        const vbY = minY - padY;
-                        const vbW = (maxX - minX) + padX * 2;
-                        const vbH = (maxY - minY) + padY * 2;
+                        // For toroidal SVGs (identified by the scale(1,-1) Y-flip group added
+                        // by MKF's export_svg), getBBox() reports coordinates in pre-flip local
+                        // space and ignores stroke-width, producing a portrait bbox even though
+                        // the physical core is circular. Force a symmetric square viewBox so the
+                        // full toroid ring (including its stroke) is always visible.
+                        const isToroid = !!svgEl.querySelector('g[transform="scale(1,-1)"]');
+                        let vbX, vbY, vbW, vbH;
+                        if (isToroid) {
+                            const half = Math.max(
+                                Math.abs(minX), Math.abs(maxX),
+                                Math.abs(minY), Math.abs(maxY)
+                            ) * 1.04; // 4% padding for strokes
+                            vbX = -half; vbY = -half; vbW = 2 * half; vbH = 2 * half;
+                        } else {
+                            // Small padding so strokes at the edges aren't cut.
+                            const padX = (maxX - minX) * 0.02;
+                            const padY = (maxY - minY) * 0.02;
+                            vbX = minX - padX;
+                            vbY = minY - padY;
+                            vbW = (maxX - minX) + padX * 2;
+                            vbH = (maxY - minY) + padY * 2;
+                        }
                         svgEl.setAttribute('viewBox', `${vbX} ${vbY} ${vbW} ${vbH}`);
                         // Update the intrinsic width/height attributes so the
                         // downstream `extractSvgDimension` + scaling math sees
@@ -714,13 +729,13 @@ export default {
 <template>
     <div v-if="modelValue.magnetic != null && showWarning && modelValue.magnetic.coil.turnsDescription == null" class="container">
         <div class="row">
-            <i class="col-12 fa-solid fa-9x fa-triangle-exclamation"></i>
+            <i class="col-12 bi bi-exclamation-triangle-fill display-1"></i>
             <label class="text-danger col-12 pt-1 fs-5" style="font-size: 1em">Winding turns not possible</label>
         </div>
     </div>
     <div v-if="showWarning && !$stateStore.wire2DVisualizerState.showAnyway" class="container">
         <div class="row">
-            <i class="col-12 fa-solid fa-9x fa-triangle-exclamation"></i>
+            <i class="col-12 bi bi-exclamation-triangle-fill display-1"></i>
             <label class="text-danger col-12 pt-1 fs-5" style="font-size: 1em">Turns don't fit in winding window</label>
             <button class="btn btn-danger offset-3 col-6 fs-5" @click="showCoilAnyway()">Show me anyway</button>
         </div>
@@ -733,7 +748,7 @@ export default {
             </div>
             <div class="zoom-modal-content" :style="{ backgroundColor: backgroundColor }">
                 <button class="zoom-modal-close" :style="{ color: textColor }" @click="zoomOut()">
-                    <i class="fas fa-times"></i>
+                    <i class="bi bi-x-lg"></i>
                 </button>
                 <div class="zoom-modal-image" ref="zoomPlotView"></div>
             </div>
@@ -750,7 +765,7 @@ export default {
                     <div data-cy="MagneticAdvise-core-field-plot-image" ref="plotView" class="mt-2 scaling-svg-container"/>
                     <div v-if="enableZoom" class="text-center mt-1">
                         <button class="btn btn-sm btn-outline-secondary" @click="zoomIn()">
-                            <i class="fas fa-expand"></i> Expand
+                            <i class="bi bi-arrows-fullscreen"></i> Expand
                         </button>
                     </div>
                     <div v-if="modelValue.magnetic != null && enableOptions && modelValue.magnetic.coil.turnsDescription != null" class="text-center">

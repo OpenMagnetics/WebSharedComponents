@@ -1,10 +1,9 @@
 <script setup>
-import { FileLoader, MeshPhysicalMaterial, Object3D, MathUtils, MeshBasicMaterial, Mesh, BoxGeometry, MeshStandardMaterial, LoadingManager, TextureLoader, PointLight, Box3, Vector3} from 'three';
-import {Camera, EffectComposer, InstancedMesh, PhongMaterial, Renderer, RenderPass, SphereGeometry, SpotLight, Scene, UnrealBloomPass, AmbientLight} from 'troisjs';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { clean, deepCopy, hexToRgb, base64ToArrayBuffer } from '../assets/js/utils.js'
+import { MeshPhysicalMaterial, Object3D, Mesh, Box3, Vector3} from 'three';
+import {Camera, EffectComposer, InstancedMesh, PhongMaterial, Renderer, RenderPass, SphereGeometry, SpotLight, Scene, AmbientLight} from 'troisjs';
+import { deepCopy, hexToRgb } from '../assets/js/utils.js'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
-import { waitForMkf } from '../assets/js/mkfRuntime.js'
+import { initMvbWorker, buildCoreSTL, buildMagneticSTL } from '../assets/js/mvbRuntime.js'
 </script>
 
 <script>
@@ -115,40 +114,25 @@ export default {
             object3D.removeFromParent(); // the parent might be the scene or another Object3D, but it is sure to be removed this way
             return true;
         },
-        getPiece(sourceObject) {            
+        getPiece(arrayBuffer) {
             const scene = this.$refs.scene.scene;
             const camera = this.$refs.camera.camera;
-            const loader = new STLLoader()
-
-            const geometry = loader.parse(base64ToArrayBuffer(sourceObject));
-            const color = hexToRgb("#7b7c7d")
-            const material = new MeshPhysicalMaterial()
-            material.color.r = color.r / 255
-            material.color.g = color.g / 255
-            material.color.b = color.b / 255
-            material.specularColor.r = 0.2
-            material.specularColor.g = 0.2
-            material.specularColor.b = 0.2
-            const mesh = new Mesh(geometry, material)
-            mesh.rotation.x = -Math.PI / 2
-            mesh.rotation.y = 0
-            mesh.rotation.z = 0
-
-            scene.add(mesh)
-            this.current3dObject = mesh
-            if (this.fullCoreModel) {
-                this.fitCameraToCenteredObject(camera, mesh, this.offset, 1.5)
-            }
-            else {
-
-                if (this.core['functionalDescription']['shape']['family'] == 't') {
-                    this.fitCameraToCenteredObject(camera, mesh, 1, 1.5)
-                }
-                else {
-                    this.fitCameraToCenteredObject(camera, mesh, 1, 3)
-                }
-            }
-
+            const loader = new STLLoader();
+            const geometry = loader.parse(arrayBuffer);
+            const color = hexToRgb('#7b7c7d');
+            const material = new MeshPhysicalMaterial();
+            material.color.r = color.r / 255;
+            material.color.g = color.g / 255;
+            material.color.b = color.b / 255;
+            material.specularColor.r = 0.2;
+            material.specularColor.g = 0.2;
+            material.specularColor.b = 0.2;
+            const mesh = new Mesh(geometry, material);
+            mesh.rotation.x = -Math.PI / 2;
+            scene.add(mesh);
+            this.current3dObject = mesh;
+            const isToroidal = this.core?.functionalDescription?.shape?.family?.toLowerCase() === 't';
+            this.fitCameraToCenteredObject(camera, mesh, this.offset, isToroidal ? 1.5 : 3);
         },
         fitCameraToCenteredObject(camera, object, offset, offsetY, orbitControls) {
             const boundingBox = new Box3();
@@ -222,69 +206,40 @@ export default {
             }
         },
         async computeShape() {
-            if (!this.posting && this.core['functionalDescription']['shape'] != "" && this.core['functionalDescription']['material'] != "") {
-                try {
-                    const mkf = await waitForMkf();
+            if (this.posting) return;
+            const shape = this.core?.functionalDescription?.shape;
+            const material = this.core?.functionalDescription?.material;
+            if (!shape || !material || shape === '') return;
 
-                    const aux = deepCopy(this.core);
-                    aux['geometricalDescription'] = null;
-                    aux['processedDescription'] = null;
-                    if (typeof(aux['functionalDescription']['shape']) == "string") {
-                        aux['functionalDescription']['shape'] = JSON.parse(await mkf.get_shape_data(aux['functionalDescription']['shape']));
+            try {
+                this.posting = true;
+                await initMvbWorker();
 
-                    }
-
-
-                    if ('familySubtype' in aux['functionalDescription']['shape']){
-                        aux['functionalDescription']['shape']['familySubtype'] = String(aux['functionalDescription']['shape']['familySubtype']);
-                    }
-                    const result = await mkf.calculate_core_data(JSON.stringify(aux), false);
-
-                    if (result.startsWith("Exception")) {
-                        console.error(result);
-                        return;
-                    }
-                    else {
-                        const core = JSON.parse(result);
-                        this.posting = true;
-
-                        let url;
-                        let data;
-                        if (this.fullCoreModel) {
-                            data = core;
-                            url = import.meta.env.VITE_API_ENDPOINT + '/core_compute_core_3d_model';
-                        }
-                        else {
-                            data = core.functionalDescription.shape;
-                            url = import.meta.env.VITE_API_ENDPOINT + '/core_compute_shape';
-                        }
-
-                        this.hasFreeCADError = false;
-                        this.removeObject3D(this.current3dObject);
-                        data = clean(data);
-
-                        if (data.functionalDescription.gapping == undefined) {
-                            data.functionalDescription.gapping = []
-                        }
-
-                        this.$axios.post(url, data)
-                        .then(response => {
-                            this.posting = false
-                            this.updating = false
-                            if (this.$refs.scene != null && this.$refs.scene.scene != null) {
-                                this.getPiece(response.data);
-                            }
-                        })
-                        .catch(error => {
-                            this.posting = false
-                            this.updating = false
-                            this.hasFreeCADError = true
-                            this.$emit("errorInDimensions");
-                        });
-                    }
-                } catch(error) {
-                    console.error(error);
+                const coreAux = deepCopy(this.core);
+                coreAux.geometricalDescription = null;
+                coreAux.processedDescription = null;
+                if (coreAux.functionalDescription?.shape?.familySubtype != null) {
+                    coreAux.functionalDescription.shape.familySubtype =
+                        String(coreAux.functionalDescription.shape.familySubtype);
                 }
+
+                // Build full magnetic vs. shape-only STL via MVB++ WASM (no backend needed)
+                const magnetic = { core: coreAux };
+                const stlOpts = { tolMm: 0.5, angTol: 0.5, binary: true };
+                const arrayBuffer = this.fullCoreModel
+                    ? await buildMagneticSTL(magnetic, stlOpts)
+                    : await buildCoreSTL(magnetic, stlOpts);
+
+                this.removeObject3D(this.current3dObject);
+                if (arrayBuffer && this.$refs.scene?.scene) {
+                    this.getPiece(arrayBuffer);
+                }
+            } catch (error) {
+                console.error('[Core3DVisualizer]', error);
+                this.$emit('errorInDimensions');
+            } finally {
+                this.posting = false;
+                this.updating = false;
             }
         },
 

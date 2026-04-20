@@ -369,7 +369,7 @@ export default {
                     class="remove-button m-0 px-0 col-4 col-form-label text-center btn"
                     @click="removeField('minimum')"
                     style="max-height: 2.3em;">
-                        <span class="normal-text" >Min.</span> <i class="fa-solid fa-xmark icon" ></i>
+                        <span class="normal-text" >Min.</span> <i class="bi bi-x-lg icon" ></i>
                 </button>
                 <input
                     :style="combinedStyle([disabled? labelBgColor : valueBgColor, textColor, valueFontSize])"
@@ -402,7 +402,7 @@ export default {
                     :class="[halfSize ? 'mx-0 px-0' : '', 'dwt-add-btn']"
                     @click="add('minimum')"
                 >
-                    <i class="fa-solid fa-plus"></i>
+                    <i class="bi bi-plus-lg"></i>
                     <span>{{shortenedButtonLabels.minimum}}</span>
                 </button>
             </div>
@@ -416,7 +416,7 @@ export default {
                     :class="combinedClass([valueFontSize, labelBgColor, textColor])"
                     @click="removeField('nominal')"
                     style="max-height: 2.3em;">
-                        <span class="normal-text" >Nom.</span> <i class="fa-solid fa-xmark icon" ></i>
+                        <span class="normal-text" >Nom.</span> <i class="bi bi-x-lg icon" ></i>
                 </button>
                 <input
                     :style="combinedStyle([disabled? labelBgColor : valueBgColor, textColor, valueFontSize])"
@@ -448,7 +448,7 @@ export default {
                     :data-cy="dataTestLabel + '-nominal-add-button'"
                     :class="[halfSize ? 'mx-0 px-0' : '', 'dwt-add-btn']"
                     @click="add('nominal')">
-                    <i class="fa-solid fa-plus"></i>
+                    <i class="bi bi-plus-lg"></i>
                     <span>{{shortenedButtonLabels.nominal}}</span>
                 </button>
             </div>
@@ -462,7 +462,7 @@ export default {
                     :class="combinedClass([valueFontSize, labelBgColor, textColor])"
                     @click="removeField('maximum')"
                     style="max-height: 2.3em;">
-                        <span class="normal-text">Max.</span> <i class="fa-solid fa-xmark icon" ></i>
+                        <span class="normal-text">Max.</span> <i class="bi bi-x-lg icon" ></i>
                 </button>
                 <input
                     :style="combinedStyle([disabled? labelBgColor : valueBgColor, textColor, valueFontSize])"
@@ -494,7 +494,7 @@ export default {
                     :data-cy="dataTestLabel + '-maximum-add-button'"
                     :class="[halfSize ? 'mx-0 px-0' : '', 'dwt-add-btn']"
                     @click="add('maximum')">
-                    <i class="fa-solid fa-plus"></i>
+                    <i class="bi bi-plus-lg"></i>
                     <span>{{shortenedButtonLabels.maximum}}</span>
                 </button>
             </div>

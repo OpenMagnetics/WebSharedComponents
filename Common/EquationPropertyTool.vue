@@ -283,7 +283,7 @@ export default {
                     class="btn col-5 p-0"
                     @click="onEdit"
                 >
-                    <i class="fa-solid fa-pen-to-square"></i>
+                    <i class="bi bi-pencil-square"></i>
                 </button>
                 <button
                     v-if="showGraph"
@@ -291,7 +291,7 @@ export default {
                     class="btn offset-1 col-5 p-0"
                     @click="showConfiguration = !showConfiguration && ! showEditor"
                 >
-                    <i class="fa-solid fa-gear"></i>
+                    <i class="bi bi-gear-fill"></i>
                 </button>
             </div>
         </div>

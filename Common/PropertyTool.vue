@@ -290,7 +290,7 @@ export default {
                     class="btn col-5 p-0"
                     @click="onEdit"
                 >
-                    <i class="fa-solid fa-pen-to-square"></i>
+                    <i class="bi bi-pencil-square"></i>
                 </button>
                 <button
                     v-if="showGraph"
@@ -298,7 +298,7 @@ export default {
                     class="btn offset-1 col-5 p-0"
                     @click="showConfiguration = !showConfiguration && ! showEditor"
                 >
-                    <i class="fa-solid fa-gear"></i>
+                    <i class="bi bi-gear-fill"></i>
                 </button>
             </div>
         </div>
@@ -361,7 +361,7 @@ export default {
                             <i
                                 :style="combinedStyle([removeElementButtonColor])"
                                 :class="combinedClass([removeElementButtonColor])"
-                                class="fa-solid fa-1x fa-circle-minus"
+                                class="bi bi-dash-circle"
                             />
                         </button>
                         <button
@@ -373,7 +373,7 @@ export default {
                             <i
                                 :style="combinedStyle([addElementButtonColor])"
                                 :class="combinedClass([addElementButtonColor])"
-                                class="fa-solid fa-1x fa-circle-plus"
+                                class="bi bi-plus-circle"
                             />
                         </button>
                     </div>

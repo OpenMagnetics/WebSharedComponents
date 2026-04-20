@@ -4,8 +4,7 @@ import { MeshPhysicalMaterial, Object3D, Group, Mesh, Box3, Vector3 } from 'thre
 import { Camera, Renderer, SpotLight, Scene, AmbientLight } from 'troisjs';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 import { deepCopy, hexToRgb } from '../assets/js/utils.js';
-import { waitForMkf } from '../assets/js/mkfRuntime.js';
-import { initMvbWorker, buildCoreSTL, buildSpacersSTL, buildBobbinSTL, buildTurnSTL, buildFR4BoardSTL, terminateWorker } from '../assets/js/mvbRuntime.js';
+import { initMvbWorker, buildCoreSTL, buildSpacersSTL, buildBobbinSTL, buildTurnsSTL, buildFR4BoardSTL, terminateWorker } from '../assets/js/mvbRuntime.js';
 </script>
 
 <script>
@@ -359,10 +358,8 @@ export default {
         return;
       }
 
-      // Clear scene before building new magnetic to prevent old designs from persisting
       this.clearScene();
 
-      // Need core data with shape and material
       const core = magnetic.core;
       if (!core?.functionalDescription?.shape || !core?.functionalDescription?.material) {
         this.updating = false;
@@ -372,42 +369,10 @@ export default {
       try {
         this.building = true;
 
-        // Initialize MVB worker if needed
         if (!this.mvbInitialized) {
           await initMvbWorker();
           this.mvbInitialized = true;
         }
-
-        // Get MKF to compute core data
-        const mkf = await waitForMkf();
-        
-        // Prepare core data
-        const coreAux = deepCopy(core);
-        coreAux.geometricalDescription = null;
-        coreAux.processedDescription = null;
-        
-        if (typeof coreAux.functionalDescription.shape === 'string') {
-          coreAux.functionalDescription.shape = JSON.parse(
-            await mkf.get_shape_data(coreAux.functionalDescription.shape)
-          );
-        }
-
-        if (coreAux.functionalDescription.shape?.familySubtype) {
-          coreAux.functionalDescription.shape.familySubtype = 
-            String(coreAux.functionalDescription.shape.familySubtype);
-        }
-
-        const coreResult = await mkf.calculate_core_data(JSON.stringify(coreAux), false);
-        
-        if (coreResult.startsWith("Exception")) {
-          console.error(coreResult);
-          this.$emit("errorInDimensions");
-          this.building = false;
-          this.updating = false;
-          return;
-        }
-
-        const processedCore = JSON.parse(coreResult);
 
         if (!this.isMounted) {
           this.building = false;
@@ -415,7 +380,6 @@ export default {
           return;
         }
 
-        // Build components in scene
         const scene = this.$refs.scene?.scene;
         const camera = this.$refs.camera?.camera;
 
@@ -425,160 +389,77 @@ export default {
           return;
         }
 
+        // Pass full magnetic to WASM — it runs magnetic_autocomplete_safe internally.
+        // Deep-clone to strip Vue reactive proxies before postMessage.
+        const mag = JSON.parse(JSON.stringify(magnetic));
+        const stlOpts = { tolMm: 0.5, angTol: 0.5, binary: true };
+
         const group = markRaw(new Group());
-        const stlOptions = { tolerance: 0.5, angularTolerance: 0.5, binary: true };
 
-        // Build core - only if core data is valid
-        const isCoreValid = processedCore.geometricalDescription?.length > 0;
-        if (this.showCore && isCoreValid) {
-          try {
-            const coreArrayBuffer = await buildCoreSTL(processedCore.geometricalDescription, stlOptions);
-            
-            if (coreArrayBuffer) {
-              this.coreMesh = this.addMeshFromSTL(coreArrayBuffer, this.coreColor, {
-                metalness: 0.1,
-                roughness: 0.9
-              });
-              if (this.coreMesh) {
-                this.coreMesh.visible = this.internalShowCore;
-                group.add(this.coreMesh);
-              }
-            }
-          } catch (err) {
-            console.warn('Could not build core:', err.message);
-          }
+        // Detect toroidal from functional shape family
+        const shapeFamily = core.functionalDescription?.shape?.family?.toLowerCase() ?? '';
+        const isToroidal = shapeFamily === 't' || shapeFamily === 'toroidal';
 
-          // Build spacers separately (different color)
+        if (this.showCore) {
           try {
-            const spacersArrayBuffer = await buildSpacersSTL(processedCore.geometricalDescription, stlOptions);
-            
-            if (spacersArrayBuffer) {
-              const spacersMesh = this.addMeshFromSTL(spacersArrayBuffer, COMPONENT_COLORS.spacer, {
-                metalness: 0.1,
-                roughness: 0.6
-              });
-              if (spacersMesh) {
-                spacersMesh.visible = this.internalShowCore;
-                group.add(spacersMesh);
-              }
+            const buf = await buildCoreSTL(mag, stlOpts);
+            if (buf) {
+              this.coreMesh = this.addMeshFromSTL(buf, this.coreColor, { metalness: 0.1, roughness: 0.9 });
+              if (this.coreMesh) { this.coreMesh.visible = this.internalShowCore; group.add(this.coreMesh); }
             }
-          } catch (err) {
-            console.warn('Could not build spacers:', err.message);
-          }
+          } catch (err) { console.warn('Could not build core:', err.message); }
+
+          try {
+            const buf = await buildSpacersSTL(mag, stlOpts);
+            if (buf) {
+              const m = this.addMeshFromSTL(buf, COMPONENT_COLORS.spacer, { metalness: 0.1, roughness: 0.6 });
+              if (m) { m.visible = this.internalShowCore; group.add(m); }
+            }
+          } catch (err) { /* no spacers — normal */ }
         }
 
-        // Check if toroidal
-        const isToroidal = processedCore.geometricalDescription?.some(
-          part => part.type === 'toroidal' || part.shape?.family?.toLowerCase() === 't'
-        );
-
-        // Build bobbin - only if valid, not toroidal, and not a dummy bobbin
         const coil = magnetic.coil || {};
-        const isDummyBobbin = coil.bobbin === "Dummy" || coil.bobbin === "" || coil.bobbin == null;
-        const hasBobbinData = coil.bobbin?.processedDescription && Object.keys(coil.bobbin.processedDescription).length > 0;
-        
+        const isDummyBobbin = coil.bobbin === 'Dummy' || coil.bobbin === '' || coil.bobbin == null;
+        const hasBobbinData = coil.bobbin?.processedDescription &&
+          Object.keys(coil.bobbin.processedDescription).length > 0;
+
         if (this.showBobbin && !isToroidal && !isDummyBobbin && hasBobbinData) {
           try {
-            // Deep clone to remove Vue reactivity and circular references
-            const bobbinProcessed = JSON.parse(JSON.stringify(coil.bobbin.processedDescription));
-            const bobbinArrayBuffer = await buildBobbinSTL(bobbinProcessed, stlOptions);
-
-            if (bobbinArrayBuffer) {
-              this.bobbinMesh = this.addMeshFromSTL(bobbinArrayBuffer, this.bobbinColor, {
-                metalness: 0.1,
-                roughness: 0.7
-              });
-              if (this.bobbinMesh) {
-                this.bobbinMesh.visible = this.internalShowBobbin;
-                group.add(this.bobbinMesh);
-              }
+            const buf = await buildBobbinSTL(mag, stlOpts);
+            if (buf) {
+              this.bobbinMesh = this.addMeshFromSTL(buf, this.bobbinColor, { metalness: 0.1, roughness: 0.7 });
+              if (this.bobbinMesh) { this.bobbinMesh.visible = this.internalShowBobbin; group.add(this.bobbinMesh); }
             }
-          } catch (err) {
-            console.warn('Could not build bobbin:', err.message);
-          }
+          } catch (err) { console.warn('Could not build bobbin:', err.message); }
         }
 
-        // Build turns - only if coil.turnsDescription is not null, has data, and bobbin data is valid
-        const hasTurnsData = coil.turnsDescription != null && coil.turnsDescription.length > 0;
-        const hasValidBobbinForTurns = coil.bobbin?.processedDescription && 
-          coil.bobbin.processedDescription.columnDepth !== undefined &&
-          coil.bobbin.processedDescription.columnWidth !== undefined;
-        
-        // Check if any wire is planar type (as fallback if groupsDescription type isn't set correctly)
+        const hasTurnsData = coil.turnsDescription?.length > 0;
         const hasPlanarWires = coil.functionalDescription?.some(
-          winding => winding?.wire?.type?.toLowerCase() === 'planar'
+          w => w?.wire?.type?.toLowerCase() === 'planar'
         );
-        
-        // Build FR4 boards for planar transformer groups
-        const hasGroupsDescription = coil.groupsDescription != null && coil.groupsDescription.length > 0;
-        const shouldBuildFR4 = hasGroupsDescription && (
-          coil.groupsDescription.some(g => g.type === "Printed" || g.type?.toLowerCase() === 'printed') ||
-          hasPlanarWires
-        );
+        const shouldBuildFR4 = coil.groupsDescription?.some(
+          g => g.type === 'Printed' || g.type?.toLowerCase() === 'printed'
+        ) || hasPlanarWires;
 
-        if (this.showTurns && shouldBuildFR4 && hasValidBobbinForTurns) {
+        if (this.showTurns && shouldBuildFR4) {
           try {
-            // Deep clone coil to remove Vue reactivity (required for Worker postMessage)
-            const coilClone = JSON.parse(JSON.stringify(coil));
-            const fr4ArrayBuffer = await buildFR4BoardSTL(coilClone);
-
-            if (fr4ArrayBuffer) {
-              const fr4Mesh = this.addMeshFromSTL(fr4ArrayBuffer, COATING_COLORS.fr4, {
-                metalness: 0.0,
-                roughness: 0.8,
-                transparent: true,
-                opacity: 0.4
-              });
-              if (fr4Mesh) {
-                fr4Mesh.visible = this.internalShowTurns;
-                group.add(fr4Mesh);
-                this.turnsMeshes.push(fr4Mesh);
-              }
+            const buf = await buildFR4BoardSTL(mag, stlOpts);
+            if (buf) {
+              const m = this.addMeshFromSTL(buf, COATING_COLORS.fr4, { metalness: 0.0, roughness: 0.8, transparent: true, opacity: 0.4 });
+              if (m) { m.visible = this.internalShowTurns; group.add(m); this.turnsMeshes.push(m); }
             }
-          } catch (err) {
-            console.warn('Could not build FR4 boards:', err.message);
-          }
+          } catch (err) { console.warn('Could not build FR4 boards:', err.message); }
         }
-        
-        if (this.showTurns && hasTurnsData && hasValidBobbinForTurns) {
+
+        if (this.showTurns && hasTurnsData) {
           try {
-            // Deep clone to remove Vue reactivity and circular references
-            const turnsData = JSON.parse(JSON.stringify(coil.turnsDescription));
-            const bobbinProcessed = JSON.parse(JSON.stringify(coil.bobbin.processedDescription));
-            
-            for (let i = 0; i < turnsData.length; i++) {
-              const turnData = turnsData[i];
-              const windingIndex = turnData.windingIndex || 0;
-              const turnColor = getWireColorFromCoating(turnData, coil, windingIndex);
-              
-              try {
-                const turnArrayBuffer = await buildTurnSTL(
-                  turnData, 
-                  turnData, // wireDesc same as turnData for now
-                  bobbinProcessed, 
-                  isToroidal, 
-                  stlOptions
-                );
-                
-                if (turnArrayBuffer) {
-                  const turnMesh = this.addMeshFromSTL(turnArrayBuffer, turnColor, {
-                    metalness: 0.2,
-                    roughness: 0.6
-                  });
-                  if (turnMesh) {
-                    turnMesh.visible = this.internalShowTurns;
-                    group.add(turnMesh);
-                    this.turnsMeshes.push(turnMesh);
-                  }
-                }
-              } catch (err) {
-                console.warn(`Could not build turn ${i}:`, err.message);
-              }
+            const buf = await buildTurnsSTL(mag, stlOpts);
+            if (buf) {
+              const m = this.addMeshFromSTL(buf, this.turnsColor, { metalness: 0.2, roughness: 0.6 });
+              if (m) { m.visible = this.internalShowTurns; group.add(m); this.turnsMeshes.push(m); }
             }
-          } catch (err) {
-            console.warn('Could not build turns:', err.message);
-          }        } else if (this.showTurns && hasTurnsData && !hasValidBobbinForTurns) {
-          console.warn('Cannot build turns: missing valid bobbin processedDescription');        }
+          } catch (err) { console.warn('Could not build turns:', err.message); }
+        }
 
         // Add group to scene
         if (group.children.length > 0) {
