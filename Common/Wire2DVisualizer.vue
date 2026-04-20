@@ -187,7 +187,9 @@ export default {
                             }
                             else {
                                 this.tryingToSend = false;
-                                if (this.includeCurrentDensity || this.wire.type == "litz") {
+                                // Litz wires now work in WASM (CCI coords compiled into binary).
+                                // Only current-density mode still needs the backend.
+                                if (this.includeCurrentDensity) {
                                     this.computeWireRemotely();
                                 }
                                 else {

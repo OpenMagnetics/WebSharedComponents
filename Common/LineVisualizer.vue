@@ -134,6 +134,9 @@ export default {
         const options = {
             title: {
                 left: 'center',
+                // Push title below the legend (legend sits at top: 6 with
+                // ~12px height). Without this the title and legend overlap.
+                top: 22,
                 text: this.title,
                 textStyle: {
                     fontSize: this.titleFontSize,

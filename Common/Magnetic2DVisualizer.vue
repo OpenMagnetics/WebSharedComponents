@@ -266,17 +266,63 @@ export default {
                 return;
             }
 
+            // Fit the SVG's viewBox to its actual content. MKF's
+            // plot_temperature_field occasionally emits a viewBox that is
+            // narrower on Y than the paths it draws (toroid rendered sideways
+            // with a colorbar extending X), which clips the top/bottom of the
+            // toroid in the browser. Recompute the content bbox and widen the
+            // viewBox to match, preserving aspect by letting the browser
+            // apply preserveAspectRatio (default xMidYMid meet).
+            try {
+                const svgEl = this.$refs.plotView.querySelector('svg');
+                if (svgEl) {
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    for (const el of svgEl.querySelectorAll('*')) {
+                        try {
+                            const b = el.getBBox?.();
+                            if (b && isFinite(b.x) && (b.width > 0 || b.height > 0)) {
+                                minX = Math.min(minX, b.x);
+                                minY = Math.min(minY, b.y);
+                                maxX = Math.max(maxX, b.x + b.width);
+                                maxY = Math.max(maxY, b.y + b.height);
+                            }
+                        } catch { /* some elements don't support getBBox */ }
+                    }
+                    if (isFinite(minX) && isFinite(minY) && isFinite(maxX) && isFinite(maxY)) {
+                        // Small padding so strokes at the edges aren't cut.
+                        const padX = (maxX - minX) * 0.02;
+                        const padY = (maxY - minY) * 0.02;
+                        const vbX = minX - padX;
+                        const vbY = minY - padY;
+                        const vbW = (maxX - minX) + padX * 2;
+                        const vbH = (maxY - minY) + padY * 2;
+                        svgEl.setAttribute('viewBox', `${vbX} ${vbY} ${vbW} ${vbH}`);
+                        // Update the intrinsic width/height attributes so the
+                        // downstream `extractSvgDimension` + scaling math sees
+                        // the corrected aspect ratio. Keep them as numeric
+                        // strings so the existing regex in calculateSvgWidth
+                        // still matches.
+                        svgEl.setAttribute('width', vbW.toFixed(1));
+                        svgEl.setAttribute('height', vbH.toFixed(1));
+                    }
+                }
+            } catch (e) {
+                console.warn('[processSvgResult] viewBox recalculation skipped:', e);
+            }
+
+            // Re-read the corrected HTML/dims for the scaling calculation.
+            const correctedHtml = this.$refs.plotView.innerHTML;
             const clientWidth = this.$refs.Magnetic2DVisualizerContainer.clientWidth;
             const clientHeight = this.$refs.Magnetic2DVisualizerContainer.clientHeight * (this.enableOptions ? OPTIONS_HEIGHT_MULTIPLIER : 1);
 
-            const originalWidth = extractSvgDimension(result, 'width');
-            const originalHeight = extractSvgDimension(result, 'height');
-            
+            const originalWidth = extractSvgDimension(correctedHtml, 'width');
+            const originalHeight = extractSvgDimension(correctedHtml, 'height');
+
             console.log('[processSvgResult] Original dimensions:', originalWidth, 'x', originalHeight);
             console.log('[processSvgResult] Client dimensions:', clientWidth, 'x', clientHeight);
 
             this.width = this.calculateSvgWidth(originalWidth, originalHeight, clientWidth, clientHeight);
-            
+
             console.log('[processSvgResult] Calculated width:', this.width);
             this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replace('width=', 'class="scaling-svg" width=');
 
