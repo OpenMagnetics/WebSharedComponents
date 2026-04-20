@@ -56,23 +56,23 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         labelFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: () => ({ backgroundColor: 'var(--p-surface-800)' })
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: () => ({ backgroundColor: 'var(--p-surface-600)' })
         },
         textColor: {
             type: [String, Object],
-            default: "text-white",
+            default: () => ({ color: 'var(--p-surface-50)' })
         },
         unitExtraStyleClass:{
             type: String,

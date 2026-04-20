@@ -53,23 +53,23 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         labelFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: () => ({ backgroundColor: 'var(--p-surface-800)' }),
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: () => ({ backgroundColor: 'var(--p-surface-600)' }),
         },
         textColor: {
             type: [String, Object],
-            default: "text-white",
+            default: () => ({ color: 'var(--p-surface-50)' }),
         },
     },
     data() {
@@ -179,7 +179,7 @@ export default {
                 :data-cy="dataTestLabel + '-alt-title-label'"
                 type="text"
                 :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
-                class="rounded-2 ms-3 col-11 p-0 mb-2 border-0"
+                class="efl-label ms-3 col-11 p-0 mb-2 border-0"
                 @change="$emit('changeText', $event.target.value)"
                 :value="altText">
             <label
@@ -187,7 +187,7 @@ export default {
                 v-if="altText == null && !titleSameRow"
                 :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 p-0">{{replaceTitle == null? toTitleCase(name) : replaceTitle}}
+                class="efl-label p-0">{{replaceTitle == null? toTitleCase(name) : replaceTitle}}
             </label>
         </div>
         <div class="row" :class="justifyContent? 'd-flex justify-content-between' : ''">
@@ -196,7 +196,7 @@ export default {
                 :data-cy="dataTestLabel + '-same-row-label'"
                 v-if="titleSameRow"
                 :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
-                class="rounded-2 m-0 p-0">{{replaceTitle == null? toTitleCase(name) : replaceTitle}}
+                class="efl-label m-0 p-0">{{replaceTitle == null? toTitleCase(name) : replaceTitle}}
             </label>
             <div  v-if="!titleSameRow" class=" col-sm-0 col-md-2">
             </div>
@@ -205,7 +205,7 @@ export default {
                 :disabled="disabled"
                 :data-cy="dataTestLabel + '-select'"
                 :class="combinedClass([selectStyleClass, valueFontSize, disabled? labelBgColor : valueBgColor, textColor, disabled? 'border-0 text-end':''])"
-                class="form-select py-1 px-2 m-0 mt-1 pe-5"
+                class="efl-select py-1 px-2 m-0 mt-1 pe-5"
                 @change="changeOption"
                 style="width:auto; max-height: 3em;"
                 :value="localData"
@@ -217,3 +217,40 @@ export default {
         </div>
     </div>
 </template>
+
+<style scoped>
+.efl-label {
+    font-size: clamp(0.6rem, 2cqi, 0.875rem);
+    overflow: hidden;
+    white-space: nowrap;
+    container-type: inline-size;
+    border-radius: var(--p-border-radius);
+}
+
+.efl-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    border: 1px solid var(--p-surface-400);
+    border-radius: var(--p-border-radius);
+    font-family: var(--p-font-family);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+    height: 1.75rem;
+    line-height: 1.25rem;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e9ecef' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 12px 9px;
+}
+
+.efl-select:disabled {
+    background-image: none;
+}
+
+.efl-select:focus {
+    border-color: var(--p-primary-color);
+    box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--p-primary-color) 25%, transparent);
+}
+</style>

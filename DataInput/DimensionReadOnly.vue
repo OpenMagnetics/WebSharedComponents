@@ -70,7 +70,7 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         labelWidthProportionClass:{
             type: String,
@@ -86,15 +86,15 @@ export default {
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: () => ({ backgroundColor: 'var(--p-surface-800)' }),
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: () => ({ backgroundColor: 'var(--p-surface-600)' }),
         },
         textColor: {
             type: [String, Object],
-            default: "text-white",
+            default: () => ({ color: 'var(--p-surface-50)' }),
         },
     },
     data() {
@@ -219,7 +219,7 @@ export default {
                 v-if="replaceTitle == null"
                 :style="combinedStyle([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 pe-0 ps-0"
+                class="dimension-readonly-label pe-0 ps-0"
                 :class="combinedClass([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
             >
                 {{shortenedName}}<sub>{{subscriptName}}</sub>
@@ -228,7 +228,7 @@ export default {
                 v-else
                 :style="combinedStyle([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 pe-0 ps-0"
+                class="dimension-readonly-label pe-0 ps-0"
                 :class="combinedClass([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
             >
                 {{replaceTitle}}<sub>{{subscriptName}}</sub>
@@ -286,6 +286,24 @@ input::-webkit-inner-spin-button {
 /* Firefox */
 input[type=number] {
   -moz-appearance: textfield;
+}
+
+.dimension-readonly-label {
+  border-radius: var(--p-border-radius);
+  font-size: clamp(0.6rem, 2cqi, 0.875rem);
+  overflow: hidden;
+  white-space: nowrap;
+  container-type: inline-size;
+}
+
+.text-danger {
+  color: var(--p-red-400);
+}
+
+input {
+  border-radius: var(--p-border-radius);
+  color: var(--p-surface-50);
+  background-color: var(--p-surface-800);
 }
 
 </style>

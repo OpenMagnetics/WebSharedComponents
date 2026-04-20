@@ -83,11 +83,11 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         labelFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         labelWidthProportionClass:{
             type: String,
@@ -99,15 +99,15 @@ export default {
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: () => ({ backgroundColor: 'var(--p-surface-800)' })
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: () => ({ backgroundColor: 'var(--p-surface-600)' })
         },
         textColor: {
             type: [String, Object],
-            default: "text-white",
+            default: () => ({ color: 'var(--p-surface-50)' })
         },
         unitExtraStyleClass:{
             type: String,
@@ -306,13 +306,13 @@ export default {
 </script>
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex" ref="container">
-        <div class="row align-items-center ">
+        <div class="row align-items-center">
             <label
                 :style="combinedStyle([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 v-if="replaceTitle == null"
                 :data-cy="dataTestLabel + '-title'"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
-                class="rounded-2 p p-0 "
+                class="dim-label p-0"
             >
                 {{shortenedName}}
             </label>
@@ -321,18 +321,18 @@ export default {
                 v-if="replaceTitle != null && replaceTitle != ''"
                 :data-cy="dataTestLabel + '-title'"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
-                class="rounded-2 p-0"
+                class="dim-label p-0"
             >
                 {{replaceTitle}}
             </label>
-            <div v-if="localData.scaledValue != null" class="row m-0 px-0 align-items-center " :class="(justifyContent? 'd-flex justify-content-end ' : '') +  valueWidthProportionClass">
+            <div v-if="localData.scaledValue != null" class="row m-0 px-0 align-items-center" :class="(justifyContent? 'd-flex justify-content-end ' : '') + valueWidthProportionClass">
                 <input type="number"
                     :style="combinedStyle([disabled? labelBgColor : valueBgColor, textColor, valueFontSize])"
                     ref="inputRef"
                     :disabled="disabled"
                     :data-cy="dataTestLabel + '-number-input'"
                     :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, disabled? 'border-0' : '', unit == null && altUnit == null? 'col-12' : 'col-8'])"
-                    class="m-0 pe-0 ps-1 text-end"
+                    class="dim-input m-0 pe-0 ps-1"
                     @change="changeScaledValue($event.target.value)"
                     :value="removeTrailingZeroes(localData.scaledValue * visualScale, numberDecimals)"
                 >
@@ -354,16 +354,61 @@ export default {
                 <label
                     :style="combinedStyle([labelBgColor, textColor, valueFontSize, unitExtraStyleClass])"
                     v-if="unit == null && altUnit != ''"
-                    class="px-2 pt-1 px-0 "
+                    class="px-2 pt-1 px-0"
                     :data-cy="dataTestLabel + '-DimensionUnit-text'"
                     :class="unit == null && justifyContent? 'col-0':'col-4'"
                 >{{altUnit}}</label>
             </div>
         </div>
         <div class="row">
-            <label :data-cy="dataTestLabel + '-error-text'" class="text-danger text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
+            <label :data-cy="dataTestLabel + '-error-text'" class="dim-error col-12 pt-1">{{errorMessages}}</label>
         </div>
     </div>
 </template>
 
+<style scoped>
+.dim-label {
+    border-radius: var(--p-border-radius);
+    font-size: clamp(0.6rem, 2cqi, 0.875rem);
+    overflow: hidden;
+    white-space: nowrap;
+    container-type: inline-size;
+}
 
+.dim-input {
+    text-align: end;
+    padding: 0.25rem 0 0.25rem 0.25rem;
+    border: 1px solid var(--p-surface-400);
+    border-radius: var(--p-border-radius) 0 0 var(--p-border-radius);
+    border-right: none;
+    font-family: var(--p-font-family);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+    height: 1.75rem;
+    line-height: 1.25rem;
+}
+
+.dim-input:focus {
+    border-color: var(--p-primary-color);
+    box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--p-primary-color) 25%, transparent);
+}
+
+.dim-input:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+:deep(.unit-select) {
+    border-radius: 0 var(--p-border-radius) var(--p-border-radius) 0;
+    height: 1.75rem;
+    line-height: 1.25rem;
+}
+
+.dim-error {
+    text-align: center;
+    color: var(--p-red-400);
+    font-size: 0.9em;
+    white-space: pre-wrap;
+}
+</style>

@@ -3,6 +3,7 @@ import { combinedStyle, combinedClass } from '../assets/js/utils.js'
 </script>
 <script>
 export default {
+    inheritAttrs: false,
     props: {
         unit:{
             type: String,
@@ -201,25 +202,23 @@ export default {
 
 
 <template>
-    <div>
-        <select
-            :style="combinedStyle([valueFontSize, extraStyleClass, valueBgColor, textColor])"
-            class="form-select m-0 p-0 unit-select"
-            :class="combinedClass([valueFontSize, extraStyleClass, valueBgColor, textColor, disabled? 'border-0':'', extraStyleClass==''? ' text-center p-1 ': ''])"
-            :value="modelValueInRange"
-            @change="$emit('update:modelValue', Number($event.target.value))"
-            style="width:auto;"
-            :disabled="readOnly || disabled">
-            <option
-                :style="combinedStyle([valueBgColor, valueFontSize])"
-                v-for="value, label in multipliersLabel"
-                :value="value"
-                :class="combinedClass([valueBgColor, valueFontSize])"
-            >
-                {{label + unit}}
-            </option>
-        </select>
-    </div>
+    <select
+        v-bind="$attrs"
+        :style="combinedStyle([valueFontSize, extraStyleClass, valueBgColor, textColor])"
+        class="unit-select"
+        :class="combinedClass([valueFontSize, extraStyleClass, valueBgColor, textColor, disabled? 'border-0':'', extraStyleClass==''? ' text-center': ''])"
+        :value="modelValueInRange"
+        @change="$emit('update:modelValue', Number($event.target.value))"
+        :disabled="readOnly || disabled">
+        <option
+            :style="combinedStyle([valueBgColor, valueFontSize])"
+            v-for="value, label in multipliersLabel"
+            :value="value"
+            :class="combinedClass([valueBgColor, valueFontSize])"
+        >
+            {{label + unit}}
+        </option>
+    </select>
 </template>
 
 <style scoped>
@@ -228,6 +227,26 @@ export default {
     -webkit-appearance: none;
     -moz-appearance: none;
     background-image: none !important;
+    margin: 0;
+    padding: 0.25rem;
+    border: 1px solid var(--p-surface-400);
+    border-radius: var(--p-border-radius);
+    font-family: var(--p-font-family);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+    height: 1.75rem;
+    line-height: 1.25rem;
+}
+
+.unit-select:focus {
+    border-color: var(--p-primary-color);
+    box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--p-primary-color) 25%, transparent);
+}
+
+.unit-select:disabled {
+    opacity: 0.6;
+    cursor: default;
 }
 
 .unit-select::-ms-expand {

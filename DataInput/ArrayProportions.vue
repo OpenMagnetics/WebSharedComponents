@@ -58,15 +58,15 @@ export default {
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: () => ({ backgroundColor: 'var(--p-surface-800)' })
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: () => ({ backgroundColor: 'var(--p-surface-600)' })
         },
         textColor: {
             type: [String, Object],
-            default: "text-white",
+            default: () => ({ color: 'var(--p-surface-50)' })
         },
         disabled: {
             type: Boolean,
@@ -214,9 +214,16 @@ export default {
             </div>
         </div>
         <div class="row">
-            <label class="text-danger text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
+            <label class="arr-error col-12 pt-1">{{errorMessages}}</label>
         </div>
     </div>
 </template>
 
-
+<style scoped>
+.arr-error {
+    text-align: center;
+    color: var(--p-red-400);
+    font-size: 0.9em;
+    white-space: pre-wrap;
+}
+</style>

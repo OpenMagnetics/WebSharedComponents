@@ -36,23 +36,23 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         labelFontSize:{
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: () => ({ backgroundColor: 'var(--p-surface-800)' }),
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: () => ({ backgroundColor: 'var(--p-surface-600)' }),
         },
         textColor: {
             type: [String, Object],
-            default: "text-white",
+            default: () => ({ color: 'var(--p-surface-50)' }),
         },
         disabled: {
             type: Boolean,
@@ -161,7 +161,7 @@ export default {
                 :data-cy="dataTestLabel + '-title'"
                 :for="name + '-text-input'"
                 :class="combinedClass([labelBgColor, textColor, labelFontSize])"
-                class="rounded-2 m-0 col-8"
+                class="list-chars-label m-0 col-8"
             >
                 {{toTitleCase(name)}}
             </label>
@@ -171,7 +171,7 @@ export default {
                 :data-cy="dataTestLabel + '-title'"
                 :for="name + '-text-input'"
                 :class="combinedClass([labelBgColor, textColor, labelFontSize])"
-                class="rounded-2 m-0 col-8"
+                class="list-chars-label m-0 col-8"
             >
                 {{replaceTitle}}
             </label>
@@ -182,14 +182,50 @@ export default {
                 type="text"
                 :disabled="disabled"
                 :class="combinedClass([valueBgColor, textColor, valueFontSize])"
-                class="m-0 px-0 col-4"
+                class="list-chars-input m-0 col-4 text-center"
                 :id="name + '-text-input'"
                 @change="changeText($event.target.value)"
                 :value="localData"
             >
-            <label class="text-danger text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
+            <label class="list-chars-error text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
         </div>
     </div>
 </template>
 
+<style scoped>
+.list-chars-label {
+    font-size: clamp(0.6rem, 2cqi, 0.875rem);
+    overflow: hidden;
+    white-space: nowrap;
+    container-type: inline-size;
+    border-radius: var(--p-border-radius);
+}
 
+.list-chars-input {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid var(--p-surface-400);
+    border-radius: var(--p-border-radius);
+    font-family: var(--p-font-family);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+    height: 1.75rem;
+    line-height: 1.25rem;
+    padding: 0 0.5rem;
+}
+
+.list-chars-input:focus {
+    border-color: var(--p-primary-color);
+    box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--p-primary-color) 25%, transparent);
+}
+
+.list-chars-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.list-chars-error {
+    color: var(--p-red-400);
+}
+</style>

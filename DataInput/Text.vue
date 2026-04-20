@@ -31,23 +31,23 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         labelFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         labelBgColor: {
             type: [String, Object],
-            default: "bg-dark",
+            default: () => ({ backgroundColor: 'var(--p-surface-800)' }),
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: () => ({ backgroundColor: 'var(--p-surface-600)' }),
         },
         textColor: {
             type: [String, Object],
-            default: "text-white",
+            default: () => ({ color: 'var(--p-surface-50)' }),
         },
         labelWidthProportionClass: {
             type: String,
@@ -117,7 +117,7 @@ export default {
                 :data-cy="dataTestLabel + '-title'"
                 :for="name + '-text-input'"
                 :class="combinedClass([labelWidthProportionClass, labelBgColor, textColor])"
-                class="rounded-2 fs-5 "
+                class="data-input-label fs-5 "
             >
                 {{replaceTitle != null? replaceTitle : toTitleCase(name)}}
             </label>
@@ -126,14 +126,39 @@ export default {
                 :data-cy="dataTestLabel + '-text-input'"
                 type="text"
                 :class="combinedClass([valueWidthProportionClass, valueBgColor, textColor, extraStyleClass])"
-                class="m-0 px-0 "
+                class="data-input-text m-0 px-0 "
                 :id="name + '-text-input'"
                 @change="changeText($event.target.value)"
                 :value="localData"
             >
-            <label class="text-danger text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
+            <label class="data-input-error text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
         </div>
     </div>
 </template>
 
+<style scoped>
+.data-input-label {
+    border-radius: var(--p-border-radius);
+    font-size: clamp(0.625rem, 1.2vw, 0.875rem);
+}
 
+.data-input-text {
+    border: 1px solid var(--p-surface-400);
+    border-radius: var(--p-border-radius);
+    font-family: var(--p-font-family);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+    height: 1.75rem;
+    line-height: 1.25rem;
+}
+
+.data-input-text:focus {
+    border-color: var(--p-primary-color);
+    box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--p-primary-color) 25%, transparent);
+}
+
+.data-input-error {
+    color: var(--p-red-400);
+}
+</style>
