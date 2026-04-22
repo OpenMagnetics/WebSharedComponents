@@ -28,22 +28,53 @@ function toBuffer(u8) {
     return u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
 }
 
-const DEFAULTS = { scale: 1.0, wireSeg: 16, coreSeg: 32, tolMm: 0.5, angTol: 0.5, binary: true };
+function decodeWasmException(mod, e) {
+    if (typeof e === 'number') {
+        if (mod && mod.getExceptionMessage) {
+            try { return mod.getExceptionMessage(e); } catch {}
+        }
+        if (mod && mod.UTF8ToString) {
+            try {
+                const msg = mod.UTF8ToString(e);
+                if (msg && msg.length < 512) return msg;
+            } catch {}
+        }
+        return `WASM exception ptr=${e}`;
+    }
+    return e instanceof Error ? e.message : String(e);
+}
+
+const DEFAULTS = { scale: 1.0, wireSeg: 16, coreSeg: 32, tolMm: 0.1, angTol: 0.1, binary: true };
 
 function o(opts) { return { ...DEFAULTS, ...opts }; }
+
+function timed(name, fn) {
+    return async (...args) => {
+        const t0 = performance.now();
+        const result = await fn(...args);
+        console.log(`[MVB] ${name} seg=${DEFAULTS.coreSeg} took ${(performance.now() - t0).toFixed(0)}ms`);
+        return result;
+    };
+}
 
 Comlink.expose({
     waitReady: () => init(),
 
-    buildMagneticSTL: async (magnetic, opts = {}) => {
+    buildMagneticSTL: timed('buildMagneticSTL', async (magnetic, opts = {}) => {
         await init();
         const d = o(opts);
-        return toBuffer(_mvbpp.buildMagneticSTL(
-            JSON.stringify(magnetic), opts.includeBobbin ?? true,
-            d.scale, opts.symmetryPlanes ?? 0, d.wireSeg, d.coreSeg,
-            d.tolMm, d.angTol, d.binary,
-        ));
-    },
+        try {
+            return toBuffer(_mvbpp.buildMagneticSTL(
+                JSON.stringify(magnetic), opts.includeBobbin ?? true,
+                d.scale, opts.symmetryPlanes ?? 0, d.wireSeg, d.coreSeg,
+                d.tolMm, d.angTol, d.binary,
+            ));
+        } catch(e) {
+            const msg = decodeWasmException(_mvbpp, e);
+            console.error('[MVB Worker] buildMagneticSTL failed:', msg, 'raw:', e);
+            throw new Error('[MVB] buildMagneticSTL: ' + msg);
+        }
+    }),
 
     buildMagneticSTEP: async (magnetic, opts = {}) => {
         await init();
@@ -54,39 +85,45 @@ Comlink.expose({
         ));
     },
 
-    buildCoreSTL: async (magnetic, opts = {}) => {
+    buildCoreSTL: timed('buildCoreSTL', async (magnetic, opts = {}) => {
         await init();
         const d = o(opts);
-        return toBuffer(_mvbpp.buildCoreSTL(
-            JSON.stringify(magnetic), d.scale, d.coreSeg, d.tolMm, d.angTol, d.binary,
-        ));
-    },
+        try {
+            return toBuffer(_mvbpp.buildCoreSTL(
+                JSON.stringify(magnetic), d.scale, d.coreSeg, d.tolMm, d.angTol, d.binary,
+            ));
+        } catch(e) {
+            const msg = decodeWasmException(_mvbpp, e);
+            console.error('[MVB Worker] buildCoreSTL failed:', msg, 'raw:', e);
+            throw new Error('[MVB] buildCoreSTL: ' + msg);
+        }
+    }),
 
-    buildSpacersSTL: async (magnetic, opts = {}) => {
+    buildSpacersSTL: timed('buildSpacersSTL', async (magnetic, opts = {}) => {
         await init();
         const d = o(opts);
         return toBuffer(_mvbpp.buildSpacersSTL(
             JSON.stringify(magnetic), d.scale, d.tolMm, d.angTol, d.binary,
         ));
-    },
+    }),
 
-    buildBobbinSTL: async (magnetic, opts = {}) => {
+    buildBobbinSTL: timed('buildBobbinSTL', async (magnetic, opts = {}) => {
         await init();
         const d = o(opts);
         return toBuffer(_mvbpp.buildBobbinSTL(
             JSON.stringify(magnetic), d.scale, d.tolMm, d.angTol, d.binary,
         ));
-    },
+    }),
 
-    buildTurnsSTL: async (magnetic, opts = {}) => {
+    buildTurnsSTL: timed('buildTurnsSTL', async (magnetic, opts = {}) => {
         await init();
         const d = o(opts);
         return toBuffer(_mvbpp.buildTurnsSTL(
             JSON.stringify(magnetic), d.scale, d.wireSeg, d.tolMm, d.angTol, d.binary,
         ));
-    },
+    }),
 
-    buildFR4BoardSTL: async (magnetic, opts = {}) => {
+    buildFR4BoardSTL: timed('buildFR4BoardSTL', async (magnetic, opts = {}) => {
         await init();
         const d = o(opts);
         return toBuffer(_mvbpp.buildFR4BoardSTL(
@@ -95,7 +132,7 @@ Comlink.expose({
             opts.coreToLayerDistance ?? 0.5,
             d.tolMm, d.angTol, d.binary,
         ));
-    },
+    }),
 
     getSymmetryPlanes: async (magnetic) => {
         await init();
@@ -109,12 +146,24 @@ Comlink.expose({
 
     drawDimensionedFrontView: async (magnetic, widthPx = 800, labelPx = 14, projColor = '#000000', dimColor = '#0000ff') => {
         await init();
-        return _mvbpp.drawDimensionedFrontView(JSON.stringify(magnetic), widthPx, labelPx, projColor, dimColor);
+        try {
+            return _mvbpp.drawDimensionedFrontView(JSON.stringify(magnetic), widthPx, labelPx, projColor, dimColor);
+        } catch(e) {
+            const msg = decodeWasmException(_mvbpp, e);
+            console.error('[MVB Worker] drawDimensionedFrontView failed:', msg, 'raw:', e);
+            throw new Error('[MVB] drawDimensionedFrontView: ' + msg);
+        }
     },
 
     drawDimensionedTopView: async (magnetic, widthPx = 800, labelPx = 14, projColor = '#000000', dimColor = '#0000ff') => {
         await init();
-        return _mvbpp.drawDimensionedTopView(JSON.stringify(magnetic), widthPx, labelPx, projColor, dimColor);
+        try {
+            return _mvbpp.drawDimensionedTopView(JSON.stringify(magnetic), widthPx, labelPx, projColor, dimColor);
+        } catch(e) {
+            const msg = decodeWasmException(_mvbpp, e);
+            console.error('[MVB Worker] drawDimensionedTopView failed:', msg, 'raw:', e);
+            throw new Error('[MVB] drawDimensionedTopView: ' + msg);
+        }
     },
 
     drawCoreGappingTechnicalDrawing: async (magnetic, widthPx = 800, labelPx = 14, projColor = '#000000', dimColor = '#0000ff') => {

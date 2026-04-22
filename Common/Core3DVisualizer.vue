@@ -3,13 +3,13 @@ import { MeshPhysicalMaterial, Object3D, Mesh, Box3, Vector3} from 'three';
 import {Camera, EffectComposer, InstancedMesh, PhongMaterial, Renderer, RenderPass, SphereGeometry, SpotLight, Scene, AmbientLight} from 'troisjs';
 import { deepCopy, hexToRgb } from '../assets/js/utils.js'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
-import { initMvbWorker, buildCoreSTL, buildMagneticSTL } from '../assets/js/mvbRuntime.js'
+import { initMvbWorker, buildCoreSTL } from '../assets/js/mvbRuntime.js'
 </script>
 
 <script>
 
 export default {
-    emits: ["errorInDimensions"],
+    emits: ["errorInDimensions", "renderSuccess"],
     props: {
         dataTestLabel: {
             type: String,
@@ -128,11 +128,11 @@ export default {
             material.specularColor.g = 0.2;
             material.specularColor.b = 0.2;
             const mesh = new Mesh(geometry, material);
-            mesh.rotation.x = -Math.PI / 2;
+            const isToroidal = this.core?.functionalDescription?.shape?.family?.toLowerCase() === 't';
+            mesh.rotation.x = isToroidal ? -Math.PI / 2 : 0;
             scene.add(mesh);
             this.current3dObject = mesh;
-            const isToroidal = this.core?.functionalDescription?.shape?.family?.toLowerCase() === 't';
-            this.fitCameraToCenteredObject(camera, mesh, this.offset, isToroidal ? 1.5 : 3);
+            this.fitCameraToCenteredObject(camera, mesh, this.offset, isToroidal ? 1.5 : 0);
         },
         fitCameraToCenteredObject(camera, object, offset, offsetY, orbitControls) {
             const boundingBox = new Box3();
@@ -182,11 +182,11 @@ export default {
             let dx = size.z / 2 + Math.abs( size.x / 2 / Math.tan( fovh / 2 ) );
             let dy = size.z / 2 + Math.abs( size.y / 2 / Math.tan( fov / 2 ) );
             let cameraZ = Math.max(dx, dy);
-            let cameraY = size.y;
+            let cameraY = 0;
 
             // offset the camera, if desired (to avoid filling the whole canvas)
             if( offset !== undefined && offset !== 0 ) cameraZ *= offset;
-            if( offsetY !== undefined && offsetY !== 0 ) cameraY *= offsetY;
+            if( offsetY !== undefined && offsetY !== 0 ) cameraY = size.y * offsetY;
 
             camera.position.set( 0, cameraY, cameraZ );
 
@@ -194,6 +194,7 @@ export default {
             const minZ = boundingBox.min.z;
             const cameraToFarEdge = ( minZ < 0 ) ? -minZ + cameraZ : cameraZ - minZ;
 
+            camera.near = cameraToFarEdge * 0.001;
             camera.far = cameraToFarEdge * 30;
             camera.updateProjectionMatrix();
 
@@ -223,17 +224,17 @@ export default {
                         String(coreAux.functionalDescription.shape.familySubtype);
                 }
 
-                // Build full magnetic vs. shape-only STL via MVB++ WASM (no backend needed)
+                // Build core STL via MVB++ WASM (no backend needed).
+                // Core3DVisualizer is core-only (no coil), so buildCoreSTL is always correct.
                 const magnetic = { core: coreAux };
                 const stlOpts = { tolMm: 0.5, angTol: 0.5, binary: true };
-                const arrayBuffer = this.fullCoreModel
-                    ? await buildMagneticSTL(magnetic, stlOpts)
-                    : await buildCoreSTL(magnetic, stlOpts);
+                const arrayBuffer = await buildCoreSTL(magnetic, stlOpts);
 
                 this.removeObject3D(this.current3dObject);
                 if (arrayBuffer && this.$refs.scene?.scene) {
                     this.getPiece(arrayBuffer);
                 }
+                this.$emit('renderSuccess');
             } catch (error) {
                 console.error('[Core3DVisualizer]', error);
                 this.$emit('errorInDimensions');

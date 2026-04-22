@@ -1,11 +1,12 @@
 <script setup>
-import { toTitleCase, removeTrailingZeroes, formatInductance, formatPower, formatTemperature, formatResistance, deepCopy } from '../assets/js/utils.js'
+import { deepCopy } from '../assets/js/utils.js'
+import { initMvbWorker, drawDimensionedFrontView, drawDimensionedTopView, drawCoreGappingTechnicalDrawing } from '../assets/js/mvbRuntime.js'
 </script>
 
 <script>
 
 export default {
-    emits: ["errorInDimensions"],
+    emits: ["errorInDimensions", "renderSuccess"],
     components: {
     },
     props: {
@@ -24,6 +25,10 @@ export default {
         backgroundColor: {
             type: String,
             default: "#1a1a1a",
+        },
+        gappingMode: {
+            type: Boolean,
+            default: false,
         },
     },
     data() {
@@ -68,33 +73,47 @@ export default {
                 , this.$settingsStore.waitingTimeForPlottingAfterChange);
             }
         },
-        calculateTechnicalDrawing() {
+        async calculateTechnicalDrawing() {
             if (this.core == null) {
                 return;
             }
-            if (this.core.functionalDescription.shape != null) {
-                const url = import.meta.env.VITE_API_ENDPOINT + '/core_compute_technical_drawing'
-
-                this.$axios.post(url, this.core.functionalDescription.shape)
-                .then(response => {
-                    const clientWidth = this.$refs.Core2DVisualizerContainer.clientWidth;
-                    const clientHeight = this.$refs.Core2DVisualizerContainer.clientHeight * 0.90;
-                    this.$refs.frontView.innerHTML = response.data.front_view;
-                    this.$refs.topView.innerHTML = response.data.top_view;
-                    this.errorMessage = "";
-                    this.posting = false;
-                })
-                .catch(error => {
-                    this.posting = false;
-                    console.error("Error plotting")
-                    console.error(error)
-                });
+            if (this.core.functionalDescription.shape == null) {
+                if (this.$refs.frontView) this.$refs.frontView.innerHTML = "";
+                if (this.$refs.topView) this.$refs.topView.innerHTML = "";
+                return;
             }
-            else {
-                this.$refs.plotView.innerHTML = ""
-                if ("zoomPlotView" in this.$refs) {
-                    this.$refs.zoomPlotView.innerHTML = ""
+
+            try {
+                await initMvbWorker();
+                const coreAux = deepCopy(this.core);
+                coreAux.geometricalDescription = null;
+                coreAux.processedDescription = null;
+                if (coreAux.functionalDescription?.shape?.familySubtype != null) {
+                    coreAux.functionalDescription.shape.familySubtype =
+                        String(coreAux.functionalDescription.shape.familySubtype);
                 }
+                const magnetic = { core: coreAux };
+                const width = this.$refs.Core2DVisualizerContainer?.clientWidth || 400;
+
+                if (this.gappingMode) {
+                    const gapSvg = await drawCoreGappingTechnicalDrawing(magnetic, width, 12, '#aaaaaa', '#4499ff');
+                    if (this.$refs.frontView) this.$refs.frontView.innerHTML = gapSvg;
+                    if (this.$refs.topView) this.$refs.topView.innerHTML = '';
+                } else {
+                    const [frontSvg, topSvg] = await Promise.all([
+                        drawDimensionedFrontView(magnetic, width, 12, '#aaaaaa', '#4499ff'),
+                        drawDimensionedTopView(magnetic, width, 12, '#aaaaaa', '#4499ff'),
+                    ]);
+                    if (this.$refs.frontView) this.$refs.frontView.innerHTML = frontSvg;
+                    if (this.$refs.topView) this.$refs.topView.innerHTML = topSvg;
+                }
+                this.errorMessage = "";
+                this.$emit('renderSuccess');
+            } catch (error) {
+                console.error('[Core2DVisualizer]', error);
+                this.$emit('errorInDimensions');
+            } finally {
+                this.posting = false;
             }
         },
         plot() {
@@ -137,6 +156,6 @@ export default {
 
     .Core2DVisualizer {
         height:100%;
-        overflow-y: auto; 
+        overflow-y: auto;
     }
 </style>

@@ -95,6 +95,19 @@ export function getMkf() {
 /**
  * Terminate the worker (cleanup)
  */
+/**
+ * Pre-enrich a magnetic JSON using the MKF worker so MVB++ can skip its
+ * internal magnetic_autocomplete_safe call (much faster rendering).
+ * @param {Object} magnetic - raw magnetic object
+ * @returns {Promise<Object>} enriched magnetic with geometricalDescription etc.
+ */
+export async function enrichMagnetic(magnetic) {
+    const m = await waitForMkf();
+    const result = await m.mas_autocomplete(JSON.stringify({ magnetic }), false, '{}');
+    const parsed = JSON.parse(result);
+    return parsed?.magnetic ?? parsed;
+}
+
 export function terminateWorker() {
     if (worker) {
         worker.terminate();

@@ -5,6 +5,7 @@ import { Camera, Renderer, SpotLight, Scene, AmbientLight } from 'troisjs';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 import { deepCopy, hexToRgb } from '../assets/js/utils.js';
 import { initMvbWorker, buildCoreSTL, buildSpacersSTL, buildBobbinSTL, buildTurnsSTL, buildFR4BoardSTL, terminateWorker } from '../assets/js/mvbRuntime.js';
+import { enrichMagnetic } from '../assets/js/mkfRuntime.js';
 </script>
 
 <script>
@@ -311,10 +312,9 @@ export default {
       const material = this.createMaterial(color, options);
       const mesh = markRaw(new Mesh(geometry, material));
       
-      mesh.rotation.x = -Math.PI / 2;
       mesh.rotation.y = 0;
       mesh.rotation.z = 0;
-      
+
       return mesh;
     },
 
@@ -330,16 +330,17 @@ export default {
       let dx = size.z / 2 + Math.abs(size.x / 2 / Math.tan(fovh / 2));
       let dy = size.z / 2 + Math.abs(size.y / 2 / Math.tan(fov / 2));
       let cameraZ = Math.max(dx, dy);
-      let cameraY = size.y;
+      let cameraY = 0;
 
       if (offset !== undefined && offset !== 0) cameraZ *= offset;
-      if (offsetY !== undefined && offsetY !== 0) cameraY *= offsetY;
+      if (offsetY !== undefined && offsetY !== 0) cameraY = size.y * offsetY;
 
       camera.position.set(0, cameraY, cameraZ);
 
       const minZ = boundingBox.min.z;
       const cameraToFarEdge = (minZ < 0) ? -minZ + cameraZ : cameraZ - minZ;
 
+      camera.near = cameraToFarEdge * 0.001;
       camera.far = cameraToFarEdge * 30;
       camera.updateProjectionMatrix();
 
@@ -389,20 +390,23 @@ export default {
           return;
         }
 
-        // Pass full magnetic to WASM — it runs magnetic_autocomplete_safe internally.
-        // Deep-clone to strip Vue reactive proxies before postMessage.
-        const mag = JSON.parse(JSON.stringify(magnetic));
-        const stlOpts = { tolMm: 0.5, angTol: 0.5, binary: true };
+        // Pre-enrich via MKF worker (already running) so MVB++ skips its internal
+        // autocomplete and goes straight to geometry — one autocomplete total.
+        let mag;
+        try {
+          mag = await enrichMagnetic(JSON.parse(JSON.stringify(magnetic)));
+        } catch (e) {
+          mag = JSON.parse(JSON.stringify(magnetic));
+        }
 
         const group = markRaw(new Group());
 
-        // Detect toroidal from functional shape family
-        const shapeFamily = core.functionalDescription?.shape?.family?.toLowerCase() ?? '';
+        const shapeFamily = mag.core?.functionalDescription?.shape?.family?.toLowerCase() ?? '';
         const isToroidal = shapeFamily === 't' || shapeFamily === 'toroidal';
 
         if (this.showCore) {
           try {
-            const buf = await buildCoreSTL(mag, stlOpts);
+            const buf = await buildCoreSTL(mag);
             if (buf) {
               this.coreMesh = this.addMeshFromSTL(buf, this.coreColor, { metalness: 0.1, roughness: 0.9 });
               if (this.coreMesh) { this.coreMesh.visible = this.internalShowCore; group.add(this.coreMesh); }
@@ -410,7 +414,7 @@ export default {
           } catch (err) { console.warn('Could not build core:', err.message); }
 
           try {
-            const buf = await buildSpacersSTL(mag, stlOpts);
+            const buf = await buildSpacersSTL(mag);
             if (buf) {
               const m = this.addMeshFromSTL(buf, COMPONENT_COLORS.spacer, { metalness: 0.1, roughness: 0.6 });
               if (m) { m.visible = this.internalShowCore; group.add(m); }
@@ -418,14 +422,14 @@ export default {
           } catch (err) { /* no spacers — normal */ }
         }
 
-        const coil = magnetic.coil || {};
+        const coil = mag.coil || {};
         const isDummyBobbin = coil.bobbin === 'Dummy' || coil.bobbin === '' || coil.bobbin == null;
         const hasBobbinData = coil.bobbin?.processedDescription &&
           Object.keys(coil.bobbin.processedDescription).length > 0;
 
         if (this.showBobbin && !isToroidal && !isDummyBobbin && hasBobbinData) {
           try {
-            const buf = await buildBobbinSTL(mag, stlOpts);
+            const buf = await buildBobbinSTL(mag);
             if (buf) {
               this.bobbinMesh = this.addMeshFromSTL(buf, this.bobbinColor, { metalness: 0.1, roughness: 0.7 });
               if (this.bobbinMesh) { this.bobbinMesh.visible = this.internalShowBobbin; group.add(this.bobbinMesh); }
@@ -443,7 +447,7 @@ export default {
 
         if (this.showTurns && shouldBuildFR4) {
           try {
-            const buf = await buildFR4BoardSTL(mag, stlOpts);
+            const buf = await buildFR4BoardSTL(mag);
             if (buf) {
               const m = this.addMeshFromSTL(buf, COATING_COLORS.fr4, { metalness: 0.0, roughness: 0.8, transparent: true, opacity: 0.4 });
               if (m) { m.visible = this.internalShowTurns; group.add(m); this.turnsMeshes.push(m); }
@@ -453,7 +457,7 @@ export default {
 
         if (this.showTurns && hasTurnsData) {
           try {
-            const buf = await buildTurnsSTL(mag, stlOpts);
+            const buf = await buildTurnsSTL(mag);
             if (buf) {
               const m = this.addMeshFromSTL(buf, this.turnsColor, { metalness: 0.2, roughness: 0.6 });
               if (m) { m.visible = this.internalShowTurns; group.add(m); this.turnsMeshes.push(m); }
@@ -463,9 +467,10 @@ export default {
 
         // Add group to scene
         if (group.children.length > 0) {
+          group.rotation.x = isToroidal ? -Math.PI / 2 : 0;
           scene.add(group);
           this.currentGroup = group;
-          this.fitCameraToCenteredObject(camera, group, this.offset, 1.5);
+          this.fitCameraToCenteredObject(camera, group, this.offset, isToroidal ? 1.5 : 0);
         }
 
         this.$emit("buildComplete");
