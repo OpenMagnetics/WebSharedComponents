@@ -202,6 +202,10 @@ export default {
                 axisLabel: {
                     fontSize: this.axisLabelFontSize,
                     color: this.textColor,
+                    rotate: this.xAxisOptions.labelRotate ?? 0,
+                    interval: this.xAxisOptions.labelInterval ?? 'auto',
+                    hideOverlap: this.xAxisOptions.hideLabelOverlap ?? true,
+                    margin: this.xAxisOptions.labelMargin ?? 8,
 
                     formatter: (value) => {
                         const aux = formatUnit(value, this.xAxisOptions.unit);
@@ -344,9 +348,19 @@ export default {
                         })
                     }
 
+                    // Handle flat data (constant values) by adding padding
+                    let finalMin = yMinimum;
+                    let finalMax = yMaximum;
+                    if (yMinimum === yMaximum || (Math.abs(yMaximum - yMinimum) / Math.abs(yMaximum) < 0.01)) {
+                        const baseValue = yMinimum;
+                        const padding = Math.max(Math.abs(baseValue) * 0.2, 0.0001);
+                        finalMin = Math.max(0, baseValue - padding);
+                        finalMax = baseValue + padding;
+                    }
+
                     limits.yAxis.push({
-                        min: (this.forceAxisMin && this.forceAxisMin[index] !== null && this.forceAxisMin[index] !== undefined) ? this.forceAxisMin[index] : yMinimum,
-                        max: (this.forceAxisMax && this.forceAxisMax[index] !== null && this.forceAxisMax[index] !== undefined) ? this.forceAxisMax[index] : yMaximum,
+                        min: (this.forceAxisMin && this.forceAxisMin[index] !== null && this.forceAxisMin[index] !== undefined) ? this.forceAxisMin[index] : finalMin,
+                        max: (this.forceAxisMax && this.forceAxisMax[index] !== null && this.forceAxisMax[index] !== undefined) ? this.forceAxisMax[index] : finalMax,
                     });
                 })
             }
