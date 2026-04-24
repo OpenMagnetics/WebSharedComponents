@@ -94,7 +94,7 @@ export default {
         },
         linePaddings:{
             type: Object,
-            default: {top: 1.1, left: 1, right: 1, bottom: 1.1}
+            default: {top: 1.2, left: 1, right: 1, bottom: 1.2}
         },
         toolbox:{
             type: Boolean,
