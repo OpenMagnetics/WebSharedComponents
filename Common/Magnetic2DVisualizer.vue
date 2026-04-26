@@ -467,6 +467,42 @@ export default {
                 this.tryingToPlot = false;
             }
         },
+        // Validate that wire data is complete for temperature plot
+        validateWiresForTemperaturePlot() {
+            const coil = this.modelValue.magnetic?.coil;
+            if (!coil?.functionalDescription?.length) {
+                return { valid: false, error: 'No windings defined' };
+            }
+
+            for (let i = 0; i < coil.functionalDescription.length; i++) {
+                const winding = coil.functionalDescription[i];
+                const wire = winding?.wire;
+                if (!wire) {
+                    return { valid: false, error: `Winding ${i} has no wire defined` };
+                }
+
+                // Check wire type and required dimensions
+                const wireType = wire.type;
+                if (wireType === 'round' || wireType === 'litz') {
+                    if (!wire.conductingDiameter?.nominal) {
+                        return { 
+                            valid: false, 
+                            error: `Winding ${i} (${wire.name || 'unnamed'}): Round/litz wire missing conductingDiameter. Please load a wire from the catalog or define the wire dimensions.` 
+                        };
+                    }
+                } else if (wireType === 'rectangular' || wireType === 'foil' || wireType === 'planar') {
+                    if (!wire.conductingWidth?.nominal || !wire.conductingHeight?.nominal) {
+                        return { 
+                            valid: false, 
+                            error: `Winding ${i} (${wire.name || 'unnamed'}): Rectangular/foil/planar wire missing conductingWidth/Height. Please load a wire from the catalog or define the wire dimensions.` 
+                        };
+                    }
+                }
+            }
+
+            return { valid: true };
+        },
+
         // Temperature field plot - uses existing WASM function
         async calculateTemperatureFieldPlot() {
             if (this.modelValue.magnetic == null) {
@@ -485,38 +521,39 @@ export default {
                 return;
             }
 
+            // Validate wire data before calling temperature plot
+            const validation = this.validateWiresForTemperaturePlot();
+            if (!validation.valid) {
+                console.error('[Temperature Plot] Validation failed:', validation.error);
+                this.$emit('errorInImage', `Temperature plot error: ${validation.error}`);
+                this.posting = false;
+                this.tryingToPlot = false;
+                return;
+            }
+
             try {
                 const mkf = await waitForMkf();
                 const settings = JSON.parse(await mkf.get_settings());
                 settings.painterSimpleLitz = true;
                 settings.painterAdvancedLitz = false;
                 await mkf.set_settings(JSON.stringify(settings));
-
-                console.log('[Temperature Plot] Calling plot_temperature_field...');
                 // Ensure color values are plain strings (not reactive objects)
                 const textColorStr = String(this.textColor || '#ffffff');
                 const bgColorStr = String(this.backgroundColor || '#1a1a1a');
-                console.log('[Temperature Plot] Colors being passed:', { textColor: textColorStr, bgColor: bgColorStr });
                 const result = await mkf.plot_temperature_field(
                     JSON.stringify(this.modelValue.magnetic),
                     JSON.stringify(this.modelValue.inputs.operatingPoints[this.operatingPointIndex]),
                     textColorStr,
                     bgColorStr
                 );
-                console.log('[Temperature Plot] Result received, length:', result?.length || 0);
-                console.log('[Temperature Plot] Result starts with:', result?.substring(0, 100) || 'empty');
                 // Check if result is an error message (doesn't start with <svg)
                 if (!result?.startsWith('<svg')) {
                     console.error('[Temperature Plot] ERROR - Result is not an SVG:', result);
+                    this.$emit('errorInImage', 'Temperature plot error: ' + result);
                     this.posting = false;
                     this.tryingToPlot = false;
                     return;
                 }
-                // Check if result contains Core_Segment (for debugging missing toroidal core)
-                const hasCoreSegments = result?.includes('Core_Segment') || false;
-                const hasTurns = result?.includes('L_') || result?.includes('Turn_') || false;
-                console.log('[Temperature Plot] SVG contains Core_Segment:', hasCoreSegments);
-                console.log('[Temperature Plot] SVG contains turns:', hasTurns);
                 this.processSvgResult(result);
             } catch (error) {
                 console.error('[Temperature Plot] Error:', error);
