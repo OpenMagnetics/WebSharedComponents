@@ -483,11 +483,18 @@ export default {
 
                 // Check wire type and required dimensions
                 const wireType = wire.type;
-                if (wireType === 'round' || wireType === 'litz') {
+                if (wireType === 'round') {
                     if (!wire.conductingDiameter?.nominal) {
-                        return { 
-                            valid: false, 
-                            error: `Winding ${i} (${wire.name || 'unnamed'}): Round/litz wire missing conductingDiameter. Please load a wire from the catalog or define the wire dimensions.` 
+                        return {
+                            valid: false,
+                            error: `Winding ${i} (${wire.name || 'unnamed'}): Round wire missing conductingDiameter. Please load a wire from the catalog or define the wire dimensions.`
+                        };
+                    }
+                } else if (wireType === 'litz') {
+                    if (!wire.strand?.conductingDiameter) {
+                        return {
+                            valid: false,
+                            error: `Winding ${i} (${wire.name || 'unnamed'}): Litz wire missing strand conductingDiameter. Please load a wire from the catalog or define the wire dimensions.`
                         };
                     }
                 } else if (wireType === 'rectangular' || wireType === 'foil' || wireType === 'planar') {
