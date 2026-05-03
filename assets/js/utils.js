@@ -890,6 +890,15 @@ export async function checkAndFixMas(mas, mkf=null) {
                 }
             }
         }
+        // Fix wire for any extra windings beyond numberWindings
+        // (e.g. DMC has turnsRatios:[] so numberWindings=1 but may have 2-4 windings)
+        for (let i = numberWindings; i < mas.magnetic.coil.functionalDescription.length; i++) {
+            if (mas.magnetic.coil.functionalDescription[i].wire == null ||
+                mas.magnetic.coil.functionalDescription[i].wire == "") {
+                mas.magnetic.coil.functionalDescription[i].wire = "Dummy";
+            }
+        }
+
         // Ensure excitationsPerWinding matches the number of windings
         if (mas.inputs != null && mas.inputs.operatingPoints != null) {
             for (const op of mas.inputs.operatingPoints) {

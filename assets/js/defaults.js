@@ -129,6 +129,45 @@ export const filterMas = {
     "outputs": []
 }
 
+export const dmcMas = {
+    "inputs": {
+        "designRequirements": {
+            "name": "My Design Requirements",
+            "topology": "DifferentialModeChoke",
+            "magnetizingInductance": {
+                "minimum": 100e-6
+            },
+            "turnsRatios": [],
+        },
+        "operatingPoints": [],
+    },
+    "magnetic": {
+        "coil": {
+            "bobbin": "Dummy",
+            "functionalDescription": [
+                {
+                    "name": "Primary",
+                    "numberTurns": 0,
+                    "numberParallels": 0,
+                    "isolationSide": "primary",
+                    "wire": "Dummy"
+                }
+            ],
+        },
+        "core": {
+            "name": "DummyCore",
+            "functionalDescription": {
+                "type": "two-piece set",
+                "material": "",
+                "shape": "",
+                "gapping": [],
+                "numberStacks": 1
+            }
+        },
+    },
+    "outputs": []
+}
+
 export const isolationSideOrdered = [
     "Primary",
     "Secondary",
@@ -340,6 +379,7 @@ export const minimumMaximumScalePerParameter = {
     "weight": {"min": 0.001, "max": 1e6},
     "altitude": {"min": 1, "max": 10000},
     "inductance": {"min": 1e-9, "max": 1},
+    "capacitance": {"min": 1e-15, "max": 1},
     "impedance": {"min": 1e-3, "max": 1e9},
     "leakageInductance": {"min": 1e-9, "max": 1e-6},
     "strayCapacitance": {"min": 1e-12, "max": 1e-6},
