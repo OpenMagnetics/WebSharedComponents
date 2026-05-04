@@ -260,6 +260,8 @@ export default {
         return {
             options,
             updateOpts,
+            chartVisible: false,
+            _visibilityObserver: null,
         }
     },
     watch: {
@@ -280,6 +282,36 @@ export default {
         // Initialize series and yAxis from data prop
         if (this.data && this.data.length > 0) {
             this.processOptions(this.options);
+        }
+
+        // Defer ECharts init until the chart wrapper actually has dimensions.
+        // Without this, mounting the chart inside a hidden tab/collapse triggers
+        // a "Can't get DOM width or height" warning from ECharts.
+        const el = this.$refs.chartWrapper;
+        if (el && typeof IntersectionObserver !== 'undefined') {
+            const checkSize = () => {
+                if (el.clientWidth > 0 && el.clientHeight > 0) {
+                    this.chartVisible = true;
+                    if (this._visibilityObserver) {
+                        this._visibilityObserver.disconnect();
+                        this._visibilityObserver = null;
+                    }
+                    return true;
+                }
+                return false;
+            };
+            if (!checkSize()) {
+                this._visibilityObserver = new IntersectionObserver(() => { checkSize(); });
+                this._visibilityObserver.observe(el);
+            }
+        } else {
+            this.chartVisible = true;
+        }
+    },
+    beforeUnmount() {
+        if (this._visibilityObserver) {
+            this._visibilityObserver.disconnect();
+            this._visibilityObserver = null;
         }
     },
     created() {
@@ -589,5 +621,7 @@ export default {
 </script>
 
 <template>
-    <v-chart v-if="options.yAxis.length > 0" class="chart" :option="options" autoresize :update-options="updateOpts" @click="onClick" :style="chartStyle"/>
+    <div ref="chartWrapper" class="chart" :style="chartStyle">
+        <v-chart v-if="chartVisible && options.yAxis.length > 0" class="chart" :option="options" autoresize :update-options="updateOpts" @click="onClick" style="width: 100%; height: 100%;"/>
+    </div>
 </template>
