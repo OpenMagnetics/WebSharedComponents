@@ -47,15 +47,15 @@ export default {
         },
         labelBgColor: {
             type: [String, Object],
-            default: () => ({ backgroundColor: 'var(--p-surface-800)' }),
+            default: () => ({ backgroundColor: 'transparent' }),
         },
         valueBgColor: {
             type: [String, Object],
-            default: () => ({ backgroundColor: 'var(--p-surface-600)' }),
+            default: () => ({ backgroundColor: 'var(--bs-white, #ffffff)', border: '1px solid var(--bs-border-color, #ced4da)' }),
         },
         textColor: {
             type: [String, Object],
-            default: () => ({ color: 'var(--p-surface-50)' }),
+            default: () => ({ color: 'var(--bs-body-color, #333333)' }),
         },
     },
     data() {
