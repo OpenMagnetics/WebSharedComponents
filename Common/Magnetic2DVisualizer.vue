@@ -129,6 +129,14 @@ export default {
             type: String,
             default: "0xfff05b",  // original yellow
         },
+        spacerColor: {
+            type: String,
+            default: "0x3b3b3b",  // original dark gray
+        },
+        drawSpacer: {
+            type: Boolean,
+            default: true,
+        },
     },
     data() {
         return {
@@ -395,6 +403,8 @@ export default {
                 const settings = JSON.parse(await mkf.get_settings());
                 settings.painterColorInsulation = this.insulationColor;
                 settings.painterColorMargin = this.marginColor;
+                settings.painterColorSpacer = this.spacerColor;
+                settings.painterDrawSpacer = this.drawSpacer;
                 await mkf.set_settings(JSON.stringify(settings));
                 const result = await mkf.plot_turns(JSON.stringify(this.modelValue.magnetic));
                 this.processSvgResult(result);
