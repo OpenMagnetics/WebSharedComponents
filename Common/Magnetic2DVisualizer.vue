@@ -121,6 +121,14 @@ export default {
             type: Boolean,
             default: false,
         },
+        insulationColor: {
+            type: String,
+            default: "0xfff05b",  // original yellow
+        },
+        marginColor: {
+            type: String,
+            default: "0xfff05b",  // original yellow
+        },
     },
     data() {
         return {
@@ -383,6 +391,11 @@ export default {
 
             try {
                 const mkf = await waitForMkf();
+                // Apply insulation/margin colors before plotting
+                const settings = JSON.parse(await mkf.get_settings());
+                settings.painterColorInsulation = this.insulationColor;
+                settings.painterColorMargin = this.marginColor;
+                await mkf.set_settings(JSON.stringify(settings));
                 const result = await mkf.plot_turns(JSON.stringify(this.modelValue.magnetic));
                 this.processSvgResult(result);
             } catch (error) {
