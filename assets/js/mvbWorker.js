@@ -66,7 +66,17 @@ function decodeWasmException(mod, e) {
         }
         return `WASM exception ptr=${e}` + (tries.length ? ` [tries: ${tries.join(', ')}]` : '');
     }
-    return e instanceof Error ? (e.stack || e.message) : String(e);
+    if (e instanceof Error) {
+        // Prefer message when it carries our tagged content; stack often
+        // shadows it with a raw "addr@http..." trace from the wasm runtime.
+        const msg = e.message || '';
+        if (msg && (msg.startsWith('[mvbpp]') || msg.startsWith('[MVB]')
+                    || msg.includes('ctor failed') || msg.includes('schema'))) {
+            return msg;
+        }
+        return msg || e.stack || String(e);
+    }
+    return String(e);
 }
 
 const DEFAULTS = { scale: 1.0, wireSeg: 16, coreSeg: 32, tolMm: 0.1, angTol: 0.1, binary: true };
