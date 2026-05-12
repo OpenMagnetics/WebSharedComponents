@@ -39,15 +39,15 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: () => ({ fontSize: '0.875rem' })
         },
         valueBgColor: {
             type: [String, Object],
-            default: "bg-light",
+            default: () => ({ backgroundColor: 'var(--p-form-field-background, #ffffff)' })
         },
         textColor: {
             type: [String, Object],
-            default: "text-white",
+            default: () => ({ color: 'var(--p-form-field-color, #333333)' })
         },
     },
     data() {
@@ -206,7 +206,7 @@ export default {
         v-bind="$attrs"
         :style="combinedStyle([valueFontSize, extraStyleClass, valueBgColor, textColor])"
         class="unit-select"
-        :class="combinedClass([valueFontSize, extraStyleClass, valueBgColor, textColor, disabled? 'border-0':'', extraStyleClass==''? ' text-center': ''])"
+        :class="combinedClass([valueFontSize, extraStyleClass, valueBgColor, textColor, disabled? 'unit-select-disabled':'', extraStyleClass==''? 'unit-select-centered': ''])"
         :value="modelValueInRange"
         @change="$emit('update:modelValue', Number($event.target.value))"
         :disabled="readOnly || disabled">
@@ -237,6 +237,14 @@ export default {
     box-sizing: border-box;
     height: 1.75rem;
     line-height: 1.25rem;
+}
+
+.unit-select-centered {
+    text-align: center;
+}
+
+.unit-select-disabled {
+    border: 0;
 }
 
 .unit-select:focus {

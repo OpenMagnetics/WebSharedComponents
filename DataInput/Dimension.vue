@@ -95,11 +95,11 @@ export default {
         },
         labelWidthProportionClass:{
             type: String,
-            default: 'col-xs-12 col-md-7'
+            default: ''
         },
         valueWidthProportionClass:{
             type: String,
-            default: 'col-xs-8 col-md-5'
+            default: ''
         },
         labelBgColor: {
             type: [String, Object],
@@ -107,11 +107,11 @@ export default {
         },
         valueBgColor: {
             type: [String, Object],
-            default: () => ({ backgroundColor: 'var(--bs-white, #ffffff)', border: '1px solid var(--bs-border-color, #ced4da)' })
+            default: () => ({ backgroundColor: 'var(--p-form-field-background, #ffffff)', border: '1px solid var(--p-form-field-border-color, #ced4da)' })
         },
         textColor: {
             type: [String, Object],
-            default: () => ({ color: 'var(--bs-body-color, #333333)' })
+            default: () => ({ color: 'var(--p-form-field-color, #333333)' })
         },
         unitExtraStyleClass:{
             type: String,
@@ -309,14 +309,14 @@ export default {
 }
 </script>
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex" ref="container">
-        <div class="row align-items-center">
+    <div :data-cy="dataTestLabel + '-container'" class="dim-container" ref="container">
+        <div class="dim-row">
             <label
                 :style="combinedStyle([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 v-if="replaceTitle == null"
                 :data-cy="dataTestLabel + '-title'"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
-                class="dim-label p-0"
+                class="dim-label"
                 v-tooltip="tooltip"
             >
                 {{shortenedName}}
@@ -326,19 +326,19 @@ export default {
                 v-if="replaceTitle != null && replaceTitle != ''"
                 :data-cy="dataTestLabel + '-title'"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
-                class="dim-label p-0"
+                class="dim-label"
                 v-tooltip="tooltip"
             >
                 {{replaceTitle}}
             </label>
-            <div v-if="localData.scaledValue != null" class="row m-0 px-0 align-items-center" :class="(justifyContent? 'd-flex justify-content-end ' : '') + valueWidthProportionClass">
+            <div v-if="localData.scaledValue != null" class="dim-value-row" :class="(justifyContent? 'dim-value-row-end ' : '') + valueWidthProportionClass">
                 <input type="number"
                     :style="combinedStyle([disabled? labelBgColor : valueBgColor, textColor, valueFontSize])"
                     ref="inputRef"
                     :disabled="disabled"
                     :data-cy="dataTestLabel + '-number-input'"
-                    :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, disabled? 'border-0' : '', unit == null && altUnit == null? 'col-12' : 'col-8'])"
-                    class="dim-input m-0 pe-0 ps-1"
+                    :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, disabled? 'dim-input-borderless' : '', unit == null && altUnit == null? 'dim-input-full' : 'dim-input-with-unit'])"
+                    class="dim-input"
                     @change="changeScaledValue($event.target.value)"
                     :value="removeTrailingZeroes(localData.scaledValue * visualScale, numberDecimals)"
                 >
@@ -355,35 +355,60 @@ export default {
                     :valueBgColor="valueBgColor"
                     :valueFontSize="valueFontSize"
                     :textColor="textColor"
-                    class="m-0 px-0 col-4"
+                    class="dim-unit"
                     @update:modelValue="changeMultiplier"/>
                 <label
                     :style="combinedStyle([labelBgColor, textColor, valueFontSize, unitExtraStyleClass])"
                     v-if="unit == null && altUnit != ''"
-                    class="px-2 pt-1 px-0"
+                    class="dim-alt-unit"
                     :data-cy="dataTestLabel + '-DimensionUnit-text'"
-                    :class="unit == null && justifyContent? 'col-0':'col-4'"
                 >{{altUnit}}</label>
             </div>
         </div>
-        <div class="row">
-            <label :data-cy="dataTestLabel + '-error-text'" class="dim-error col-12 pt-1">{{errorMessages}}</label>
+        <div class="dim-error-row">
+            <label :data-cy="dataTestLabel + '-error-text'" class="dim-error">{{errorMessages}}</label>
         </div>
     </div>
 </template>
 
 <style scoped>
+.dim-container {
+    width: 100%;
+}
+
+.dim-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
 .dim-label {
     border-radius: var(--p-border-radius);
     font-size: clamp(0.6rem, 2cqi, 0.875rem);
     overflow: hidden;
     white-space: nowrap;
     container-type: inline-size;
+    flex: 0 0 auto;
+    padding: 0;
+}
+
+.dim-value-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.dim-value-row-end {
+    justify-content: flex-end;
 }
 
 .dim-input {
     text-align: end;
     padding: 0.25rem 0 0.25rem 0.25rem;
+    margin: 0;
     border: 1px solid var(--p-surface-400);
     border-radius: var(--p-border-radius) 0 0 var(--p-border-radius);
     border-right: none;
@@ -393,6 +418,21 @@ export default {
     box-sizing: border-box;
     height: 1.75rem;
     line-height: 1.25rem;
+    min-width: 0;
+}
+
+.dim-input-full {
+    flex: 1 1 100%;
+    border-radius: var(--p-border-radius);
+    border-right: 1px solid var(--p-surface-400);
+}
+
+.dim-input-with-unit {
+    flex: 1 1 auto;
+}
+
+.dim-input-borderless {
+    border: 0 !important;
 }
 
 .dim-input:focus {
@@ -405,10 +445,24 @@ export default {
     cursor: default;
 }
 
+.dim-unit {
+    flex: 0 0 auto;
+}
+
 :deep(.unit-select) {
     border-radius: 0 var(--p-border-radius) var(--p-border-radius) 0;
     height: 1.75rem;
     line-height: 1.25rem;
+}
+
+.dim-alt-unit {
+    padding: 0.25rem 0.5rem;
+    flex: 0 0 auto;
+}
+
+.dim-error-row {
+    display: flex;
+    width: 100%;
 }
 
 .dim-error {
@@ -416,5 +470,7 @@ export default {
     color: var(--p-red-400);
     font-size: 0.9em;
     white-space: pre-wrap;
+    width: 100%;
+    padding-top: 0.25rem;
 }
 </style>

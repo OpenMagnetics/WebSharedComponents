@@ -78,15 +78,15 @@ export default {
         },
         labelWidthProportionClass:{
             type: String,
-            default: 'col-5'
+            default: ''
         },
         valueWidthProportionClass:{
             type: String,
-            default: 'col-7'
+            default: ''
         },
         inputStyleClass:{
             type: String,
-            default: 'col-7'
+            default: ''
         },
         labelBgColor: {
             type: [String, Object],
@@ -94,11 +94,11 @@ export default {
         },
         valueBgColor: {
             type: [String, Object],
-            default: () => ({ backgroundColor: 'var(--bs-white, #ffffff)', border: '1px solid var(--bs-border-color, #ced4da)' }),
+            default: () => ({ backgroundColor: 'var(--p-form-field-background, #ffffff)', border: '1px solid var(--p-form-field-border-color, #ced4da)' }),
         },
         textColor: {
             type: [String, Object],
-            default: () => ({ color: 'var(--bs-body-color, #333333)' }),
+            default: () => ({ color: 'var(--p-form-field-color, #333333)' }),
         },
     },
     data() {
@@ -217,13 +217,13 @@ export default {
 </script>
 
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex" ref="container">
-        <div class="row align-items-center ">
+    <div :data-cy="dataTestLabel + '-container'" class="dim-ro-container" ref="container">
+        <div class="dim-ro-row">
             <label
                 v-if="replaceTitle == null"
                 :style="combinedStyle([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
-                class="dimension-readonly-label pe-0 ps-0"
+                class="dimension-readonly-label"
                 :class="combinedClass([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 v-tooltip="tooltip"
             >
@@ -233,20 +233,20 @@ export default {
                 v-else
                 :style="combinedStyle([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
-                class="dimension-readonly-label pe-0 ps-0"
+                class="dimension-readonly-label"
                 :class="combinedClass([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 v-tooltip="tooltip"
             >
                 {{replaceTitle}}<sub>{{subscriptName}}</sub>
             </label>
-            <div v-show="localData.scaledValue != null" :class="valueWidthProportionClass" class="container m-0 px-0">
-                <div class="row m-0 px-0 ">
-                    <input 
+            <div v-show="localData.scaledValue != null" :class="valueWidthProportionClass" class="dim-ro-value-wrap">
+                <div class="dim-ro-value-row">
+                    <input
                         :style="combinedStyle([valueFontSize, labelBgColor, textColor])"
                         :disabled="true"
                         :data-cy="dataTestLabel + '-number-label'"
                         type="number"
-                        class="m-0 px-0 text-end border-0 col-8 pe-1"
+                        class="dim-ro-input"
                         :class="combinedClass([valueFontSize, labelBgColor, textColor])"
                         :value="visuallyScaledValue"
                         ref="inputRef"
@@ -262,15 +262,15 @@ export default {
                         :valueFontSize="valueFontSize"
                         :valueBgColor="labelBgColor"
                         :textColor="textColor"
-                        :extraStyleClass="'text-start'"
+                        :extraStyleClass="''"
                         :unit="unit"
-                        class="m-0 py-0 px-0 col-4 border-0 "
+                        class="dim-ro-unit"
                     />
                     <label
                         :style="combinedStyle([labelBgColor, textColor, valueFontSize])"
                         :data-cy="dataTestLabel + '-DimensionUnit-text'"
                         v-if="unit == null"
-                        class="ms-2 pt-1 px-0 col-2"
+                        class="dim-ro-alt-unit"
                     >
                         {{altUnit}}
                     </label>
@@ -294,12 +294,55 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
+.dim-ro-container {
+  width: 100%;
+}
+
+.dim-ro-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dim-ro-value-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dim-ro-value-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.dim-ro-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: end;
+  padding: 0 0.25rem 0 0;
+  border: 0;
+  background-color: transparent;
+}
+
+.dim-ro-unit {
+  flex: 0 0 auto;
+  border: 0 !important;
+}
+
+.dim-ro-alt-unit {
+  margin-left: 0.5rem;
+  padding-top: 0.25rem;
+}
+
 .dimension-readonly-label {
   border-radius: var(--p-border-radius);
   font-size: clamp(0.6rem, 2cqi, 0.875rem);
   overflow: hidden;
   white-space: nowrap;
   container-type: inline-size;
+  flex: 0 0 auto;
+  padding: 0;
 }
 
 .text-danger {
@@ -308,9 +351,10 @@ input[type=number] {
 
 input {
   border-radius: var(--p-border-radius);
-  color: var(--bs-body-color, #333333);
-  background-color: var(--bs-white, #ffffff);
-  border: 1px solid var(--bs-border-color, #ced4da);
+  color: var(--p-form-field-color, #333333);
+  background-color: var(--p-form-field-background, #ffffff);
+  border: 1px solid var(--p-form-field-border-color, #ced4da);
+  font-family: var(--p-font-family);
 }
 
 </style>

@@ -58,11 +58,11 @@ export default {
         },
         labelWidthProportionClass: {
             type: String,
-            default: "col-4",
+            default: "",
         },
         selectStyleClass: {
             type: String,
-            default: "col-8",
+            default: "",
         },
         valueFontSize: {
             type: [String, Object],
@@ -78,11 +78,11 @@ export default {
         },
         valueBgColor: {
             type: [String, Object],
-            default: () => ({ backgroundColor: 'var(--bs-white, #ffffff)', border: '1px solid var(--bs-border-color, #ced4da)' }),
+            default: () => ({ backgroundColor: 'var(--p-form-field-background, #ffffff)', border: '1px solid var(--p-form-field-border-color, #ced4da)' }),
         },
         textColor: {
             type: [String, Object],
-            default: () => ({ color: 'var(--bs-body-color, #333333)' }),
+            default: () => ({ color: 'var(--p-form-field-color, #333333)' }),
         },
     },
     data() {
@@ -184,15 +184,15 @@ export default {
 </script>
 
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex">
-        <div class="row">
+    <div :data-cy="dataTestLabel + '-container'" class="efl-container">
+        <div class="efl-row">
             <input
                 :style="combinedStyle([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
                 v-if="altText != null && !titleSameRow"
                 :data-cy="dataTestLabel + '-alt-title-label'"
                 type="text"
                 :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
-                class="efl-label ms-3 col-11 p-0 mb-2 border-0"
+                class="efl-label efl-alt-input"
                 @change="$emit('changeText', $event.target.value)"
                 :value="altText">
             <label
@@ -201,28 +201,25 @@ export default {
                 :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
                 v-tooltip="tooltip"
-                class="efl-label p-0">{{replaceTitle == null? toTitleCase(name) : replaceTitle}}
+                class="efl-label">{{replaceTitle == null? toTitleCase(name) : replaceTitle}}
             </label>
         </div>
-        <div class="row" :class="justifyContent? 'd-flex justify-content-between' : ''">
+        <div class="efl-row" :class="justifyContent? 'efl-row-between' : ''">
             <label
                 :style="combinedStyle([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-same-row-label'"
                 v-if="titleSameRow"
                 :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
                 v-tooltip="tooltip"
-                class="efl-label m-0 p-0">{{replaceTitle == null? toTitleCase(name) : replaceTitle}}
+                class="efl-label efl-label-inline">{{replaceTitle == null? toTitleCase(name) : replaceTitle}}
             </label>
-            <div  v-if="!titleSameRow" class=" col-sm-0 col-md-2">
-            </div>
             <select
                 :style="combinedStyle([selectStyleClass, valueFontSize, disabled? labelBgColor : valueBgColor, textColor])"
                 :disabled="disabled"
                 :data-cy="dataTestLabel + '-select'"
-                :class="combinedClass([selectStyleClass, valueFontSize, disabled? labelBgColor : valueBgColor, textColor, disabled? 'border-0 text-end':''])"
-                class="efl-select py-1 px-2 m-0 mt-1 pe-5"
+                :class="combinedClass([selectStyleClass, valueFontSize, disabled? labelBgColor : valueBgColor, textColor, disabled? 'efl-select-disabled':''])"
+                class="efl-select"
                 @change="changeOption"
-                style="width:auto; max-height: 3em;"
                 :value="localData"
             >
                 <option :disabled="optionsToDisable.includes(value)" v-for="value in computedOptions" :key="value" :value="value">
@@ -234,12 +231,41 @@ export default {
 </template>
 
 <style scoped>
+.efl-container {
+    width: 100%;
+}
+
+.efl-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.efl-row-between {
+    justify-content: space-between;
+}
+
 .efl-label {
     font-size: clamp(0.6rem, 2cqi, 0.875rem);
     overflow: hidden;
     white-space: nowrap;
     container-type: inline-size;
     border-radius: var(--p-border-radius);
+    padding: 0;
+    margin: 0;
+}
+
+.efl-label-inline {
+    flex: 0 0 auto;
+}
+
+.efl-alt-input {
+    margin-left: 1rem;
+    margin-bottom: 0.5rem;
+    border: 0;
+    padding: 0;
+    flex: 1 1 auto;
 }
 
 .efl-select {
@@ -254,10 +280,21 @@ export default {
     box-sizing: border-box;
     height: 1.75rem;
     line-height: 1.25rem;
+    padding: 0.25rem 2rem 0.25rem 0.5rem;
+    margin: 0.25rem 0 0 0;
+    width: auto;
+    max-height: 3em;
+    flex: 1 1 auto;
+    min-width: 0;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e9ecef' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
     background-repeat: no-repeat;
     background-position: right 0.6rem center;
     background-size: 12px 9px;
+}
+
+.efl-select-disabled {
+    border: 0;
+    text-align: end;
 }
 
 .efl-select:disabled {
