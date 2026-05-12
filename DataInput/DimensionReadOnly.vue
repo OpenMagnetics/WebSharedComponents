@@ -13,6 +13,10 @@ export default {
             type: String,
             default: null,
         },
+        tooltip:{
+            type: String,
+            default: null,
+        },
         subscriptName:{
             type: String,
             default: ""
@@ -221,6 +225,7 @@ export default {
                 :data-cy="dataTestLabel + '-title'"
                 class="dimension-readonly-label pe-0 ps-0"
                 :class="combinedClass([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
+                v-tooltip="tooltip"
             >
                 {{shortenedName}}<sub>{{subscriptName}}</sub>
             </label>
@@ -230,6 +235,7 @@ export default {
                 :data-cy="dataTestLabel + '-title'"
                 class="dimension-readonly-label pe-0 ps-0"
                 :class="combinedClass([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
+                v-tooltip="tooltip"
             >
                 {{replaceTitle}}<sub>{{subscriptName}}</sub>
             </label>

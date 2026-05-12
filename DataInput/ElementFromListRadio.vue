@@ -67,6 +67,10 @@ export default {
             type: [String, Object],
             default: () => ({ color: 'var(--p-surface-50)' }),
         },
+        optionLabels: {
+            type: Object,
+            default: null,
+        },
     },
     data() {
         return {
@@ -160,7 +164,7 @@ export default {
                     class="form-check-label"
                     :for="key + '-radio-input'"
                 >
-                    {{key}}
+                    {{ (optionLabels && optionLabels[key]) || key }}
                 </label>
 
                 <label
