@@ -7,13 +7,20 @@ let _initPromise = null;
 // mvbpp.js is compiled with MODULARIZE=1 (UMD) without EXPORT_ES6.
 // In a module worker there is no importScripts(), so we fetch the script
 // text and wrap it in new Function() to capture the createMvbpp factory.
+//
+// Paths are anchored on Vite's BASE_URL (always ends with "/") so they
+// resolve against the deployed sub-path (e.g. "/el-choker/") instead of
+// the server root. Without this, dev returns the 404 page "The server is
+// configured with a public base URL of …" which then crashes
+// new Function() with "Unexpected identifier 'server'".
+const BASE = import.meta.env.BASE_URL;
 async function init() {
     if (_initPromise) return _initPromise;
     _initPromise = (async () => {
         try {
-            const code = await (await fetch('/wasm/mvbpp.js')).text();
+            const code = await (await fetch(`${BASE}wasm/mvbpp.js`)).text();
             const createMvbpp = new Function(code + '\nreturn createMvbpp;')();
-            _mvbpp = await createMvbpp({ locateFile: (f) => `/wasm/${f}` });
+            _mvbpp = await createMvbpp({ locateFile: (f) => `${BASE}wasm/${f}` });
         } catch (e) {
             _initPromise = null;
             console.error('[MVB Worker] init failed:', e);
