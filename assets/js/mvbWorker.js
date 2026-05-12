@@ -30,18 +30,53 @@ function toBuffer(u8) {
 
 function decodeWasmException(mod, e) {
     if (typeof e === 'number') {
-        if (mod && mod.getExceptionMessage) {
-            try { return mod.getExceptionMessage(e); } catch {}
+        // Emscripten C++ exception pointer. Try every known introspection path.
+        const tries = [];
+        if (mod) {
+            // 1. Official helper (requires -sEXPORT_EXCEPTION_HANDLING_HELPERS=1).
+            if (typeof mod.getExceptionMessage === 'function') {
+                try {
+                    const r = mod.getExceptionMessage(e);
+                    if (r) return Array.isArray(r) ? r.join(': ') : String(r);
+                } catch (err) { tries.push(`getExceptionMessage:${err && err.message}`); }
+            }
+            // 2. Older helper.
+            if (typeof mod.getCppExceptionMessage === 'function') {
+                try { const r = mod.getCppExceptionMessage(e); if (r) return String(r); }
+                catch (err) { tries.push(`getCppExceptionMessage:${err && err.message}`); }
+            }
+            // 3. Manual ITANIUM ABI: pointer is to exception object; what() is offset.
+            // Try ___cxa_get_exception_ptr / what virtual-call (rarely present).
+            if (typeof mod.___cxa_get_exception_ptr === 'function' && typeof mod.UTF8ToString === 'function') {
+                try {
+                    const objPtr = mod.___cxa_get_exception_ptr(e);
+                    // Heuristic: read pointer at objPtr+4 (vptr+slot 0 typically what()).
+                    // This is unreliable; fall through silently.
+                } catch (err) { tries.push(`cxaGet:${err && err.message}`); }
+            }
+            // 4. Last resort: UTF8 from raw ptr (works iff exception WAS a const char*).
+            if (typeof mod.UTF8ToString === 'function') {
+                try {
+                    const msg = mod.UTF8ToString(e);
+                    if (msg && msg.length > 0 && msg.length < 512 && /^[\x20-\x7e\n\t]+$/.test(msg)) {
+                        return msg;
+                    }
+                } catch (err) { tries.push(`utf8:${err && err.message}`); }
+            }
         }
-        if (mod && mod.UTF8ToString) {
-            try {
-                const msg = mod.UTF8ToString(e);
-                if (msg && msg.length < 512) return msg;
-            } catch {}
-        }
-        return `WASM exception ptr=${e}`;
+        return `WASM exception ptr=${e}` + (tries.length ? ` [tries: ${tries.join(', ')}]` : '');
     }
-    return e instanceof Error ? e.message : String(e);
+    if (e instanceof Error) {
+        // Prefer message when it carries our tagged content; stack often
+        // shadows it with a raw "addr@http..." trace from the wasm runtime.
+        const msg = e.message || '';
+        if (msg && (msg.startsWith('[mvbpp]') || msg.startsWith('[MVB]')
+                    || msg.includes('ctor failed') || msg.includes('schema'))) {
+            return msg;
+        }
+        return msg || e.stack || String(e);
+    }
+    return String(e);
 }
 
 const DEFAULTS = { scale: 1.0, wireSeg: 16, coreSeg: 32, tolMm: 0.1, angTol: 0.1, binary: true };

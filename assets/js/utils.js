@@ -1,6 +1,6 @@
 import * as Defaults from './defaults.js'
 import axios from "axios"
-import { ConnectionType } from '/WebSharedComponents/assets/ts/MAS.ts'
+import { ConnectionType, CoreType, MagneticCircuit } from '/WebSharedComponents/assets/ts/MAS.ts'
 
 let requesting = 0
 
@@ -846,13 +846,13 @@ export async function checkAndFixMas(mas, mkf=null) {
     if (mas.magnetic.core != null) {
         if (mas.magnetic.core.functionalDescription.shape != null && typeof(mas.magnetic.core.functionalDescription.shape) !== "string") {
             if (mas.magnetic.core.functionalDescription.shape.family == 't') {
-                mas.magnetic.core.functionalDescription.type = "toroidal";
-                mas.magnetic.core.functionalDescription.magneticCircuit = "closed";
+                mas.magnetic.core.functionalDescription.type = CoreType.Toroidal;
+                mas.magnetic.core.functionalDescription.magneticCircuit = MagneticCircuit.Closed;
                 mas.magnetic.core.functionalDescription.gapping = [];
             }
             else {
-                mas.magnetic.core.functionalDescription.type = "two-piece set";
-                mas.magnetic.core.functionalDescription.magneticCircuit = "open";
+                mas.magnetic.core.functionalDescription.type = CoreType.TwoPieceSet;
+                mas.magnetic.core.functionalDescription.magneticCircuit = MagneticCircuit.Open;
             }
         }
     }

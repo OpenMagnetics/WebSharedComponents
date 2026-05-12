@@ -73,6 +73,10 @@ export default {
         replaceTitle:{
             type: String
         },
+        tooltip:{
+            type: String,
+            default: null,
+        },
         justifyContent: {
             type: Boolean,
             default: false,
@@ -313,6 +317,7 @@ export default {
                 :data-cy="dataTestLabel + '-title'"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 class="dim-label p-0"
+                v-tooltip="tooltip"
             >
                 {{shortenedName}}
             </label>
@@ -322,6 +327,7 @@ export default {
                 :data-cy="dataTestLabel + '-title'"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 class="dim-label p-0"
+                v-tooltip="tooltip"
             >
                 {{replaceTitle}}
             </label>

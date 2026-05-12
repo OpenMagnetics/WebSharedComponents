@@ -17,8 +17,21 @@ export default {
         options:{
             required: true
         },
+        optionLabels:{
+            // Optional map { rawValue: 'Display Label' } that overrides the
+            // option text shown to the user without changing what is stored
+            // in modelValue. Use this when `options` is an array of camelCase
+            // enum strings (e.g. ['centerTapped', 'fullBridge']) that are
+            // backend identifiers and need a human-readable display label.
+            type: Object,
+            default: null,
+        },
         replaceTitle:{
             type: String
+        },
+        tooltip:{
+            type: String,
+            default: null,
         },
         titleSameRow:{
             type: Boolean,
@@ -187,6 +200,7 @@ export default {
                 v-if="altText == null && !titleSameRow"
                 :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
+                v-tooltip="tooltip"
                 class="efl-label p-0">{{replaceTitle == null? toTitleCase(name) : replaceTitle}}
             </label>
         </div>
@@ -196,6 +210,7 @@ export default {
                 :data-cy="dataTestLabel + '-same-row-label'"
                 v-if="titleSameRow"
                 :class="combinedClass([labelWidthProportionClass, labelFontSize, labelBgColor, textColor])"
+                v-tooltip="tooltip"
                 class="efl-label m-0 p-0">{{replaceTitle == null? toTitleCase(name) : replaceTitle}}
             </label>
             <div  v-if="!titleSameRow" class=" col-sm-0 col-md-2">
@@ -210,8 +225,8 @@ export default {
                 style="width:auto; max-height: 3em;"
                 :value="localData"
             >
-                <option :disabled="optionsToDisable.includes(value)" v-for="value in computedOptions" :key="value">
-                    {{value}}
+                <option :disabled="optionsToDisable.includes(value)" v-for="value in computedOptions" :key="value" :value="value">
+                    {{ (optionLabels && optionLabels[value] != null) ? optionLabels[value] : value }}
                 </option>
             </select>
         </div>

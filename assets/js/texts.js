@@ -105,3 +105,183 @@ export const tooltipsMagneticBuilder = {
     "magnetizingInductance": "Magnetizing inductance of this core with the selected number of turns of primary",
     "coreLosses": "Losses due to hysteresis and eddy currents in the core",
 }
+
+// Tooltips for converter wizard input fields. Keys are the `name=` value
+// passed to <Dimension>, <ElementFromList>, <DimensionReadOnly> etc. inside
+// the wizard components under src/components/Wizards/. See WIZARDS_GUIDE.md
+// §3.4c "Tooltips" for the convention and how to extend.
+export const tooltipsConverterWizards = {
+    // ---------- Common operating conditions ----------
+    "switchingFrequency":   "Nominal switching frequency of the converter (the rate at which the main switches commute).",
+    "minSwitchingFrequency": "Lower bound of the switching-frequency range used by the controller (e.g. for variable-frequency LLC).",
+    "maxSwitchingFrequency": "Upper bound of the switching-frequency range used by the controller.",
+    "operatingSwitchingFrequency": "Switching frequency at the chosen operating point (used for losses and waveform shape).",
+    "designFrequency":      "Reference design frequency used to size the magnetic component (typically the nominal switching frequency).",
+    "frequency":            "Frequency at this operating point.",
+    "lineFrequency":        "AC mains frequency (50 Hz or 60 Hz). Used for boost-PFC and similar line-fed converters.",
+    "resonantFrequency":    "Resonant frequency of the tank (1 / (2π√(L·C))). Drives gain and ZVS behaviour in resonant converters.",
+
+    "dutyCycle":            "Duty cycle of the main switch at the operating point (0..1).",
+    "maximumDutyCycle":     "Maximum allowed duty cycle. Used to clamp the controller and for worst-case design.",
+    "phaseShift":           "Phase shift between the two legs of a phase-shifted bridge (degrees, 0..180).",
+    "maxPhaseShift":        "Maximum allowed phase shift between the two legs (degrees).",
+    "innerPhaseShift1":     "Inner phase shift of bridge 1 in a triple-phase-shift DAB modulation (degrees).",
+    "innerPhaseShift2":     "Inner phase shift of bridge 2 in a triple-phase-shift DAB modulation (degrees).",
+    "innerPhaseShift3":     "Auxiliary inner phase shift in extended DAB modulations (degrees).",
+    "deadTime":             "Dead time inserted between complementary switches to prevent shoot-through and enable ZVS.",
+    "modulationType":       "Modulation strategy used by the controller (e.g. SPS, EPS, DPS, TPS for DAB).",
+    "mode":                 "Operating mode of the converter (e.g. CCM / DCM / BCM, or a topology-specific mode).",
+
+    "ambientTemperature":   "Ambient temperature around the magnetic component. Affects winding resistance and core losses.",
+    "efficiency":           "Target conversion efficiency at the operating point. Used to size losses and thermal margins.",
+    "insulationType":       "Insulation coordination type required by the application (basic / supplementary / reinforced / no isolation).",
+    "regulatoryStandard":   "Regulatory standard the design must comply with (e.g. IEC 60601-1, IEC 62368-1).",
+    "rectifierType":        "Secondary-side rectifier topology (full-bridge, centre-tapped, current-doubler, synchronous, …).",
+    "bridgeType":           "Primary-side bridge topology (half-bridge, full-bridge, …).",
+    "configuration":        "Topology configuration variant (e.g. interleaved vs single-phase, isolated vs non-isolated).",
+    "specMode":             "How the design is specified — choose between `Help me with the design` and `I know the design I want`.",
+    "designLevel":          "Design entry level — choose between `Help me with the design` and `I know the design I want`.",
+    "designMode":           "Design entry level — choose between `Help me with the design` and `I know the design I want`.",
+    "windingOption":        "How the windings are specified (single primary + N secondaries, multi-tap, etc.).",
+    "numberOutputs":        "Number of secondary outputs of the converter. Each output gets its own voltage / power row.",
+
+    // ---------- Voltages and currents ----------
+    "inputVoltage":         "DC input voltage at the converter terminals. For AC-fed converters this is the post-rectifier DC bus.",
+    "outputVoltage":        "DC output voltage at the converter terminals (after the secondary rectifier and filter).",
+    "operatingVoltage":     "Voltage at this operating point.",
+    "voltage":              "Voltage at this operating point.",
+    "outputPower":          "Output power delivered by this output.",
+    "operatingCurrent":     "Output current at this operating point.",
+    "current":              "Current at this operating point.",
+    "currentOptions":       "Predefined current waveform shape (sinusoidal, square, triangular, …) used to seed the operating point.",
+    "ripplePeakToPeak":     "Allowed peak-to-peak ripple on the output voltage (or current, depending on context).",
+    "currentRippleRatio":   "Allowed peak-to-peak inductor-current ripple as a fraction of the average current (e.g. 0.3 = 30 %).",
+
+    // ---------- Magnetics & tank ----------
+    "turnsRatio":           "Transformer turns ratio Np : Ns (primary turns divided by secondary turns).",
+    "magnetizingInductance": "Primary-side magnetizing inductance of the transformer.",
+    "leakageInductance":    "Primary-referred leakage inductance of the transformer.",
+    "seriesInductance":     "External series (resonant or commutation) inductance in the primary loop, in addition to leakage.",
+    "outputInductance":     "Output filter inductor value (Lo).",
+    "desiredInductance":    "Target inductance the wizard should design for.",
+    "inductance":           "Inductance value at this operating point.",
+    "inductanceRatio":      "Ratio between two inductances of the topology (e.g. Lm/Lr in LLC).",
+    "resonantCapacitance":  "Resonant tank capacitance (Cr) in series-resonant / LLC / CLLC tanks.",
+    "dcBlockingCapacitance": "DC-blocking (clamp) capacitance Cb on the primary side. Carries the DC component the bridge cannot.",
+    "outputCapacitance":    "Output filter capacitance Co.",
+    "filterCapacitance":    "Filter (X / Y) capacitance in EMI / line-filter design.",
+    "qualityFactor":        "Quality factor Q of the resonant tank (Q = √(L/C) / Rload).",
+
+    // ---------- Switches & rectifier ----------
+    "maximumDrainSourceVoltage": "Maximum allowed drain-source voltage on the primary switch (Vds_max).",
+    "maximumSwitchCurrent": "Maximum allowed switch current.",
+    "mosfetInputType":      "Whether the MOSFET parameters are entered manually or selected from a predefined list.",
+    "mosfetOnResistance":   "MOSFET drain-source on-resistance Rds(on). Drives conduction losses.",
+    "diodeVoltageDrop":     "Forward voltage drop across the rectifier diode (or body-diode) at the operating current.",
+
+    // ---------- Filter / EMI / impedance ----------
+    "impedance":            "Impedance specification at the operating frequency.",
+    "lineImpedance":        "AC line impedance presented by the LISN (typical 50 Ω // 50 µH per CISPR).",
+    "minimumImpedance":     "Minimum impedance the EMI/common-mode filter must reach in the regulated band.",
+    "attenuation":          "Required attenuation (dB) the filter must provide.",
+    "insertionLoss":        "Insertion loss of the filter at the design frequency (dB).",
+
+    // ---------- LLC-specific ----------
+    "llcMode":              "LLC operating region (above resonance, at resonance, below resonance, capacitive).",
+    "llcLn":                "Inductance ratio Ln = Lm / Lr.",
+    "llcLs":                "Series resonant inductance Lr.",
+    "llcCr":                "Resonant capacitance Cr.",
+    "llcSubStates":         "Number of switching sub-states detected by the LLC operating-point analysis.",
+    "llcResidual":          "Residual error of the LLC operating-point solver.",
+    "llcLipFreq":           "Frequency at the chosen LLC operating point produced by the solver.",
+    "llcLipVin":             "Input voltage at the chosen LLC operating point produced by the solver.",
+
+    // ---------- Diagnostic rows (read-only, computed by the solver) ----------
+    // Convention: `<wizard-prefix><Field>`. Each row in the diagnostics
+    // panel below the input form gets one entry here. Missing entry =
+    // silently no tooltip = regression. See WIZARDS_GUIDE.md §3.4c.
+
+    // AHB diagnostics — see backend AdvancedAsymmetricHalfBridge::compute_diagnostics
+    "ahbMode":              "Operating mode the AHB solver settled on at this operating point (CCM / DCM, sub-mode, etc.).",
+    "ahbRectifier":         "Rectifier topology the solver chose (centre-tapped, full-bridge, current-doubler, AHB-flyback).",
+    "ahbDuty":              "Steady-state duty cycle solved analytically from the operating point (Vin, Vout, Lm, Lk).",
+    "ahbConvRatio":         "Conversion ratio M = Vout / Vin at this operating point. Sanity check of the design.",
+    "ahbCb":                "DC voltage across the primary clamp (DC-blocking) capacitor Cb at steady state.",
+    "ahbCbRipple":          "Peak-to-peak voltage ripple on Cb during one switching period. Drives Cb sizing for ESR / dielectric losses.",
+    "ahbVPriPos":           "Peak positive primary winding voltage during the on-time of the high-side switch.",
+    "ahbVPriNeg":           "Peak negative primary winding voltage during the on-time of the low-side (clamp) switch.",
+    "ahbVQ1":               "Peak voltage stress across the high-side switch Q1 (worst-case Vds).",
+    "ahbVQ2":               "Peak voltage stress across the low-side switch Q2 (worst-case Vds).",
+    "ahbIQ1":               "RMS current through Q1. Drives Q1 conduction loss with Rds(on).",
+    "ahbIQ2":               "RMS current through Q2. Drives Q2 conduction loss with Rds(on).",
+    "ahbZvs":               "Zero-Voltage-Switching margin: positive = ZVS achieved, ≤ 0 = hard switching (highlighted as warning).",
+    "ahbResTrans":          "Resonant transition time of the half-bridge midpoint between switch turn-off and ZVS arrival.",
+    "ahbFluxSS":            "Steady-state core flux excursion ΔB (peak-to-peak) per switching period.",
+    "ahbFluxTrans":         "Estimated transient flux excursion (worst-case start-up / load-step). Margin against saturation.",
+    "ahbIMag":              "Peak-to-peak magnetizing current ripple in the transformer primary (drives core loss).",
+    "ahbIOut":              "Peak-to-peak output-inductor current ripple ΔILo (drives output-cap RMS).",
+    "ahbN":                 "Turns ratio Np : Ns the solver computed from Vin, Vout and the chosen rectifier (compare with your input).",
+    "ahbLo":                "Output filter inductance Lo computed by the solver to meet the requested ΔILo.",
+    "ahbLm":                "Magnetizing inductance Lm computed / honoured by the solver.",
+    "ahbLk":                "Leakage inductance Lk computed / honoured by the solver.",
+    "ahbCblock":            "DC-blocking capacitance Cb computed by the solver to meet the requested ΔVCb.",
+    "ahbCo":                "Output filter capacitance Co computed by the solver to meet the requested output ripple.",
+    "ahbDutyComp":          "Duty cycle the solver actually computed for steady state (compare with the user's hint).",
+    "ahbDeadTime":          "Recommended dead time between Q1 and Q2 transitions to achieve ZVS.",
+
+    // PSFB diagnostics — see PhaseShiftedFullBridge::compute_diagnostics
+    "psfbEffectiveDuty":    "Effective duty cycle delivered to the secondary after duty-cycle loss (Deff = D − Dloss).",
+    "psfbDutyLoss":         "Duty cycle lost during the resonant commutation of the leakage / series inductance.",
+    "psfbZvsLagging":       "ZVS margin on the lagging leg of the bridge. ≤ 0 = hard switching at this load (highlighted).",
+    "psfbZvsLoadThr":       "Minimum load current at which the lagging leg achieves ZVS.",
+    "psfbResTrans":         "Resonant transition time of the bridge midpoint (commutation duration of Lk·Coss).",
+    "psfbPriPeak":          "Peak primary current during the active phase. Drives transformer / switch peak ratings.",
+    "psfbLseries":          "Series (resonant + leakage) inductance Ls computed / honoured by the solver.",
+    "psfbLout":             "Output filter inductance Lo computed by the solver.",
+    "psfbLmag":             "Magnetizing inductance Lm computed / honoured by the solver.",
+    "psfbDeadTime":         "Recommended dead time between leg transitions to achieve ZVS at the rated load.",
+
+    // PSHB diagnostics — same fields as PSFB but for the half-bridge variant
+    "pshbEffectiveDuty":    "Effective duty cycle delivered to the secondary after duty-cycle loss (Deff = D − Dloss).",
+    "pshbDutyLoss":         "Duty cycle lost during the resonant commutation of the leakage / series inductance.",
+    "pshbZvsLagging":       "ZVS margin on the lagging leg of the half-bridge. ≤ 0 = hard switching at this load (highlighted).",
+    "pshbZvsLoadThr":       "Minimum load current at which the lagging leg achieves ZVS.",
+    "pshbResTrans":         "Resonant transition time of the bridge midpoint (commutation duration of Lk·Coss).",
+    "pshbPriPeak":          "Peak primary current during the active phase. Drives transformer / switch peak ratings.",
+    "pshbLseries":          "Series (resonant + leakage) inductance Ls computed / honoured by the solver.",
+    "pshbLout":             "Output filter inductance Lo computed by the solver.",
+    "pshbLmag":             "Magnetizing inductance Lm computed / honoured by the solver.",
+    "pshbDeadTime":         "Recommended dead time between leg transitions to achieve ZVS at the rated load.",
+
+    // DAB diagnostics — see Dab::compute_diagnostics
+    "dabModulation":        "DAB modulation strategy the solver settled on at this operating point (SPS / EPS / DPS / TPS).",
+    "dabD3":                "Outer phase shift D3 (primary-to-secondary) the solver computed for steady state.",
+    "dabSeriesInductance":  "Total primary-side series inductance the solver used (leakage + external Ls).",
+    "dabVoltageRatio":      "Voltage-conversion ratio d = N · V₂ / V₁. d = 1 is the matched-bridge sweet spot.",
+    "dabZvsPrimary":        "ZVS margin on the primary bridge. ≤ 0 = hard switching at this load (highlighted).",
+    "dabZvsSecondary":      "ZVS margin on the secondary bridge. ≤ 0 = hard switching at this load (highlighted).",
+}
+
+// Display labels for converter-wizard <ElementFromList> dropdowns whose
+// `options=` array contains backend camelCase enum strings. The stored
+// value (modelValue[name]) remains the raw enum; only the dropdown text
+// is humanised. Keys are the raw enum string. Pass the relevant sub-map
+// via :optionLabels="dropdownLabelsConverterWizards.<field>" on the
+// <ElementFromList>. See WIZARDS_GUIDE.md §3.4d.
+export const dropdownLabelsConverterWizards = {
+    rectifierType: {
+        centerTapped:    'Center-Tapped',
+        fullBridge:      'Full Bridge',
+        currentDoubler:  'Current Doubler',
+        ahbFlyback:      'AHB Flyback',
+    },
+    bridgeType: {
+        halfBridge:      'Half Bridge',
+        fullBridge:      'Full Bridge',
+    },
+    pfcMode: {
+        continuousConductionMode:    'Continuous (CCM)',
+        'Critical Conduction Mode':  'Critical (BCM)',
+        discontinuousConductionMode: 'Discontinuous (DCM)',
+    },
+}

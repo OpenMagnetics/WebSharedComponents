@@ -1,3 +1,4 @@
+import { CTI, CoreShapeFamily, CoreType, GapType, InsulationStandards, InsulationType, IsolationSide, Market, OvervoltageCategory, PollutionDegree, Topologies, WiringTechnology } from '../ts/MAS.ts'
 export const coreAdviserWeights = {
     "Efficiency": 40,
     "Dimensions": 30,
@@ -52,7 +53,7 @@ export const powerMas = {
                 "nominal": 100e-6
             },
             "turnsRatios": [],
-            "wiringTechnology": "Wound",
+            "wiringTechnology": WiringTechnology.Wound,
         },
         "operatingPoints": [],
     },
@@ -64,7 +65,7 @@ export const powerMas = {
                     "name": "Primary",
                     "numberTurns": 0,
                     "numberParallels": 0,
-                    "isolationSide": "primary",
+                    "isolationSide": IsolationSide.Primary,
                     "wire": ""
                 }
             ],
@@ -72,7 +73,7 @@ export const powerMas = {
         "core": {
             "name": "DummyCore",
             "functionalDescription": {
-                "type": "two-piece set",
+                "type": CoreType.TwoPieceSet,
                 "material": "",
                 "shape": "",
                 "gapping": [],
@@ -103,14 +104,14 @@ export const filterMas = {
                     "name": "Primary",
                     "numberTurns": 0,
                     "numberParallels": 0,
-                    "isolationSide": "primary",
+                    "isolationSide": IsolationSide.Primary,
                     "wire": ""
                 },
                 {
                     "name": "Secondary",
                     "numberTurns": 0,
                     "numberParallels": 0,
-                    "isolationSide": "secondary",
+                    "isolationSide": IsolationSide.Secondary,
                     "wire": ""
                 }
             ],
@@ -118,7 +119,7 @@ export const filterMas = {
         "core": {
             "name": "DummyCore",
             "functionalDescription": {
-                "type": "two-piece set",
+                "type": CoreType.TwoPieceSet,
                 "material": "",
                 "shape": "",
                 "gapping": [],
@@ -133,7 +134,7 @@ export const dmcMas = {
     "inputs": {
         "designRequirements": {
             "name": "My Design Requirements",
-            "topology": "DifferentialModeChoke",
+            "topology": Topologies.DifferentialModeChoke,
             "magnetizingInductance": {
                 "minimum": 100e-6
             },
@@ -149,7 +150,7 @@ export const dmcMas = {
                     "name": "Primary",
                     "numberTurns": 0,
                     "numberParallels": 0,
-                    "isolationSide": "primary",
+                    "isolationSide": IsolationSide.Primary,
                     "wire": "Dummy"
                 }
             ],
@@ -157,7 +158,7 @@ export const dmcMas = {
         "core": {
             "name": "DummyCore",
             "functionalDescription": {
-                "type": "two-piece set",
+                "type": CoreType.TwoPieceSet,
                 "material": "",
                 "shape": "",
                 "gapping": [],
@@ -276,22 +277,22 @@ export const defaultDesignRequirements = {
         "altitude": {
             "maximum": 2000,
         },
-        "cti": "Group II",
-        "pollutionDegree": "P2",
-        "overvoltageCategory": "OVC-III",
-        "insulationType": "Double",
+        "cti": CTI.GroupII,
+        "pollutionDegree": PollutionDegree.Pd2,
+        "overvoltageCategory": OvervoltageCategory.Iii,
+        "insulationType": InsulationType.Double,
         "mainSupplyVoltage": {
             "maximum": 400
         },
-        "standards": ["IEC 60664-1"]
+        "standards": [InsulationStandards.IEC606641]
     },
-    "market": "Industrial",
-    "topology": "Buck Converter",
+    "market": Market.Industrial,
+    "topology": Topologies.BuckConverter,
     "maximumWeight": 300,
-    "isolationSides": ["primary"],
+    "isolationSides": [IsolationSide.Primary],
     "maximumDimensions": {"width": null, "height": 0.05, "depth": null},
     "terminalType": ["FlyingLead"],
-    "wiringTechnology": "Wound"
+    "wiringTechnology": WiringTechnology.Wound
 }
 
 export const defaultOperatingPointExcitationForInsulation = {  
@@ -303,7 +304,7 @@ export const defaultOperatingPointExcitationForInsulation = {
             "peakToPeak" : 1600,
             "rms" : 400,
             "offset" : 0,
-            "label": "Rectangular"
+            "label": "rectangular"
         }
     }
 }
@@ -328,7 +329,7 @@ export const defaultOperatingPointExcitation = {
             "dutyCycle" : 0.5,
             "peakToPeak" : 10,
             "offset" : 0,
-            "label": "Triangular"
+            "label": "triangular"
         }
     },
     "voltage": {
@@ -352,7 +353,7 @@ export const defaultOperatingPointExcitation = {
             "dutyCycle" : 0.5,
             "peakToPeak" : 100,
             "offset" : 0,
-            "label": "Rectangular"
+            "label": "rectangular"
         }
     }
 }
@@ -403,66 +404,66 @@ export const gapTypes = [
 export const defaultUngappedGapping = [
     {
         "length": 0.000005,
-        "type": "residual"
+        "type": GapType.Residual
     },
     {
         "length": 0.000005,
-        "type": "residual"
+        "type": GapType.Residual
     },
     {
         "length": 0.000005,
-        "type": "residual"
+        "type": GapType.Residual
     }
 ]
 export const defaultGroundGapping = [
     {
         "length": 0.001,
-        "type": "subtractive"
+        "type": GapType.Subtractive
     },
     {
         "length": 0.000005,
-        "type": "residual"
+        "type": GapType.Residual
     },
     {
         "length": 0.000005,
-        "type": "residual"
+        "type": GapType.Residual
     }
 ]
 export const defaultSpacerGapping = [
     {
         "length": 0.001,
-        "type": "additive"
+        "type": GapType.Additive
     },
     {
         "length": 0.001,
-        "type": "additive"
+        "type": GapType.Additive
     },
     {
         "length": 0.001,
-        "type": "additive"
+        "type": GapType.Additive
     }
 ]
 export const defaultDistributedGapping = [
     {
         "length": 0.0003,
-        "type": "subtractive"
+        "type": GapType.Subtractive
     },
     {
         "length": 0.000005,
-        "type": "residual"
+        "type": GapType.Residual
     },
     {
         "length": 0.000005,
 
-        "type": "residual"
+        "type": GapType.Residual
     },
     {
         "length": 0.0003,
-        "type": "subtractive"
+        "type": GapType.Subtractive
     },
     {
         "length": 0.0003,
-        "type": "subtractive"
+        "type": GapType.Subtractive
     }
 ]
 
@@ -508,7 +509,7 @@ export const defaultOperationPointExcitation = {
 export const defaultCore = {
     "name": "My Core",
     "functionalDescription": {
-        "type": "two-piece set",
+        "type": CoreType.TwoPieceSet,
         "material": "3C97",
         "shape":  {'aliases': [],
                    'dimensions': {'A': 0.0391,
@@ -519,18 +520,18 @@ export const defaultCore = {
                                   'F': 0.0125,
                                   'G': 0.0,
                                   'H': 0.0},
-                   'family': 'etd',
+                   'family': CoreShapeFamily.Etd,
                    'familySubtype': '1',
                    'name': 'ETD 39/20/13',
                    'type': 'standard'},
         "gapping": [{
-            "type": "subtractive",
+            "type": GapType.Subtractive,
             "length": 0.001
         },{
-            "type": "residual",
+            "type": GapType.Residual,
             "length": 0.00001
         },{
-            "type": "residual",
+            "type": GapType.Residual,
             "length": 0.00001
         }],
         "numberStacks": 1
@@ -556,7 +557,7 @@ export const defaultInputs = {
 export const defaultCoil = {
     "bobbin": "Dummy",
     "functionalDescription": [{
-        "isolationSide": "primary",
+        "isolationSide": IsolationSide.Primary,
         "name": "Primary",
         "numberParallels": 1,
         "numberTurns": 23,
@@ -703,7 +704,7 @@ export const defaultFlybackWizardInputs = {
     ],
     switchingFrequency: 100000,
     ambientTemperature: 25,
-    insulationType: 'Basic'
+    insulationType: 'basic'
 };
 
 export const defaultBuckWizardInputs = {
@@ -770,7 +771,7 @@ export const defaultIsolatedBuckWizardInputs = {
     ],
     switchingFrequency: 750000,
     ambientTemperature: 25,
-    insulationType: 'Basic'
+    insulationType: 'basic'
 };
 
 export const defaultIsolatedBuckBoostWizardInputs = {
@@ -804,7 +805,7 @@ export const defaultIsolatedBuckBoostWizardInputs = {
     ],
     switchingFrequency: 400000,
     ambientTemperature: 25,
-    insulationType: 'Basic'
+    insulationType: 'basic'
 };
 
 export const defaultPushPullWizardInputs = {
@@ -829,7 +830,7 @@ export const defaultPushPullWizardInputs = {
     ],
     switchingFrequency: 100000,
     ambientTemperature: 25,
-    insulationType: 'Basic'
+    insulationType: 'basic'
 };
 
 export const defaultForwardWizardInputs = {
@@ -858,7 +859,7 @@ export const defaultForwardWizardInputs = {
     ],
     switchingFrequency: 200000,
     ambientTemperature: 25,
-    insulationType: 'Basic'
+    insulationType: 'basic'
 };
 
 export const defaultPfcWizardInputs = {
@@ -867,7 +868,7 @@ export const defaultPfcWizardInputs = {
         maximum: 265
     },
     designLevel: 'Help me with the design',
-    mode: 'Continuous Conduction Mode',
+    mode: 'continuousConductionMode',
     outputVoltage: 400,      // 400V DC bus for universal input PFC
     outputPower: 300,        // 300W - typical for small-medium PFC
     switchingFrequency: 65000,  // 65kHz - good balance of size/losses
