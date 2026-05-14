@@ -96,14 +96,58 @@ function symmetryToken(planes) {
     return 'none';
 }
 
-function callDraw(name, fn, args) {
+function callDraw(name, fn, args, { quiet = false } = {}) {
     try {
         return toBuffer(fn(...args));
     } catch (e) {
         const msg = decodeWasmException(_mvbpp, e);
-        console.error(`[MVB Worker] ${name} failed:`, msg, 'raw:', e);
-        throw new Error(`[MVB] ${name}: ${msg}`);
+        if (!quiet) {
+            console.error(`[MVB Worker] ${name} failed:`, msg, 'raw:', e);
+        }
+        const err = new Error(`[MVB] ${name}: ${msg}`);
+        err.mvbMessage = msg;
+        throw err;
     }
+}
+
+// "Optional component absent" markers thrown by deliver()/builders when the
+// magnetic legitimately has no spacers / no PCB / etc. Treated as null by
+// callers, not as errors.
+const ABSENT_PATTERNS = [
+    'STL export produced empty output',
+    'filtered out all geometry',
+    'no SPACER',
+    'no PCB',
+    'no FR4',
+];
+function isAbsentGeometry(e) {
+    const m = String(e && (e.mvbMessage || e.message) || e);
+    return ABSENT_PATTERNS.some(p => m.includes(p));
+}
+
+function hasSpacerEntries(magnetic) {
+    const gd = magnetic?.core?.geometricalDescription
+            ?? magnetic?.core?.geometrical_description;
+    if (!Array.isArray(gd)) return false;
+    return gd.some(e => {
+        const t = (e?.type || '').toString().toLowerCase();
+        return t === 'spacer' || t.includes('spacer');
+    });
+}
+
+function hasPrintedWinding(magnetic) {
+    const groups = magnetic?.coil?.groupsDescription
+                ?? magnetic?.coil?.groups_description;
+    if (!Array.isArray(groups) || !groups.length) return false;
+    const t = (groups[0]?.type || '').toString().toLowerCase();
+    return t === 'printed';
+}
+
+function inlineBobbin(magnetic) {
+    const b = magnetic?.coil?.bobbin;
+    if (!b || typeof b !== 'object') return null;
+    if (!b.processedDescription && !b.processed_description) return null;
+    return b;
 }
 
 function timed(name, fn) {
@@ -157,6 +201,9 @@ Comlink.expose({
 
     buildSpacersSTL: timed('buildSpacersSTL', async (magnetic, opts = {}) => {
         await init();
+        // Most magnetics have no spacers — short-circuit before touching WASM
+        // so we don't trigger the "filtered out all geometry" exception path.
+        if (!hasSpacerEntries(magnetic)) return null;
         const d = o(opts);
         const sym = symmetryToken(opts.symmetryPlanes);
         const side = opts.side ?? '';
@@ -164,32 +211,33 @@ Comlink.expose({
             return callDraw('drawSpacer[stl]', _mvbpp.drawSpacer, [
                 JSON.stringify(magnetic), '3D', 'XY', 0.0, 'stl',
                 d.scale, d.coreSeg, sym, side,
-            ]);
+            ], { quiet: true });
         } catch (e) {
-            // Most magnetics have no spacers — surface as null instead of an error.
-            if (String(e.message || e).includes('STL export produced empty output')
-                || String(e.message || e).includes('filtered out all geometry')) {
-                return null;
-            }
+            if (isAbsentGeometry(e)) return null;
             throw e;
         }
     }),
 
     buildBobbinSTL: timed('buildBobbinSTL', async (magnetic, opts = {}) => {
         await init();
+        // Pull the bobbin sub-object directly. We deliberately do NOT enrich
+        // the whole magnetic here — enrichment can fail for unrelated reasons
+        // (missing wire references, incomplete coil, etc.) and a missing
+        // bobbin is a legitimate "nothing to draw" state, not an error.
+        const bobbin = inlineBobbin(magnetic);
+        if (!bobbin) return null;
         const d = o(opts);
         const sym = symmetryToken(opts.symmetryPlanes);
         const side = opts.side ?? '';
-        // drawBobbin needs the bobbin sub-object — extract from the magnetic
-        // (after letting WASM enrich if needed). Cheapest path: enrich
-        // ourselves and pull coil.bobbin out.
-        const enriched = JSON.parse(_mvbpp._enrichMagnetic(JSON.stringify(magnetic)));
-        const bobbin = enriched.coil && enriched.coil.bobbin;
-        if (!bobbin || typeof bobbin !== 'object') return null;
-        return callDraw('drawBobbin[stl]', _mvbpp.drawBobbin, [
-            JSON.stringify(bobbin), '3D', 'XY', 0.0, 'stl',
-            d.scale, d.coreSeg, sym, side,
-        ]);
+        try {
+            return callDraw('drawBobbin[stl]', _mvbpp.drawBobbin, [
+                JSON.stringify(bobbin), '3D', 'XY', 0.0, 'stl',
+                d.scale, d.coreSeg, sym, side,
+            ], { quiet: true });
+        } catch (e) {
+            if (isAbsentGeometry(e)) return null;
+            throw e;
+        }
     }),
 
     buildTurnsSTL: timed('buildTurnsSTL', async (magnetic, opts = {}) => {
@@ -212,6 +260,9 @@ Comlink.expose({
 
     buildFR4BoardSTL: timed('buildFR4BoardSTL', async (magnetic, opts = {}) => {
         await init();
+        // Only PRINTED (planar) coils have an FR4 board — short-circuit
+        // otherwise to avoid noisy "filtered out all geometry" exceptions.
+        if (!hasPrintedWinding(magnetic)) return null;
         const d = o(opts);
         const sym = symmetryToken(opts.symmetryPlanes);
         const side = opts.side ?? '';
@@ -219,13 +270,9 @@ Comlink.expose({
             return callDraw('drawBoard[stl]', _mvbpp.drawBoard, [
                 JSON.stringify(magnetic), '3D', 'XY', 0.0, 'stl',
                 d.scale, d.coreSeg, sym, side,
-            ]);
+            ], { quiet: true });
         } catch (e) {
-            // Non-planar coils legitimately produce no board geometry.
-            if (String(e.message || e).includes('STL export produced empty output')
-                || String(e.message || e).includes('filtered out all geometry')) {
-                return null;
-            }
+            if (isAbsentGeometry(e)) return null;
             throw e;
         }
     }),
