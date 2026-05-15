@@ -94,7 +94,7 @@ export default {
         },
         linePaddings:{
             type: Object,
-            default: {top: 1.1, left: 1, right: 1, bottom: 1.1}
+            default: {top: 1.2, left: 1, right: 1, bottom: 1.2}
         },
         toolbox:{
             type: Boolean,
@@ -124,6 +124,10 @@ export default {
             type: Boolean,
             default: false
         },
+        showArea:{
+            type: Boolean,
+            default: true
+        },
     },
     emits: [
         'click',
@@ -134,9 +138,7 @@ export default {
         const options = {
             title: {
                 left: 'center',
-                // Push title below the legend (legend sits at top: 6 with
-                // ~12px height). Without this the title and legend overlap.
-                top: 22,
+                top: 6,
                 text: this.title,
                 textStyle: {
                     fontSize: this.titleFontSize,
@@ -200,7 +202,7 @@ export default {
                 show: this.showLegend,
                 orient: 'horizontal',
                 left: 'center',
-                top: 6,
+                top: this.title ? Math.round(this.titleFontSize * 1.5) + 6 : 6,
                 icon: 'circle',
                 itemWidth: 8,
                 itemHeight: 8,
@@ -208,7 +210,7 @@ export default {
                 textStyle: {
                     color: this.textColor,
                     fontSize: 11,
-                    fontWeight: 600,
+                    fontWeight: 400,
                 }
             },
             xAxis: {
@@ -217,9 +219,9 @@ export default {
                 type: this.xAxisOptions.type,
                 splitLine: {
                     show: this.showGrid,
-                    lineStyle: { color: 'rgba(255, 255, 255, 0.05)' },
+                    lineStyle: { color: 'rgba(0, 0, 0, 0.08)' },
                 },
-                axisLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.18)' } },
+                axisLine: { lineStyle: { color: 'rgba(0, 0, 0, 0.15)' } },
                 axisTick: { show: false },
                 axisLabel: {
                     fontSize: this.axisLabelFontSize,
@@ -440,7 +442,7 @@ export default {
                     position: side,
                     splitLine: {
                         show: index === 0 ? this.showGrid : false,
-                        lineStyle: { color: 'rgba(255, 255, 255, 0.05)' },
+                        lineStyle: { color: 'rgba(0, 0, 0, 0.08)' },
                     },
                     axisLine: { show: false },
                     axisTick: { show: false },
@@ -506,16 +508,13 @@ export default {
                         yAxisIndex: this.forceAxisUniquePerSide ? firstIndexPerSide[side] : index,
                         lineStyle: {
                             type: datum.lineStyle ?? 'solid',
-                            width: 2,
-                            shadowColor: seriesColor,
-                            shadowBlur: 4,
-                            shadowOffsetY: 1,
+                            width: 1.5,
                         },
                         emphasis: {
                             focus: 'series',
-                            lineStyle: { width: 2.5 },
+                            lineStyle: { width: 2 },
                         },
-                        areaStyle: {
+                        areaStyle: this.showArea ? {
                             color: {
                                 type: 'linear',
                                 x: 0, y: 0, x2: 0, y2: 1,
@@ -525,7 +524,7 @@ export default {
                                 ],
                             },
                             opacity: 1,
-                        },
+                        } : null,
                     }
                 );
 
