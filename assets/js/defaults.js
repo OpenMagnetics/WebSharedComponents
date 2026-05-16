@@ -745,6 +745,28 @@ export const defaultBoostWizardInputs = {
     ambientTemperature: 25
 };
 
+export const defaultSepicWizardInputs = {
+    inputVoltage: {
+        minimum: 9,
+        maximum: 16
+    },
+    designLevel: 'Help me with the design',
+    diodeVoltageDrop: 0.5,
+    maximumSwitchCurrent: 4,
+    currentRippleRatio: 0.4,
+    inductance: 47e-6,
+    efficiency: 0.9,
+    coupledInductor: false,
+    couplingCoefficient: 0.95,
+    synchronousRectifier: false,
+    outputsParameters: {
+        voltage: 12,
+        current: 1,
+    },
+    switchingFrequency: 250000,
+    ambientTemperature: 25
+};
+
 export const defaultIsolatedBuckWizardInputs = {
     inputVoltage: {
         minimum: 36,

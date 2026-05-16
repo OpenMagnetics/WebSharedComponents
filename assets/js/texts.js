@@ -284,6 +284,27 @@ export const tooltipsConverterWizards = {
     "dabVoltageRatio":      "Voltage-conversion ratio d = N · V₂ / V₁. d = 1 is the matched-bridge sweet spot.",
     "dabZvsPrimary":        "ZVS margin on the primary bridge. ≤ 0 = hard switching at this load (highlighted).",
     "dabZvsSecondary":      "ZVS margin on the secondary bridge. ≤ 0 = hard switching at this load (highlighted).",
+
+    // ---------- SEPIC ----------
+    "sepicInductanceL1":          "Inductance of the input inductor L1. In coupled-inductor mode, also the per-winding inductance (L1 = L2).",
+    "sepicCoupledInductor":       "When checked, L1 and L2 share a single core (V2 wiring, TI SLYT411). Reduces input-current ripple via ripple-steering; the design output is a 2-winding coupled inductor instead of a single L1.",
+    "sepicCouplingCoefficient":   "Magnetic coupling coefficient k between L1 and L2 (0..1). k=1 is ideal coupling; real coupled inductors are typically 0.95–0.99. Only used when 'Coupled Inductor' is enabled.",
+    "sepicSynchronousRectifier":  "When checked, the catch diode is replaced by a low-side MOSFET (LTC1871-style). Used at low Vout where diode drop hurts efficiency.",
+    "sepicDutyCycle":             "SEPIC duty cycle D = (Vo+Vd) / (Vin·η + Vo+Vd). Capped at 95% — designs approaching this limit are rejected.",
+    "sepicConversionRatio":       "Voltage conversion ratio M(D) = +D/(1−D). Non-inverting; equal to 1 at D = 0.5.",
+    "sepicCouplingCapVoltage":    "Steady-state voltage across the coupling capacitor Cs. By charge-balance, VCs = Vin.",
+    "sepicIL1Average":            "Average current in inductor L1 (= input current). IL1,avg = Iout · D / (1−D).",
+    "sepicIL2Average":            "Average current in inductor L2 (= output current). IL2,avg = Iout.",
+    "sepicIL1Ripple":             "Peak-to-peak ripple in L1 current. ΔIL1 = Vin·D / (L1·fsw).",
+    "sepicIL2Ripple":             "Peak-to-peak ripple in L2 current. ΔIL2 = Vin·D / (L2·fsw).",
+    "sepicSwitchPeakVoltage":     "Peak voltage across the main switch (Vds for a MOSFET). VS,peak = Vin + Vo.",
+    "sepicSwitchPeakCurrent":     "Peak switch current. ≈ IL1,avg + IL2,avg + (ΔIL1 + ΔIL2)/2.",
+    "sepicDiodePeakReverseVoltage": "Peak reverse voltage across the catch diode (or body diode of the synchronous rectifier). = Vin + Vo.",
+    "sepicDiodePeakCurrent":      "Peak forward current in the catch diode (during the OFF interval). = switch peak current.",
+    "sepicCouplingCapRmsCurrent": "RMS current in the coupling capacitor Cs. ≈ Iout · √(D/(1−D)). Sizes Cs ESR and ripple rating.",
+    "sepicDcmK":                  "DCM/CCM boundary parameter K = 2·Le·fsw / R, with Le = L1·L2/(L1+L2). CCM iff K > Kcrit.",
+    "sepicDcmKcrit":              "Critical conduction-mode threshold Kcrit(D) = (1−D)². If K ≤ Kcrit the converter is in DCM.",
+    "sepicIsCcm":                 "True when the converter operates in continuous conduction mode (CCM). DCM solutions are flagged separately.",
 }
 
 // Display labels for converter-wizard <ElementFromList> dropdowns whose
