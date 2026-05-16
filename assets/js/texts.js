@@ -196,6 +196,27 @@ export const tooltipsConverterWizards = {
     "llcLipFreq":           "Frequency at the chosen LLC operating point produced by the solver.",
     "llcLipVin":             "Input voltage at the chosen LLC operating point produced by the solver.",
 
+    // ---------- CLLC-specific ----------
+    "bidirectional":               "Whether the converter operates bidirectionally (active synchronous rectifier on the secondary, capable of reverse power flow).",
+    "resonantInductorRatio":       "Asymmetric-tank inductor ratio a = n^2 * Lr2 / Lr1. Symmetric tank: 1. Typical asymmetric battery-charger: ~0.95.",
+    "resonantCapacitorRatio":      "Asymmetric-tank capacitor ratio b = Cr2 / (n^2 * Cr1). Symmetric tank: 1. Typical asymmetric battery-charger: ~1.052 so that fr1 = fr2.",
+    "integratedResonantInductor1": "If true, the primary resonant inductor Lr1 is realised as transformer primary leakage (no discrete inductor).",
+    "integratedResonantInductor2": "If true, the secondary resonant inductor Lr2 is realised as transformer secondary leakage (CLLLC layout).",
+    "primaryResonantInductance":   "Primary-side series resonant inductance Lr1 (leakage or discrete).",
+    "secondaryResonantInductance": "Secondary-side series resonant inductance Lr2 (leakage or discrete).",
+    "secondaryResonantCapacitance":"Secondary-side resonant capacitance Cr2.",
+    "powerFlow":                   "Power-flow direction at this operating point. forward = HV -> LV via Lr1; reverse = LV -> HV via Lr2.",
+    "cllcMode":                    "CLLC operating region the solver settled on (above resonance, at resonance, below resonance, capacitive).",
+    "cllcLipFreq":                 "Frequency at the chosen CLLC operating point produced by the solver.",
+    "cllcResidual":                "Residual error of the CLLC operating-point solver.",
+    "cllcZvsPrimary":              "ZVS margin on the primary bridge. <= 0 means hard switching at this load (highlighted as warning).",
+    "cllcZvsSecondary":            "ZVS margin on the secondary bridge. <= 0 means hard switching at this load.",
+    "cllcResTrans":                "Resonant transition time of the bridge midpoint at switch turn-off.",
+    "cllcIPriPeak":                "Peak primary resonant current. Drives transformer / switch peak ratings.",
+    "cllcVCrPeak":                 "Peak voltage across the primary resonant capacitor Cr1. Drives Cr dielectric rating.",
+    "cllcBridgeFactor":            "Bridge voltage factor: 1.0 for full-bridge (peak Vpri = Vin), 0.5 for half-bridge (peak Vpri = Vin/2).",
+    "cllcSubStates":               "Switching sub-state sequence detected by the CLLC operating-point analysis.",
+
     // ---------- Diagnostic rows (read-only, computed by the solver) ----------
     // Convention: `<wizard-prefix><Field>`. Each row in the diagnostics
     // panel below the input form gets one entry here. Missing entry =
@@ -278,6 +299,10 @@ export const dropdownLabelsConverterWizards = {
     bridgeType: {
         halfBridge:      'Half Bridge',
         fullBridge:      'Full Bridge',
+    },
+    powerFlow: {
+        forward: 'Forward (HV -> LV)',
+        reverse: 'Reverse (LV -> HV)',
     },
     pfcMode: {
         continuousConductionMode:    'Continuous (CCM)',
