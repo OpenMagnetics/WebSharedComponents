@@ -185,6 +185,9 @@ export const tooltipsConverterWizards = {
     "minimumImpedance":     "Minimum impedance the EMI/common-mode filter must reach in the regulated band.",
     "attenuation":          "Required attenuation (dB) the filter must provide.",
     "insertionLoss":        "Insertion loss of the filter at the design frequency (dB).",
+    "parasiticCap_pF":      "Parasitic common-mode capacitance from the switch node to earth (pF). Drives the common-mode current sourced into the LISN.",
+    "dvdt_V_ns":            "Rate of voltage change at the switch node (V/ns). Combined with parasiticCap_pF this determines the common-mode noise amplitude.",
+    "safetyMargin_dB":      "Extra attenuation margin (dB) on top of the EMI standard's limit line. Typical: 3–10 dB.",
 
     // ---------- LLC-specific ----------
     "llcMode":              "LLC operating region (above resonance, at resonance, below resonance, capacitive).",
