@@ -745,6 +745,116 @@ export const defaultBoostWizardInputs = {
     ambientTemperature: 25
 };
 
+// Cuk converter (V1 non-isolated). MKF Cuk model also supports V2 coupled,
+// V3 isolated, V4 synchronous, V5 bidirectional — exposed via optional flags.
+// Wizard MVP only targets V1; advanced variants reachable later via flag toggles.
+// Note: Cuk inverts polarity (Vo is signed negative internally per MKF
+// convention) but the wizard takes the positive magnitude (the C++ model
+// signs it). See MAS.ts CukOperatingPoint.
+export const defaultCukWizardInputs = {
+    inputVoltage: {
+        minimum: 10,
+        maximum: 14
+    },
+    diodeVoltageDrop: 0.7,
+    maximumSwitchCurrent: 8,
+    currentRippleRatio: 0.4,
+    efficiency: 0.9,
+    outputsParameters: {
+        voltage: 12,
+        current: 1,
+    },
+    switchingFrequency: 100000,
+    ambientTemperature: 25
+};
+
+// Zeta converter (non-isolated buck-boost relative, non-inverting Vo positive).
+// MKF Zeta model uses L1 (primary inductor) — wizard sizes only L1 here; L2
+// is an extra-component output of process_extra_components_inputs.
+export const defaultZetaWizardInputs = {
+    inputVoltage: {
+        minimum: 5,
+        maximum: 15
+    },
+    diodeVoltageDrop: 0.7,
+    maximumSwitchCurrent: 8,
+    currentRippleRatio: 0.4,
+    efficiency: 0.9,
+    outputsParameters: {
+        voltage: 12,
+        current: 1,
+    },
+    switchingFrequency: 100000,
+    ambientTemperature: 25
+};
+
+// Four-Switch Buck-Boost (non-isolated, non-inverting Vo positive). Single
+// inductor between the two H-bridge legs. Operates in buck, boost, or
+// passthrough mode depending on Vin/Vo ratio — selected automatically by the
+// MKF FourSwitchBuckBoost model.
+export const defaultFourSwitchBuckBoostWizardInputs = {
+    inputVoltage: {
+        minimum: 9,
+        maximum: 18
+    },
+    diodeVoltageDrop: 0.7,
+    maximumSwitchCurrent: 8,
+    currentRippleRatio: 0.4,
+    efficiency: 0.92,
+    outputsParameters: {
+        voltage: 12,
+        current: 2,
+    },
+    switchingFrequency: 100000,
+    ambientTemperature: 25
+};
+
+// Weinberg converter (isolated, push-pull-derived, non-inverting Vo positive).
+// Two primary windings + center-tapped secondary, single output inductor.
+// MKF Weinberg returns the 2-winding power transformer; secondary inductor
+// and clamp components come from process_extra_components_inputs.
+export const defaultWeinbergWizardInputs = {
+    inputVoltage: {
+        minimum: 20,
+        maximum: 30
+    },
+    diodeVoltageDrop: 0.7,
+    maximumSwitchCurrent: 5,
+    currentRippleRatio: 0.4,
+    efficiency: 0.9,
+    turnsRatio: 0.5,
+    outputsParameters: {
+        voltage: 48,
+        current: 2,
+    },
+    switchingFrequency: 200000,
+    ambientTemperature: 25,
+    insulationType: 'basic'
+};
+
+// CLLLC bidirectional symmetric resonant converter — Lr_p / Cr_p / Lm /
+// Cr_s / Lr_s layout. The wizard exposes the converter as a designed-by-MKF
+// flow: user specifies switching range + output range; MKF picks Lm, turns
+// ratio, and the resonant elements via process_design_requirements.
+export const defaultClllcWizardInputs = {
+    inputVoltage: {
+        minimum: 380,
+        maximum: 420
+    },
+    minSwitchingFrequency: 90000,
+    maxSwitchingFrequency: 150000,
+    nominalSwitchingFrequency: 120000,
+    diodeVoltageDrop: 0.7,
+    efficiency: 0.95,
+    qualityFactor: 0.4,
+    outputsParameters: {
+        voltage: 48,
+        current: 5,
+    },
+    ambientTemperature: 25,
+    insulationType: 'basic'
+};
+
 export const defaultSepicWizardInputs = {
     inputVoltage: {
         minimum: 9,
