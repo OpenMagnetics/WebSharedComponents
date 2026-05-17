@@ -760,6 +760,8 @@ export const defaultCukWizardInputs = {
     maximumSwitchCurrent: 8,
     currentRippleRatio: 0.4,
     efficiency: 0.9,
+    designLevel: 'Help me with the design',
+    inductance: 100e-6,
     outputsParameters: {
         voltage: 12,
         current: 1,
@@ -780,6 +782,8 @@ export const defaultZetaWizardInputs = {
     maximumSwitchCurrent: 8,
     currentRippleRatio: 0.4,
     efficiency: 0.9,
+    designLevel: 'Help me with the design',
+    inductance: 100e-6,
     outputsParameters: {
         voltage: 12,
         current: 1,
@@ -801,6 +805,8 @@ export const defaultFourSwitchBuckBoostWizardInputs = {
     maximumSwitchCurrent: 8,
     currentRippleRatio: 0.4,
     efficiency: 0.92,
+    designLevel: 'Help me with the design',
+    inductance: 47e-6,
     outputsParameters: {
         voltage: 12,
         current: 2,
@@ -823,6 +829,8 @@ export const defaultWeinbergWizardInputs = {
     currentRippleRatio: 0.4,
     efficiency: 0.9,
     turnsRatio: 0.5,
+    designLevel: 'Help me with the design',
+    inductance: 200e-6,
     outputsParameters: {
         voltage: 48,
         current: 2,
@@ -847,6 +855,11 @@ export const defaultClllcWizardInputs = {
     diodeVoltageDrop: 0.7,
     efficiency: 0.95,
     qualityFactor: 0.4,
+    designLevel: 'Help me with the design',
+    magnetizingInductance: 500e-6,
+    turnsRatio: 8,
+    primarySeriesInductance: 50e-6,
+    primaryResonantCapacitance: 33e-9,
     outputsParameters: {
         voltage: 48,
         current: 5,
