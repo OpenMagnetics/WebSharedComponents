@@ -165,6 +165,7 @@ export default {
       bobbinMesh: null,
       turnsMeshes: [],
       building: false,
+      pendingBuild: false,
       updating: true,
       recentChange: false,
       tryingToSend: false,
@@ -351,7 +352,16 @@ export default {
     },
 
     async buildMagnetic() {
-      if (this.building || !this.isMounted) return;
+      // Re-entry guard: if a build is already in flight, remember that the
+      // caller wanted a fresh build with the latest `magnetic` snapshot and
+      // re-fire after the current build settles. Without this, a wind-result
+      // arriving while the previous build is still running is silently
+      // dropped and the viewer stays one revision behind.
+      if (this.building || !this.isMounted) {
+        if (this.building) this.pendingBuild = true;
+        return;
+      }
+      this.pendingBuild = false;
 
       const magnetic = this.magnetic;
       if (!magnetic) {
@@ -482,6 +492,12 @@ export default {
         if (this.isMounted) {
           this.building = false;
           this.updating = false;
+          // If new build requests arrived while this build was running,
+          // honour the most recent `magnetic` snapshot now.
+          if (this.pendingBuild) {
+            this.pendingBuild = false;
+            this.tryToSend();
+          }
         }
       }
     },
@@ -510,6 +526,10 @@ export default {
       this.updating = true;
       this.clearScene();
       this.currentMagnetic = deepCopy(this.magnetic);
+      // Flag that a fresh change happened so a tryToSend already in its
+      // debounce window restarts the timer instead of building with the
+      // (now stale) snapshot it captured.
+      this.recentChange = true;
       this.tryToSend();
     },
   },
