@@ -282,17 +282,13 @@ export default {
 
 <style scoped type="text/css">
 
-/* Chrome, Safari, Edge, Opera */
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-/* Firefox */
-input[type=number] {
-  -moz-appearance: textfield;
-}
+/* Native number-input spinner arrows are intentionally left visible.
+   A previous version hid them here via `::-webkit-inner-spin-button` and
+   `-moz-appearance: textfield`, but those rules cannot be scoped by Vue
+   (the pseudo-elements live in the browser's shadow DOM), so they
+   leaked globally and stripped arrows from every editable number input
+   in the host app. If you want a "clean" look in this component
+   specifically, hide them on the local `.dim-input` class instead. */
 
 .dimension-readonly-label {
   border-radius: var(--p-border-radius);

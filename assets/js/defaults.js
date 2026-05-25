@@ -745,6 +745,136 @@ export const defaultBoostWizardInputs = {
     ambientTemperature: 25
 };
 
+// Cuk converter (V1 non-isolated). MKF Cuk model also supports V2 coupled,
+// V3 isolated, V4 synchronous, V5 bidirectional — exposed via optional flags.
+// Wizard MVP only targets V1; advanced variants reachable later via flag toggles.
+// Note: Cuk inverts polarity (Vo is signed negative internally per MKF
+// convention) but the wizard takes the positive magnitude (the C++ model
+// signs it). See MAS.ts CukOperatingPoint.
+export const defaultCukWizardInputs = {
+    inputVoltage: {
+        minimum: 10,
+        maximum: 14
+    },
+    diodeVoltageDrop: 0.7,
+    maximumSwitchCurrent: 8,
+    currentRippleRatio: 0.4,
+    efficiency: 0.9,
+    designLevel: 'Help me with the design',
+    inductance: 100e-6,
+    outputsParameters: {
+        voltage: 12,
+        current: 1,
+    },
+    switchingFrequency: 100000,
+    ambientTemperature: 25
+};
+
+// Zeta converter (non-isolated buck-boost relative, non-inverting Vo positive).
+// MKF Zeta model uses L1 (primary inductor) — wizard sizes only L1 here; L2
+// is an extra-component output of process_extra_components_inputs.
+export const defaultZetaWizardInputs = {
+    inputVoltage: {
+        minimum: 5,
+        maximum: 15
+    },
+    diodeVoltageDrop: 0.7,
+    maximumSwitchCurrent: 8,
+    currentRippleRatio: 0.4,
+    efficiency: 0.9,
+    designLevel: 'Help me with the design',
+    inductance: 100e-6,
+    outputsParameters: {
+        voltage: 12,
+        current: 1,
+    },
+    switchingFrequency: 100000,
+    ambientTemperature: 25
+};
+
+// Four-Switch Buck-Boost (non-isolated, non-inverting Vo positive). Single
+// inductor between the two H-bridge legs. Operates in buck, boost, or
+// passthrough mode depending on Vin/Vo ratio — selected automatically by the
+// MKF FourSwitchBuckBoost model.
+export const defaultFourSwitchBuckBoostWizardInputs = {
+    inputVoltage: {
+        minimum: 9,
+        maximum: 18
+    },
+    diodeVoltageDrop: 0.7,
+    maximumSwitchCurrent: 8,
+    currentRippleRatio: 0.4,
+    efficiency: 0.92,
+    designLevel: 'Help me with the design',
+    inductance: 47e-6,
+    outputsParameters: {
+        voltage: 12,
+        current: 2,
+    },
+    switchingFrequency: 100000,
+    ambientTemperature: 25
+};
+
+// Weinberg converter (isolated, push-pull-derived, non-inverting Vo positive).
+// Two primary windings + center-tapped secondary, single output inductor.
+// MKF Weinberg returns the 2-winding power transformer; secondary inductor
+// and clamp components come from process_extra_components_inputs.
+export const defaultWeinbergWizardInputs = {
+    inputVoltage: {
+        minimum: 20,
+        maximum: 30
+    },
+    diodeVoltageDrop: 0.7,
+    maximumSwitchCurrent: 5,
+    currentRippleRatio: 0.4,
+    efficiency: 0.9,
+    turnsRatio: 0.5,
+    designLevel: 'Help me with the design',
+    inductance: 200e-6,
+    outputsParameters: {
+        voltage: 48,
+        current: 2,
+    },
+    switchingFrequency: 200000,
+    ambientTemperature: 25,
+    insulationType: 'basic',
+    // Backend-known optional fields exposed through the wizard so the user
+    // can pin them rather than letting the solver pick. Defaults map to
+    // typical fielded values.
+    variant: 'classic',                  // 'classic' (V1 push-pull) | 'bridge' (V2 H-bridge)
+    synchronousRectifier: false,         // diodes -> actively-driven MOSFETs on secondary
+    couplingCoefficientInput: 0.999,     // k for the two L1 windings (input coupled inductor)
+    couplingCoefficientMain: 0.97,       // k for the 4-way main-transformer coupling
+};
+
+// CLLLC bidirectional symmetric resonant converter — Lr_p / Cr_p / Lm /
+// Cr_s / Lr_s layout. The wizard exposes the converter as a designed-by-MKF
+// flow: user specifies switching range + output range; MKF picks Lm, turns
+// ratio, and the resonant elements via process_design_requirements.
+export const defaultClllcWizardInputs = {
+    inputVoltage: {
+        minimum: 380,
+        maximum: 420
+    },
+    minSwitchingFrequency: 90000,
+    maxSwitchingFrequency: 150000,
+    nominalSwitchingFrequency: 120000,
+    diodeVoltageDrop: 0.7,
+    efficiency: 0.95,
+    qualityFactor: 0.4,
+    designLevel: 'Help me with the design',
+    magnetizingInductance: 500e-6,
+    turnsRatio: 8,
+    primarySeriesInductance: 50e-6,
+    primaryResonantCapacitance: 33e-9,
+    outputsParameters: {
+        voltage: 48,
+        current: 5,
+    },
+    ambientTemperature: 25,
+    insulationType: 'basic'
+};
+
 export const defaultSepicWizardInputs = {
     inputVoltage: {
         minimum: 9,
@@ -776,6 +906,11 @@ export const defaultIsolatedBuckWizardInputs = {
     diodeVoltageDrop: 0.7,
     maximumSwitchCurrent: 1,
     currentRippleRatio: 0.4,
+    // dutyCycle: required in I-know mode (buildParams zips .min/.nom/.max
+    // with inputVoltage to emit desiredDutyCycle). Without this, analytical
+    // sends an empty array and the backend produces no waveforms.
+    dutyCycle: { minimum: 0.25, nominal: 0.40, maximum: 0.55 },
+    deadTime: 100e-9,
     inductance: 10e-6,
     efficiency: 0.9,
     numberOutputs: 2,
@@ -805,6 +940,9 @@ export const defaultIsolatedBuckBoostWizardInputs = {
     diodeVoltageDrop: 0.7,
     maximumSwitchCurrent: 2.5,
     currentRippleRatio: 0.4,
+    // dutyCycle: required in I-know mode (see IsolatedBuck comment).
+    dutyCycle: { minimum: 0.30, nominal: 0.50, maximum: 0.65 },
+    deadTime: 100e-9,
     inductance: 10e-6,
     efficiency: 0.9,
     numberOutputs: 3,
@@ -839,7 +977,10 @@ export const defaultPushPullWizardInputs = {
     diodeVoltageDrop: 0.7,
     maximumSwitchCurrent: 3,
     currentRippleRatio: 0.3,
-    dutyCycle: 0.40,
+    // dutyCycle: I-know mode reads .minimum/.nominal/.maximum and zips with
+    // inputVoltage triple to build desiredDutyCycle. Scalar default would
+    // produce an empty array and crash analytical in I-know mode.
+    dutyCycle: { minimum: 0.30, nominal: 0.40, maximum: 0.45 },
     inductance: 100e-6,
     efficiency: 0.9,
     numberOutputs: 1,

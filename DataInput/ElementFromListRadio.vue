@@ -157,7 +157,7 @@ export default {
                     :ref="key"
                     class="form-check-input"
                     type="radio"
-                    :checked="modelValue[name].includes(value)"
+                    :checked="modelValue[name] === value"
                     :id="key + '-radio-input'"
                     @change="changedCheckedValue(value)"
                 >

@@ -208,6 +208,9 @@ export const tooltipsConverterWizards = {
     "primaryResonantInductance":   "Primary-side series resonant inductance Lr1 (leakage or discrete).",
     "secondaryResonantInductance": "Secondary-side series resonant inductance Lr2 (leakage or discrete).",
     "secondaryResonantCapacitance":"Secondary-side resonant capacitance Cr2.",
+    "primaryResonantCapacitance": "Primary-side resonant capacitance Cr1.",
+    "primarySeriesInductance":    "Primary-side series resonant inductance Lr1 (CLLLC layout — leakage or discrete).",
+    "nominalSwitchingFrequency":  "Nominal switching frequency used as the resonant-tank design target (typically set equal to the resonant frequency fr1).",
     "powerFlow":                   "Power-flow direction at this operating point. forward = HV -> LV via Lr1; reverse = LV -> HV via Lr2.",
     "cllcMode":                    "CLLC operating region the solver settled on (above resonance, at resonance, below resonance, capacitive).",
     "cllcLipFreq":                 "Frequency at the chosen CLLC operating point produced by the solver.",
@@ -305,6 +308,42 @@ export const tooltipsConverterWizards = {
     "sepicDcmK":                  "DCM/CCM boundary parameter K = 2·Le·fsw / R, with Le = L1·L2/(L1+L2). CCM iff K > Kcrit.",
     "sepicDcmKcrit":              "Critical conduction-mode threshold Kcrit(D) = (1−D)². If K ≤ Kcrit the converter is in DCM.",
     "sepicIsCcm":                 "True when the converter operates in continuous conduction mode (CCM). DCM solutions are flagged separately.",
+
+    // ---------- Vienna (3-phase 3-level boost PFC) ----------
+    "lineToLineVoltage":          "RMS line-to-line input voltage of the 3-phase mains (e.g. 400 V EU industrial).",
+    "outputDcVoltage":            "DC bus output voltage. Must exceed √2·V_LL to guarantee boost operation (no over-modulation).",
+    "phaseCount":                 "Number of phases. Vienna rectifier is always 3-phase.",
+    "powerFactor":                "Target displacement power factor (typically ≥ 0.98 for PFC).",
+    "currentRippleRatio":         "Peak-to-peak inductor current ripple ratio (ΔI_L,pp / I_pk) at peak-of-line. Typical 0.2–0.3.",
+    "viennaVariant":              "Switch arrangement: viennaI = single bidirectional switch per leg (classic Kolar 1994); viennaII = two switches per leg (lower conduction loss at >30 kW).",
+    "switchType":                 "Per-leg bidirectional switch realisation: tType (modern SiC default), back-to-back MOSFET, or single-MOSFET-in-4-diode bridge.",
+    "samplingStrategy":           "Line-cycle envelope sampling: peakOfLineOnly (cheapest, ωt = π/2), peakOfLinePlusSectors (peak + 30/60° samples), fullLineCycle (36 samples — for THD validation).",
+    "desiredBoostInductance":     "Optional explicit boost-inductor value (H) per phase. Overrides ripple-based derivation when set.",
+    "boostInductance":            "Per-phase boost-inductor value (H) the solver chose to meet the requested current-ripple ratio.",
+
+    // ---------- Weinberg ----------
+    "weinbergVariant":            "Primary topology variant: 'classic' (V1 push-pull, 2 switches; switch V_DS = 2·Vin/(1−D)) or 'bridge' (V2 H-bridge, 4 switches; switch V_DS = Vin).",
+    "couplingCoefficientInput":   "Magnetic coupling coefficient k between the two L1 windings (1:1 input coupled inductor). Typical 0.99–0.999.",
+    "couplingCoefficientMain":    "Magnetic coupling coefficient k for the 4-way main-transformer coupling (Lpri_a, Lpri_b, Lsec_a, Lsec_b). Typical 0.95–0.99 — some leakage is required for SPICE convergence and ZCS.",
+    "synchronousRectifier":       "When checked, the secondary diodes are replaced by actively-driven synchronous MOSFETs gated complementary to the primary switches.",
+
+    // ---------- SRC (Series-Resonant Converter) ----------
+    "useSynchronousRectifier":    "Use synchronous-MOSFET rectification on the secondary instead of diodes (reduces conduction loss).",
+    "seriesInductance":           "Resonant inductor Lr (H) in the SRC/LLC tank.",
+    "resonantCapacitance":        "Resonant capacitor Cr (F) in the SRC/LLC tank.",
+    "srcRectifierType":           "SRC secondary rectifier topology (full-bridge diode, centre-tapped diode, current doubler).",
+    "srcLs":                      "Series resonant inductance Lr (H) the solver settled on for this operating point.",
+    "srcCr":                      "Series resonant capacitance Cr (F) the solver settled on for this operating point.",
+    "srcFr":                      "Resonant frequency fr = 1 / (2π√(Lr·Cr)) computed from the solver's Lr and Cr.",
+    "srcM":                       "Last gain M = Vout / Vin·n at the solver's converged operating point. Sanity check vs the requested conversion ratio.",
+    "srcFsw":                     "Normalized switching frequency fsw / fr at the converged operating point. >1 means above resonance (inductive), <1 means below resonance (capacitive — avoid).",
+
+    // ---------- Current Transformer ----------
+    "burdenResistor":             "Secondary burden resistor R_b (Ω) that converts the secondary current to a measurable voltage.",
+    "secondaryDcResistance":      "DC resistance of the secondary winding (Ω). Adds in series with R_b.",
+    "diodeVoltageDrop":           "Forward voltage drop of any secondary rectifier diode (V). Set to 0 for an unrectified output.",
+    "maximumPrimaryCurrentPeak":  "Peak value of the primary current to be measured (A).",
+    "waveformLabel":              "Shape of the primary current waveform: Sinusoidal, Unipolar Rectangular, or Unipolar Triangular.",
 }
 
 // Display labels for converter-wizard <ElementFromList> dropdowns whose
@@ -321,8 +360,9 @@ export const dropdownLabelsConverterWizards = {
         ahbFlyback:      'AHB Flyback',
     },
     bridgeType: {
-        halfBridge:      'Half Bridge',
-        fullBridge:      'Full Bridge',
+        halfBridge:           'Half Bridge',
+        fullBridge:           'Full Bridge',
+        fullBridgePhaseShift: 'Full Bridge (Phase-Shift)',
     },
     powerFlow: {
         forward: 'Forward (HV -> LV)',
@@ -330,7 +370,31 @@ export const dropdownLabelsConverterWizards = {
     },
     pfcMode: {
         continuousConductionMode:    'Continuous (CCM)',
-        'Critical Conduction Mode':  'Critical (BCM)',
+        criticalConductionMode:      'Critical (BCM)',
         discontinuousConductionMode: 'Discontinuous (DCM)',
+    },
+    srcRectifierType: {
+        fullBridgeDiode:    'Full-Bridge Diode',
+        centerTappedDiode:  'Center-Tapped Diode',
+        currentDoubler:     'Current Doubler',
+    },
+    viennaVariant: {
+        viennaI:  'Vienna I (1 switch/leg)',
+        viennaII: 'Vienna II (2 switch/leg)',
+    },
+    viennaSwitchType: {
+        tType:                          'T-Type (SiC, modern)',
+        backToBackMosfet:               'Back-to-Back MOSFET',
+        singleMosfetIn4DiodeBridge:     'Single MOSFET in 4-Diode Bridge',
+    },
+    viennaSamplingStrategy: {
+        peakOfLineOnly:         'Peak of Line Only',
+        peakOfLinePlusSectors:  'Peak + Sector Samples',
+        fullLineCycle:          'Full Line Cycle (36 samples)',
+    },
+    insulationType: {
+        no:           'No Isolation',
+        basic:        'Basic',
+        reinforced:   'Reinforced',
     },
 }
