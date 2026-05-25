@@ -112,7 +112,7 @@ export default {
 
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex" v-tooltip="tooltip">
-        <div class="row">
+        <div class="grid">
             <input 
                 :style="combinedStyle([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-alt-title-label'"
@@ -134,7 +134,7 @@ export default {
                 {{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
             </label>
         </div>
-        <div class="row">
+        <div class="grid">
             <label
                 :style="combinedStyle([labelFontSize, labelWidthProportionClass, labelBgColor, textColor, labelWidthProportionClass])"
                 :data-cy="dataTestLabel + '-same-row-label'"

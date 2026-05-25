@@ -331,7 +331,7 @@ export default {
             >
                 {{replaceTitle}}
             </label>
-            <div v-if="localData.scaledValue != null" class="dim-value-row" :class="(justifyContent? 'dim-value-row-end ' : '') + valueWidthProportionClass">
+            <div v-if="localData.scaledValue != null" class="dim-value-row" :class="(justifyContent? 'dim-value-row-end' : '') + valueWidthProportionClass">
                 <input type="number"
                     :style="combinedStyle([disabled? labelBgColor : valueBgColor, textColor, valueFontSize])"
                     ref="inputRef"

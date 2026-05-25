@@ -110,14 +110,14 @@ export default {
 
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex px-2 m-0">
-        <div class="row">
+        <div class="grid">
             <label
                 v-if="labelWidthProportionClass != 'col-0'"
                 :style="combinedStyle([labelWidthProportionClass, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
                 :for="name + '-text-input'"
                 :class="combinedClass([labelWidthProportionClass, labelBgColor, textColor])"
-                class="data-input-label fs-5 "
+                class="data-input-label text-lg"
             >
                 {{replaceTitle != null? replaceTitle : toTitleCase(name)}}
             </label>
@@ -126,7 +126,7 @@ export default {
                 :data-cy="dataTestLabel + '-text-input'"
                 type="text"
                 :class="combinedClass([valueWidthProportionClass, valueBgColor, textColor, extraStyleClass])"
-                class="data-input-text m-0 px-0 "
+                class="data-input-text m-0 px-0"
                 :id="name + '-text-input'"
                 @change="changeText($event.target.value)"
                 :value="localData"

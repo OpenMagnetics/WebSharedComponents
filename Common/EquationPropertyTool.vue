@@ -267,15 +267,15 @@ export default {
 </script>
 
 <template>
-    <div class="container-flex border pt-2 ps-3">
-        <div class="row">
+    <div class="container-flex border pt-2 pl-3">
+        <div class="grid">
             <div 
                 class="col-9"
             >
                 {{title}}
             </div>
             <div 
-                class="col-3 row"
+                class="col-3 grid"
             >
                 <button
                     v-if="enableEditing"
@@ -295,15 +295,15 @@ export default {
                 </button>
             </div>
         </div>
-        <div class="row">
+        <div class="grid">
             <div
                 v-if="showEditor"
                 class="col-12"
             >
-                <div class="row">
+                <div class="grid">
                     <ElementFromList
                         v-if="Object.keys(propertyLabels).length > 1"
-                        class="offset-1 col-10 mb-1 text-start"
+                        class="offset-1 col-10 mb-1 text-left"
                         :dataTestLabel="dataTestLabel + '-PropertySelector'"
                         :name="'propertyToEdit'"
                         :titleSameRow="true"
@@ -322,7 +322,7 @@ export default {
                     />
                 </div>
 
-                <div class="row">
+                <div class="grid">
                     <vue-latex
                         :expression="equationsLatex[selectedEquationToEdit]"
                         class="m-0 p-0"
@@ -330,13 +330,13 @@ export default {
                         :fontsize="formulaFontSize"
                     />
                 </div>
-                <div class="row"  v-for="value, coefficient in coefficients[selectedEquationToEdit]" :key="coefficient">
+                <div class="grid"  v-for="value, coefficient in coefficients[selectedEquationToEdit]" :key="coefficient">
                     <Dimension 
                         v-if="value != null"
                         :name="coefficient"
                         :unit="''"
                         :useMetricPrefixes="false"
-                        class="pt-1 pb-0 pe-4 mb-0 col-10"
+                        class="pt-1 pb-0 pr-4 mb-0 col-10"
                         :dataTestLabel="dataTestLabel + '-Coefficient-' + coefficient"
                         :justifyContent="true"
                         :allowNegative="true"
@@ -361,7 +361,7 @@ export default {
                 class="col-3"
             >
                 <ElementFromList
-                    class="col-12 mb-1 text-start"
+                    class="col-12 mb-1 text-left"
                     :dataTestLabel="dataTestLabel + '-GraphsSelector'"
                     :name="'xAxisMode'"
                     :titleSameRow="false"
@@ -379,7 +379,7 @@ export default {
                     @update="axisModeChanged"
                 />
                 <ElementFromList
-                    class="col-12 mb-1 text-start"
+                    class="col-12 mb-1 text-left"
                     :dataTestLabel="dataTestLabel + '-GraphsSelector'"
                     :name="'yAxisMode'"
                     :titleSameRow="false"
@@ -402,7 +402,7 @@ export default {
                 class="col-12 my-2"
             >
                 <label
-                    class="text-danger pt-1 mx-3 "
+                    class="text-danger pt-1 mx-3"
                     style="font-size: 1em"
                 >            
                     {{'Property is missing'}}
@@ -412,7 +412,7 @@ export default {
             <div 
                 v-if="!showEditor"
                 :class="showEditor || showConfiguration? 'col-9' : 'col-12'"
-                class="pe-3"
+                class="pr-3"
             >
                 <LineVisualizer 
                     v-if="showGraph"

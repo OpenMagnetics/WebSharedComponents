@@ -172,18 +172,18 @@ export default {
 
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex" ref="container">
-        <div class="row">
+        <div class="grid">
             <label
                 :style="combinedStyle([labelFontSize, labelBgColor, textColor])"
                 v-tooltip="tooltipsMagneticBuilder.coreGapping"
                 :data-cy="dataTestLabel + '-title'"
-                class="rounded-2 col-12">
+                class="border-round col-12">
                 {{title}}
             </label>
             <div class="offset-1 col-11">
                 <ElementFromList
                     v-tooltip="tooltipsMagneticBuilder.coreGappingType"
-                    class="col-12 text-start m-0 p-0"
+                    class="col-12 text-left m-0 p-0"
                     :dataTestLabel="dataTestLabel + '-GapType'"
                     :name="'gapType'"
                     :replaceTitle="'Type'"
@@ -203,7 +203,7 @@ export default {
                     @update="update"
                 />
 
-                <Dimension class="col-12 text-start"
+                <Dimension class="col-12 text-left"
                     v-tooltip="tooltipsMagneticBuilder.coreGappingLength"
                     v-if="localData.gapType != 'Ungapped'"
                     :name="'gapLength'"
@@ -227,7 +227,7 @@ export default {
                     @update="update"
                 />
 
-                <Dimension class="col-12 text-start"
+                <Dimension class="col-12 text-left"
                     v-tooltip="tooltipsMagneticBuilder.coreGappingNumberGaps"
                     :name="'numberGaps'"
                     :replaceTitle="'No. Gaps'"

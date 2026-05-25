@@ -112,18 +112,18 @@ export default {
 </script>
 
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex ">
-        <div class="row" :class="justifyContent ? 'ms-0 ps-0' : ''">
+    <div :data-cy="dataTestLabel + '-container'" class="container-flex">
+        <div class="grid" :class="justifyContent ? 'ml-0 pl-0' : ''">
             <label
                 :style="combinedStyle([labelBgColor, textColor, labelFontSize])"
                 :data-cy="dataTestLabel + '-title'"
-                class="several-elements-color-label "
-                :class="combinedClass([justifyContent? 'text-start ms-0' : 'ms-3', labelBgColor, textColor, labelFontSize])"
+                class="several-elements-color-label"
+                :class="combinedClass([justifyContent? 'text-left ml-0' : 'ml-3', labelBgColor, textColor, labelFontSize])"
             >
                 {{toTitleCase(name)}}
             </label>
         </div>
-            <div :class="classInput" class="form-check ms-4 " v-for="[key, value] in Object.entries(options)" :key="key">
+            <div :class="classInput" class="form-check ml-4" v-for="[key, value] in Object.entries(options)" :key="key">
                 <input
                     :style="combinedStyle([textColor])"
                     :disabled="optionsToDisable.includes(value) || disabled"

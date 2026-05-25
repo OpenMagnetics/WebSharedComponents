@@ -815,16 +815,16 @@ export default {
 
 <template>
     <div v-if="modelValue.magnetic != null && showWarning && modelValue.magnetic.coil.turnsDescription == null" class="container">
-        <div class="row">
+        <div class="grid">
             <i class="col-12 bi bi-exclamation-triangle-fill display-1"></i>
-            <label class="text-danger col-12 pt-1 fs-5" style="font-size: 1em">Winding turns not possible</label>
+            <label class="text-danger col-12 pt-1 text-lg" style="font-size: 1em">Winding turns not possible</label>
         </div>
     </div>
     <div v-if="showWarning && !$stateStore.wire2DVisualizerState.showAnyway" class="container">
-        <div class="row">
+        <div class="grid">
             <i class="col-12 bi bi-exclamation-triangle-fill display-1"></i>
-            <label class="text-danger col-12 pt-1 fs-5" style="font-size: 1em">Turns don't fit in winding window</label>
-            <button class="btn btn-danger offset-3 col-6 fs-5" @click="showCoilAnyway()">Show me anyway</button>
+            <label class="text-danger col-12 pt-1 text-lg" style="font-size: 1em">Turns don't fit in winding window</label>
+            <button class="btn btn-danger offset-3 col-6 text-lg" @click="showCoilAnyway()">Show me anyway</button>
         </div>
     </div>
 
@@ -860,7 +860,7 @@ export default {
                             <button
                                 v-if="mode !== PLOT_MODES.BASIC"
                                 :style="buttonStyle"
-                                class="btn mt-1 ms-1"
+                                class="btn mt-1 ml-1"
                                 :class="isModeActive(mode) ? 'btn-success' : 'btn-primary'"
                                 @click="setPlotMode(mode)"
                             >
@@ -871,7 +871,7 @@ export default {
                     <div v-if="modelValue.magnetic != null && showFringingOption && modelValue.magnetic.coil.turnsDescription != null" class="text-center">
                         <button
                             :style="buttonStyle"
-                            class="btn btn-primary ms-1 mt-1"
+                            class="btn btn-primary ml-1 mt-1"
                             @click="swapIncludeFringing()"
                         >
                             {{ includeFringing ? 'Exclude Fringing' : 'Include Fringing' }}

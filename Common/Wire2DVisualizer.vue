@@ -95,7 +95,7 @@ export default {
                         this.posting = false
                         // console.log(response.data)
                         this.$refs.wire2DPlotView.innerHTML = response.data
-                        this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`<svg`, `<svg class="h-100 w-100"`);
+                        this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`<svg`, `<svg class="h-full w-full"`);
                         this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`width="300" height="300"`,
                             `width="${this.$refs.wire2DPlotViewContainer.clientWidth}" height="${this.$refs.wire2DPlotViewContainer.clientHeight}"`);
                         this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replaceAll(`stroke="rgb(  0,   0,   0)" d="M0.00,`, `stroke="${this.backgroundColor}" d="M0.00,`);
@@ -162,7 +162,7 @@ export default {
                     }
 
                     this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`width=`, `class="scaling-wire-svg" width=`);
-                    this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`<svg`, `<svg class="h-100 w-100"`);
+                    this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`<svg`, `<svg class="h-full w-full"`);
                     this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = this.$refs.wire2DPlotView.innerHTML;
                 } catch(error) {
                     console.error(error);
@@ -222,7 +222,7 @@ export default {
 
 <template>
     <div class="mt-2 wire2DPlotViewer text-center mx-auto" ref="wire2DPlotViewContainer">
-        <img :data-cy="dataTestLabel + 'Wire2DVisualizer-loading'" v-if="posting" class="mx-auto d-block col-12" alt="loading" style="width: auto; height: 20vh;" :src="loadingGif">
+        <img :data-cy="dataTestLabel + 'Wire2DVisualizer-loading'" v-if="posting" class="mx-auto block col-12" alt="loading" style="width: auto; height: 20vh;" :src="loadingGif">
         <div :data-cy="dataTestLabel + 'Wire2DVisualizer-core-field-plot-image'" v-show="!posting" ref="wire2DPlotView" style="width: auto; height: 20vh;" />
     </div>
 </template>

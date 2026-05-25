@@ -88,13 +88,13 @@ export default {
 
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex">
-        <div class="row">
+        <div class="grid">
             <label
                 :style="combinedStyle([labelWidthProportionClass, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
                 :for="name + '-date-input'"
                 :class="combinedClass([labelWidthProportionClass, labelBgColor, textColor])"
-                class="data-input-label fs-5 col-3 "
+                class="data-input-label text-lg col-3"
             >
                 {{toTitleCase(name)}}
             </label>

@@ -274,7 +274,7 @@ export default {
 </script>
 
 <template>
-    <img data-cy="CoreShapeArtisanVisualizer-loading" v-if="updating" class="mx-auto d-block col-12" alt="loading" style="height: auto;" :src="loadingGif">
+    <img data-cy="CoreShapeArtisanVisualizer-loading" v-if="updating" class="mx-auto block col-12" alt="loading" style="height: auto;" :src="loadingGif">
     <Renderer  data-cy="CoreShapeArtisanVisualizer-canvas" ref="renderer" resize=true :orbit-ctrl="{ enableDamping: true, dampingFactor: 0.05, autoRotate : true }" shadow class="p-0 m-0">
         <Camera ref="camera" />
         <Scene ref="scene" :background="backgroundColor">

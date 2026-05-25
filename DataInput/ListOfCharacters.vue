@@ -154,7 +154,7 @@ export default {
 
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex">
-        <div class="row">
+        <div class="grid">
             <label
                 :style="combinedStyle([labelBgColor, textColor, labelFontSize])"
                 v-if="replaceTitle == null"
