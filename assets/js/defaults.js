@@ -837,7 +837,14 @@ export const defaultWeinbergWizardInputs = {
     },
     switchingFrequency: 200000,
     ambientTemperature: 25,
-    insulationType: 'basic'
+    insulationType: 'basic',
+    // Backend-known optional fields exposed through the wizard so the user
+    // can pin them rather than letting the solver pick. Defaults map to
+    // typical fielded values.
+    variant: 'classic',                  // 'classic' (V1 push-pull) | 'bridge' (V2 H-bridge)
+    synchronousRectifier: false,         // diodes -> actively-driven MOSFETs on secondary
+    couplingCoefficientInput: 0.999,     // k for the two L1 windings (input coupled inductor)
+    couplingCoefficientMain: 0.97,       // k for the 4-way main-transformer coupling
 };
 
 // CLLLC bidirectional symmetric resonant converter — Lr_p / Cr_p / Lm /
@@ -899,6 +906,11 @@ export const defaultIsolatedBuckWizardInputs = {
     diodeVoltageDrop: 0.7,
     maximumSwitchCurrent: 1,
     currentRippleRatio: 0.4,
+    // dutyCycle: required in I-know mode (buildParams zips .min/.nom/.max
+    // with inputVoltage to emit desiredDutyCycle). Without this, analytical
+    // sends an empty array and the backend produces no waveforms.
+    dutyCycle: { minimum: 0.25, nominal: 0.40, maximum: 0.55 },
+    deadTime: 100e-9,
     inductance: 10e-6,
     efficiency: 0.9,
     numberOutputs: 2,
@@ -928,6 +940,9 @@ export const defaultIsolatedBuckBoostWizardInputs = {
     diodeVoltageDrop: 0.7,
     maximumSwitchCurrent: 2.5,
     currentRippleRatio: 0.4,
+    // dutyCycle: required in I-know mode (see IsolatedBuck comment).
+    dutyCycle: { minimum: 0.30, nominal: 0.50, maximum: 0.65 },
+    deadTime: 100e-9,
     inductance: 10e-6,
     efficiency: 0.9,
     numberOutputs: 3,
@@ -962,7 +977,10 @@ export const defaultPushPullWizardInputs = {
     diodeVoltageDrop: 0.7,
     maximumSwitchCurrent: 3,
     currentRippleRatio: 0.3,
-    dutyCycle: 0.40,
+    // dutyCycle: I-know mode reads .minimum/.nominal/.maximum and zips with
+    // inputVoltage triple to build desiredDutyCycle. Scalar default would
+    // produce an empty array and crash analytical in I-know mode.
+    dutyCycle: { minimum: 0.30, nominal: 0.40, maximum: 0.45 },
     inductance: 100e-6,
     efficiency: 0.9,
     numberOutputs: 1,

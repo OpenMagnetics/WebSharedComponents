@@ -438,6 +438,15 @@ export default {
         }
 
         const hasTurnsData = coil.turnsDescription?.length > 0;
+        // MVB++ STL turn renderer needs every wire to be a fully-resolved
+        // object (numDimensions, material, etc.). The OpenMagnetics defaults
+        // pipeline (utils.js:1083) writes the string "Dummy" as a sentinel
+        // when a wire isn't yet picked — and MVB++ throws COIL_WIRE_NOT_FOUND
+        // because no catalog wire is named "Dummy". Detect that here and
+        // skip the build, same way `isDummyBobbin` handles the bobbin path.
+        const hasDummyWires = coil.functionalDescription?.some(
+          w => typeof w?.wire === 'string' || !w?.wire
+        );
         const hasPlanarWires = coil.functionalDescription?.some(
           w => w?.wire?.type?.toLowerCase() === 'planar'
         );
@@ -455,7 +464,7 @@ export default {
           } catch (err) { console.warn('Could not build FR4 boards:', err.message); }
         }
 
-        if (this.showTurns && hasTurnsData) {
+        if (this.showTurns && hasTurnsData && !hasDummyWires) {
           try {
             const buf = await buildTurnsSTL(mag);
             if (buf) {
@@ -463,6 +472,8 @@ export default {
               if (m) { m.visible = this.internalShowTurns; group.add(m); this.turnsMeshes.push(m); }
             }
           } catch (err) { console.warn('Could not build turns:', err.message); }
+        } else if (this.showTurns && hasTurnsData && hasDummyWires) {
+          console.warn('Skipping turn STL build: one or more windings reference the "Dummy" wire sentinel. Pick a real wire in the coil builder before rendering 3D turns.');
         }
 
         // Add group to scene
