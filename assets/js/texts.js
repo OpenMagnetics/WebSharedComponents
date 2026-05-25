@@ -111,6 +111,139 @@ export const tooltipsMagneticBuilder = {
 // the wizard components under src/components/Wizards/. See WIZARDS_GUIDE.md
 // §3.4c "Tooltips" for the convention and how to extend.
 export const tooltipsConverterWizards = {
+    // ---------- Cuk diagnostics (cukDiagnostics) ----------
+    cukDuty:        "Duty cycle D — Cuk is inverting; signed conversion ratio shown separately.",
+    cukConvRatio:   "Voltage conversion ratio M = Vo/Vin (negative in Cuk because polarity inverts).",
+    cukMode:        "CCM = both inductor currents stay positive; DCM = at least one reaches zero each cycle.",
+    cukVcc:         "Steady-state voltage on the coupling (energy-transfer) capacitor Cc.",
+    cukIL1Avg:      "Average current through input inductor L1.",
+    cukIL2Avg:      "Average current through output inductor L2.",
+    cukIL1Ripple:   "Peak-to-peak ripple on L1.",
+    cukIL2Ripple:   "Peak-to-peak ripple on L2.",
+    cukVsw:         "Peak drain-source voltage on the switch (Vin + Vo magnitude in Cuk).",
+    cukIsw:         "Peak switch current (sum of L1 and L2 peaks during t_on).",
+    cukVd:          "Peak reverse voltage across the diode.",
+    cukId:          "Peak diode current (sum of inductor currents during t_off).",
+
+    // ---------- SEPIC diagnostics (sepicDiagnostics) ----------
+    sepicDuty:        "Duty cycle D — SEPIC produces positive output, M(D) = D/(1-D).",
+    sepicConvRatio:   "Voltage conversion ratio M = Vo/Vin (positive in SEPIC).",
+    sepicMode:        "CCM = both inductor currents stay positive; DCM = at least one reaches zero each cycle.",
+    sepicVcc:         "Steady-state voltage on the coupling capacitor Cs (= Vin in CCM).",
+    sepicIL1Avg:      "Average current through input inductor L1.",
+    sepicIL2Avg:      "Average current through output inductor L2.",
+    sepicIL1Ripple:   "Peak-to-peak ripple on L1.",
+    sepicVsw:         "Peak switch drain-source voltage (Vin + Vo).",
+    sepicIsw:         "Peak switch current.",
+    sepicVd:          "Peak diode reverse voltage.",
+    sepicId:          "Peak diode current.",
+
+    // ---------- Zeta diagnostics (zetaDiagnostics) ----------
+    zetaDuty:         "Duty cycle D — Zeta produces positive output, M(D) = D/(1-D).",
+    zetaConvRatio:    "Voltage conversion ratio M = Vo/Vin.",
+    zetaMode:         "CCM = both inductor currents stay positive each cycle.",
+    zetaVcc:          "Steady-state voltage on the coupling capacitor Cc.",
+    zetaIL1Avg:       "Average current through input inductor L1.",
+    zetaIL2Avg:       "Average current through output inductor L2.",
+    zetaIripple:      "Peak-to-peak input current ripple — Zeta has continuous output current.",
+    zetaVo:           "Output voltage ripple ΔV_o.",
+    zetaVsw:          "Peak switch drain-source voltage.",
+    zetaIsw:          "Peak switch current.",
+    zetaVd:           "Peak diode reverse voltage.",
+    zetaId:           "Peak diode current.",
+
+    // ---------- Weinberg diagnostics (weinbergDiagnostics) ----------
+    weinDuty:         "Duty cycle D per switch — Weinberg uses overlapping conduction.",
+    weinConvRatio:    "Voltage conversion ratio M.",
+    weinMode:         "Output-inductor conduction mode (CCM/DCM).",
+    weinOverlap:      "Overlap fraction of the two switches (0 = no overlap, 0.5 = symmetric).",
+    weinIL1Avg:       "Average input inductor current.",
+    weinIL1Ripple:    "Peak-to-peak input inductor ripple.",
+    weinImagRipple:   "Peak-to-peak magnetizing current of the main transformer.",
+    weinIer:          "Average current through the energy-recovery diode/winding.",
+    weinFlux:         "Flux-balance margin (closer to 1 = balanced; lower = approaching saturation).",
+    weinVsw:          "Peak switch drain-source voltage.",
+    weinIsw:          "Peak switch current.",
+    weinVd:           "Peak diode reverse voltage on the output rectifier.",
+    weinVo:           "Output voltage ripple ΔV_o.",
+
+    // ---------- Push-Pull diagnostics (pushPullDiagnostics) ----------
+    ppDuty:           "Duty cycle per switch — push-pull alternates so each switch runs at most D per half-cycle.",
+    ppFsw:            "Switching frequency per switch (half the fundamental of the transformer flux).",
+    ppMode:           "Output-inductor conduction mode (CCM/DCM).",
+    ppIprimAvg:       "Average primary winding current.",
+    ppIprimPk:        "Peak primary current at end of t_on.",
+    ppImagPk:         "Peak magnetizing current (transformer flux peak).",
+
+    // ---------- Four-Switch Buck-Boost diagnostics (fsbbDiagnostics) ----------
+    fsbbIlAvg:        "Average inductor current.",
+    fsbbCo:           "Sized output capacitance for the specified output-voltage ripple.",
+
+    // ---------- CMC diagnostics (cmcDiagnostics) ----------
+    cmcInd:           "Common-mode inductance required to meet the impedance/insertion-loss spec.",
+
+    // ---------- DMC diagnostics (dmcDiagnostics) ----------
+    dmcInd:           "Differential-mode inductance required to meet the impedance spec.",
+    dmcFmin:          "Lowest frequency in the impedance specification.",
+    dmcFmax:          "Highest frequency in the impedance specification.",
+    dmcZmin:          "Required impedance |Z| at the lowest spec frequency.",
+    dmcNwind:         "Number of windings (1 = single-phase, 2 = balanced, 3-4 = three-phase).",
+
+    // ---------- CLLLC diagnostics (clllcDiagnostics) ----------
+    clllcLrPri:       "Computed primary-side series resonant inductance L_r,pri.",
+    clllcLrSec:       "Computed secondary-side series resonant inductance L_r,sec (= L_r,pri × n² in symmetric design).",
+    clllcCrPri:       "Computed primary resonant capacitance C_r,pri.",
+    clllcCrSec:       "Computed secondary resonant capacitance C_r,sec.",
+    clllcLm:          "Computed magnetizing inductance L_m of the resonant tank transformer.",
+    clllcN:           "Transformer turns ratio n = N_p / N_s.",
+    clllcDeadTime:    "Computed dead-time between switching transitions (sized for ZVS).",
+    clllcK:           "Inductance ratio k = L_m / L_r (typical 5-10 for CLLLC).",
+    clllcQ:           "Loaded quality factor Q at the design point.",
+    clllcFres:        "Series resonant frequency f_r = 1 / (2π·√(L_r·C_r)).",
+    clllcIprimPk:     "Peak primary tank current.",
+    clllcZvsMargin:   "ZVS margin on the primary lagging leg (positive = ZVS achieved).",
+
+    // ---------- PFC diagnostics (pfcDiagnostics) ----------
+    pfcInd:           "Computed boost inductance for the chosen mode (CCM / CrCM / DCM).",
+    pfcMode:          "Mode the controller actually operates in given the inductance value.",
+    pfcDuty:          "Worst-case duty cycle at minimum-V_in peak-of-line.",
+    pfcIlPk:          "Peak inductor current at the worst-case operating point.",
+    pfcIlRipple:      "Peak-to-peak inductor current ripple at the worst-case operating point.",
+    pfcIline:         "RMS line current at minimum input voltage.",
+    pfcPin:           "Average input power (per phase for interleaved boost).",
+
+    // ---------- Forward variants diagnostics (forwardDiagnostics) ----------
+    fwdDuty:          "Maximum operating duty cycle D_max specified by the user.",
+    fwdLm:            "Magnetizing inductance of the transformer.",
+    fwdN:             "Primary-to-secondary turns ratio n = N_p / N_s.",
+    fwdMode:          "Output-inductor conduction mode (CCM / DCM).",
+    fwdIprimPk:       "Peak primary current at end of t_on.",
+    fwdIsecPk:        "Peak secondary current (reflected through n).",
+    fwdImagPk:        "Peak magnetizing current (transformer flux peak).",
+    fwdReset:         "Reset voltage on the demagnetizing winding (Single-Switch Forward only).",
+    fwdClamp:         "Steady-state voltage on the clamp capacitor (Active Clamp Forward only): V_clamp = D/(1-D)·V_in.",
+
+    // ---------- Computed diagnostics (Phase 2/3 — buck/boost/flyback/isolatedBuck/isolatedBuckBoost) ----------
+    bbDuty:             "Operating duty cycle D = t_on / T_sw computed by the analytical solver.",
+    bbMode:             "Conduction mode — CCM means inductor current never reaches zero; DCM shows the conduction ratio.",
+    bbIlAvg:            "Average inductor current.",
+    bbIlPk:             "Peak instantaneous inductor current (avg + ΔI/2).",
+    bbIlRipple:         "Inductor peak-to-peak current ripple ΔI_L over one switching period.",
+
+    flybackDuty:        "Operating duty cycle D = t_on / T_sw.",
+    flybackMode:        "Conduction mode — CCM = magnetizing current never reaches zero; DCM = zero-current phase exists.",
+    flybackIprimAvg:    "Average primary current over one switching cycle.",
+    flybackIprimPk:     "Peak primary switch current at the end of t_on.",
+    flybackIprimRipple: "Primary peak-to-peak current ripple ΔI_pri.",
+    flybackIsecPk:      "Peak secondary current at the start of t_off, reflected through the turns ratio.",
+
+    ibbDuty:            "Operating duty cycle D = t_on / T_sw.",
+    ibbMode:            "Conduction mode — CCM = magnetizing current never reaches zero; DCM = zero-current phase exists.",
+    ibbIprimAvg:        "Average primary current over one switching cycle.",
+    ibbIprimPk:         "Peak primary current at end of switch-on.",
+    ibbIsecPk:          "Peak secondary current immediately after switch turn-off.",
+    ibbImagRipple:      "Peak-to-peak magnetizing current ripple ΔI_mag.",
+
     // ---------- Common operating conditions ----------
     "switchingFrequency":   "Nominal switching frequency of the converter (the rate at which the main switches commute).",
     "minSwitchingFrequency": "Lower bound of the switching-frequency range used by the controller (e.g. for variable-frequency LLC).",
@@ -185,6 +318,9 @@ export const tooltipsConverterWizards = {
     "minimumImpedance":     "Minimum impedance the EMI/common-mode filter must reach in the regulated band.",
     "attenuation":          "Required attenuation (dB) the filter must provide.",
     "insertionLoss":        "Insertion loss of the filter at the design frequency (dB).",
+    "parasiticCap_pF":      "Parasitic common-mode capacitance from the switch node to earth (pF). Drives the common-mode current sourced into the LISN.",
+    "dvdt_V_ns":            "Rate of voltage change at the switch node (V/ns). Combined with parasiticCap_pF this determines the common-mode noise amplitude.",
+    "safetyMargin_dB":      "Extra attenuation margin (dB) on top of the EMI standard's limit line. Typical: 3–10 dB.",
 
     // ---------- LLC-specific ----------
     "llcMode":              "LLC operating region (above resonance, at resonance, below resonance, capacitive).",
@@ -195,6 +331,30 @@ export const tooltipsConverterWizards = {
     "llcResidual":          "Residual error of the LLC operating-point solver.",
     "llcLipFreq":           "Frequency at the chosen LLC operating point produced by the solver.",
     "llcLipVin":             "Input voltage at the chosen LLC operating point produced by the solver.",
+
+    // ---------- CLLC-specific ----------
+    "bidirectional":               "Whether the converter operates bidirectionally (active synchronous rectifier on the secondary, capable of reverse power flow).",
+    "resonantInductorRatio":       "Asymmetric-tank inductor ratio a = n^2 * Lr2 / Lr1. Symmetric tank: 1. Typical asymmetric battery-charger: ~0.95.",
+    "resonantCapacitorRatio":      "Asymmetric-tank capacitor ratio b = Cr2 / (n^2 * Cr1). Symmetric tank: 1. Typical asymmetric battery-charger: ~1.052 so that fr1 = fr2.",
+    "integratedResonantInductor1": "If true, the primary resonant inductor Lr1 is realised as transformer primary leakage (no discrete inductor).",
+    "integratedResonantInductor2": "If true, the secondary resonant inductor Lr2 is realised as transformer secondary leakage (CLLLC layout).",
+    "primaryResonantInductance":   "Primary-side series resonant inductance Lr1 (leakage or discrete).",
+    "secondaryResonantInductance": "Secondary-side series resonant inductance Lr2 (leakage or discrete).",
+    "secondaryResonantCapacitance":"Secondary-side resonant capacitance Cr2.",
+    "primaryResonantCapacitance": "Primary-side resonant capacitance Cr1.",
+    "primarySeriesInductance":    "Primary-side series resonant inductance Lr1 (CLLLC layout — leakage or discrete).",
+    "nominalSwitchingFrequency":  "Nominal switching frequency used as the resonant-tank design target (typically set equal to the resonant frequency fr1).",
+    "powerFlow":                   "Power-flow direction at this operating point. forward = HV -> LV via Lr1; reverse = LV -> HV via Lr2.",
+    "cllcMode":                    "CLLC operating region the solver settled on (above resonance, at resonance, below resonance, capacitive).",
+    "cllcLipFreq":                 "Frequency at the chosen CLLC operating point produced by the solver.",
+    "cllcResidual":                "Residual error of the CLLC operating-point solver.",
+    "cllcZvsPrimary":              "ZVS margin on the primary bridge. <= 0 means hard switching at this load (highlighted as warning).",
+    "cllcZvsSecondary":            "ZVS margin on the secondary bridge. <= 0 means hard switching at this load.",
+    "cllcResTrans":                "Resonant transition time of the bridge midpoint at switch turn-off.",
+    "cllcIPriPeak":                "Peak primary resonant current. Drives transformer / switch peak ratings.",
+    "cllcVCrPeak":                 "Peak voltage across the primary resonant capacitor Cr1. Drives Cr dielectric rating.",
+    "cllcBridgeFactor":            "Bridge voltage factor: 1.0 for full-bridge (peak Vpri = Vin), 0.5 for half-bridge (peak Vpri = Vin/2).",
+    "cllcSubStates":               "Switching sub-state sequence detected by the CLLC operating-point analysis.",
 
     // ---------- Diagnostic rows (read-only, computed by the solver) ----------
     // Convention: `<wizard-prefix><Field>`. Each row in the diagnostics
@@ -260,6 +420,63 @@ export const tooltipsConverterWizards = {
     "dabVoltageRatio":      "Voltage-conversion ratio d = N · V₂ / V₁. d = 1 is the matched-bridge sweet spot.",
     "dabZvsPrimary":        "ZVS margin on the primary bridge. ≤ 0 = hard switching at this load (highlighted).",
     "dabZvsSecondary":      "ZVS margin on the secondary bridge. ≤ 0 = hard switching at this load (highlighted).",
+
+    // ---------- SEPIC ----------
+    "sepicInductanceL1":          "Inductance of the input inductor L1. In coupled-inductor mode, also the per-winding inductance (L1 = L2).",
+    "sepicCoupledInductor":       "When checked, L1 and L2 share a single core (V2 wiring, TI SLYT411). Reduces input-current ripple via ripple-steering; the design output is a 2-winding coupled inductor instead of a single L1.",
+    "sepicCouplingCoefficient":   "Magnetic coupling coefficient k between L1 and L2 (0..1). k=1 is ideal coupling; real coupled inductors are typically 0.95–0.99. Only used when 'Coupled Inductor' is enabled.",
+    "sepicSynchronousRectifier":  "When checked, the catch diode is replaced by a low-side MOSFET (LTC1871-style). Used at low Vout where diode drop hurts efficiency.",
+    "sepicDutyCycle":             "SEPIC duty cycle D = (Vo+Vd) / (Vin·η + Vo+Vd). Capped at 95% — designs approaching this limit are rejected.",
+    "sepicConversionRatio":       "Voltage conversion ratio M(D) = +D/(1−D). Non-inverting; equal to 1 at D = 0.5.",
+    "sepicCouplingCapVoltage":    "Steady-state voltage across the coupling capacitor Cs. By charge-balance, VCs = Vin.",
+    "sepicIL1Average":            "Average current in inductor L1 (= input current). IL1,avg = Iout · D / (1−D).",
+    "sepicIL2Average":            "Average current in inductor L2 (= output current). IL2,avg = Iout.",
+    "sepicIL1Ripple":             "Peak-to-peak ripple in L1 current. ΔIL1 = Vin·D / (L1·fsw).",
+    "sepicIL2Ripple":             "Peak-to-peak ripple in L2 current. ΔIL2 = Vin·D / (L2·fsw).",
+    "sepicSwitchPeakVoltage":     "Peak voltage across the main switch (Vds for a MOSFET). VS,peak = Vin + Vo.",
+    "sepicSwitchPeakCurrent":     "Peak switch current. ≈ IL1,avg + IL2,avg + (ΔIL1 + ΔIL2)/2.",
+    "sepicDiodePeakReverseVoltage": "Peak reverse voltage across the catch diode (or body diode of the synchronous rectifier). = Vin + Vo.",
+    "sepicDiodePeakCurrent":      "Peak forward current in the catch diode (during the OFF interval). = switch peak current.",
+    "sepicCouplingCapRmsCurrent": "RMS current in the coupling capacitor Cs. ≈ Iout · √(D/(1−D)). Sizes Cs ESR and ripple rating.",
+    "sepicDcmK":                  "DCM/CCM boundary parameter K = 2·Le·fsw / R, with Le = L1·L2/(L1+L2). CCM iff K > Kcrit.",
+    "sepicDcmKcrit":              "Critical conduction-mode threshold Kcrit(D) = (1−D)². If K ≤ Kcrit the converter is in DCM.",
+    "sepicIsCcm":                 "True when the converter operates in continuous conduction mode (CCM). DCM solutions are flagged separately.",
+
+    // ---------- Vienna (3-phase 3-level boost PFC) ----------
+    "lineToLineVoltage":          "RMS line-to-line input voltage of the 3-phase mains (e.g. 400 V EU industrial).",
+    "outputDcVoltage":            "DC bus output voltage. Must exceed √2·V_LL to guarantee boost operation (no over-modulation).",
+    "phaseCount":                 "Number of phases. Vienna rectifier is always 3-phase.",
+    "powerFactor":                "Target displacement power factor (typically ≥ 0.98 for PFC).",
+    "currentRippleRatio":         "Peak-to-peak inductor current ripple ratio (ΔI_L,pp / I_pk) at peak-of-line. Typical 0.2–0.3.",
+    "viennaVariant":              "Switch arrangement: viennaI = single bidirectional switch per leg (classic Kolar 1994); viennaII = two switches per leg (lower conduction loss at >30 kW).",
+    "switchType":                 "Per-leg bidirectional switch realisation: tType (modern SiC default), back-to-back MOSFET, or single-MOSFET-in-4-diode bridge.",
+    "samplingStrategy":           "Line-cycle envelope sampling: peakOfLineOnly (cheapest, ωt = π/2), peakOfLinePlusSectors (peak + 30/60° samples), fullLineCycle (36 samples — for THD validation).",
+    "desiredBoostInductance":     "Optional explicit boost-inductor value (H) per phase. Overrides ripple-based derivation when set.",
+    "boostInductance":            "Per-phase boost-inductor value (H) the solver chose to meet the requested current-ripple ratio.",
+
+    // ---------- Weinberg ----------
+    "weinbergVariant":            "Primary topology variant: 'classic' (V1 push-pull, 2 switches; switch V_DS = 2·Vin/(1−D)) or 'bridge' (V2 H-bridge, 4 switches; switch V_DS = Vin).",
+    "couplingCoefficientInput":   "Magnetic coupling coefficient k between the two L1 windings (1:1 input coupled inductor). Typical 0.99–0.999.",
+    "couplingCoefficientMain":    "Magnetic coupling coefficient k for the 4-way main-transformer coupling (Lpri_a, Lpri_b, Lsec_a, Lsec_b). Typical 0.95–0.99 — some leakage is required for SPICE convergence and ZCS.",
+    "synchronousRectifier":       "When checked, the secondary diodes are replaced by actively-driven synchronous MOSFETs gated complementary to the primary switches.",
+
+    // ---------- SRC (Series-Resonant Converter) ----------
+    "useSynchronousRectifier":    "Use synchronous-MOSFET rectification on the secondary instead of diodes (reduces conduction loss).",
+    "seriesInductance":           "Resonant inductor Lr (H) in the SRC/LLC tank.",
+    "resonantCapacitance":        "Resonant capacitor Cr (F) in the SRC/LLC tank.",
+    "srcRectifierType":           "SRC secondary rectifier topology (full-bridge diode, centre-tapped diode, current doubler).",
+    "srcLs":                      "Series resonant inductance Lr (H) the solver settled on for this operating point.",
+    "srcCr":                      "Series resonant capacitance Cr (F) the solver settled on for this operating point.",
+    "srcFr":                      "Resonant frequency fr = 1 / (2π√(Lr·Cr)) computed from the solver's Lr and Cr.",
+    "srcM":                       "Last gain M = Vout / Vin·n at the solver's converged operating point. Sanity check vs the requested conversion ratio.",
+    "srcFsw":                     "Normalized switching frequency fsw / fr at the converged operating point. >1 means above resonance (inductive), <1 means below resonance (capacitive — avoid).",
+
+    // ---------- Current Transformer ----------
+    "burdenResistor":             "Secondary burden resistor R_b (Ω) that converts the secondary current to a measurable voltage.",
+    "secondaryDcResistance":      "DC resistance of the secondary winding (Ω). Adds in series with R_b.",
+    "diodeVoltageDrop":           "Forward voltage drop of any secondary rectifier diode (V). Set to 0 for an unrectified output.",
+    "maximumPrimaryCurrentPeak":  "Peak value of the primary current to be measured (A).",
+    "waveformLabel":              "Shape of the primary current waveform: Sinusoidal, Unipolar Rectangular, or Unipolar Triangular.",
 }
 
 // Display labels for converter-wizard <ElementFromList> dropdowns whose
@@ -276,12 +493,41 @@ export const dropdownLabelsConverterWizards = {
         ahbFlyback:      'AHB Flyback',
     },
     bridgeType: {
-        halfBridge:      'Half Bridge',
-        fullBridge:      'Full Bridge',
+        halfBridge:           'Half Bridge',
+        fullBridge:           'Full Bridge',
+        fullBridgePhaseShift: 'Full Bridge (Phase-Shift)',
+    },
+    powerFlow: {
+        forward: 'Forward (HV -> LV)',
+        reverse: 'Reverse (LV -> HV)',
     },
     pfcMode: {
         continuousConductionMode:    'Continuous (CCM)',
-        'Critical Conduction Mode':  'Critical (BCM)',
+        criticalConductionMode:      'Critical (BCM)',
         discontinuousConductionMode: 'Discontinuous (DCM)',
+    },
+    srcRectifierType: {
+        fullBridgeDiode:    'Full-Bridge Diode',
+        centerTappedDiode:  'Center-Tapped Diode',
+        currentDoubler:     'Current Doubler',
+    },
+    viennaVariant: {
+        viennaI:  'Vienna I (1 switch/leg)',
+        viennaII: 'Vienna II (2 switch/leg)',
+    },
+    viennaSwitchType: {
+        tType:                          'T-Type (SiC, modern)',
+        backToBackMosfet:               'Back-to-Back MOSFET',
+        singleMosfetIn4DiodeBridge:     'Single MOSFET in 4-Diode Bridge',
+    },
+    viennaSamplingStrategy: {
+        peakOfLineOnly:         'Peak of Line Only',
+        peakOfLinePlusSectors:  'Peak + Sector Samples',
+        fullLineCycle:          'Full Line Cycle (36 samples)',
+    },
+    insulationType: {
+        no:           'No Isolation',
+        basic:        'Basic',
+        reinforced:   'Reinforced',
     },
 }

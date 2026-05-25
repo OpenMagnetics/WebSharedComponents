@@ -80,11 +80,6 @@ export async function buildFR4BoardSTL(magnetic, opts = {}) {
 
 // ── Metadata ────────────────────────────────────────────────────────────────
 
-export async function getSymmetryPlanes(magnetic) {
-    const api = await waitForMvb();
-    return api.getSymmetryPlanes(magnetic);
-}
-
 export async function getSupportedFamilies() {
     const api = await waitForMvb();
     return api.getSupportedFamilies();

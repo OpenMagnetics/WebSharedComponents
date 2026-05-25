@@ -165,6 +165,7 @@ export default {
       bobbinMesh: null,
       turnsMeshes: [],
       building: false,
+      pendingBuild: false,
       updating: true,
       recentChange: false,
       tryingToSend: false,
@@ -351,7 +352,16 @@ export default {
     },
 
     async buildMagnetic() {
-      if (this.building || !this.isMounted) return;
+      // Re-entry guard: if a build is already in flight, remember that the
+      // caller wanted a fresh build with the latest `magnetic` snapshot and
+      // re-fire after the current build settles. Without this, a wind-result
+      // arriving while the previous build is still running is silently
+      // dropped and the viewer stays one revision behind.
+      if (this.building || !this.isMounted) {
+        if (this.building) this.pendingBuild = true;
+        return;
+      }
+      this.pendingBuild = false;
 
       const magnetic = this.magnetic;
       if (!magnetic) {
@@ -438,6 +448,15 @@ export default {
         }
 
         const hasTurnsData = coil.turnsDescription?.length > 0;
+        // MVB++ STL turn renderer needs every wire to be a fully-resolved
+        // object (numDimensions, material, etc.). The OpenMagnetics defaults
+        // pipeline (utils.js:1083) writes the string "Dummy" as a sentinel
+        // when a wire isn't yet picked — and MVB++ throws COIL_WIRE_NOT_FOUND
+        // because no catalog wire is named "Dummy". Detect that here and
+        // skip the build, same way `isDummyBobbin` handles the bobbin path.
+        const hasDummyWires = coil.functionalDescription?.some(
+          w => typeof w?.wire === 'string' || !w?.wire
+        );
         const hasPlanarWires = coil.functionalDescription?.some(
           w => w?.wire?.type?.toLowerCase() === 'planar'
         );
@@ -455,7 +474,7 @@ export default {
           } catch (err) { console.warn('Could not build FR4 boards:', err.message); }
         }
 
-        if (this.showTurns && hasTurnsData) {
+        if (this.showTurns && hasTurnsData && !hasDummyWires) {
           try {
             const buf = await buildTurnsSTL(mag);
             if (buf) {
@@ -463,6 +482,8 @@ export default {
               if (m) { m.visible = this.internalShowTurns; group.add(m); this.turnsMeshes.push(m); }
             }
           } catch (err) { console.warn('Could not build turns:', err.message); }
+        } else if (this.showTurns && hasTurnsData && hasDummyWires) {
+          console.warn('Skipping turn STL build: one or more windings reference the "Dummy" wire sentinel. Pick a real wire in the coil builder before rendering 3D turns.');
         }
 
         // Add group to scene
@@ -482,6 +503,12 @@ export default {
         if (this.isMounted) {
           this.building = false;
           this.updating = false;
+          // If new build requests arrived while this build was running,
+          // honour the most recent `magnetic` snapshot now.
+          if (this.pendingBuild) {
+            this.pendingBuild = false;
+            this.tryToSend();
+          }
         }
       }
     },
@@ -510,6 +537,10 @@ export default {
       this.updating = true;
       this.clearScene();
       this.currentMagnetic = deepCopy(this.magnetic);
+      // Flag that a fresh change happened so a tryToSend already in its
+      // debounce window restarts the timer instead of building with the
+      // (now stale) snapshot it captured.
+      this.recentChange = true;
       this.tryToSend();
     },
   },

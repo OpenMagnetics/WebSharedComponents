@@ -24,6 +24,10 @@ export default {
         replaceTitle:{
             type: String
         },
+        tooltip:{
+            type: String,
+            default: null,
+        },
         titleSameRow:{
             type: Boolean,
             default: false
@@ -107,7 +111,7 @@ export default {
 
 
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex">
+    <div :data-cy="dataTestLabel + '-container'" class="container-flex" v-tooltip="tooltip">
         <div class="row">
             <input 
                 :style="combinedStyle([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
@@ -125,6 +129,7 @@ export default {
                 v-if="altText == null && !titleSameRow"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 class="element-radio-label p-0"
+                v-tooltip="tooltip"
             >
                 {{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
             </label>
@@ -136,6 +141,7 @@ export default {
                 v-if="titleSameRow"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor, labelWidthProportionClass])"
                 class="element-radio-label p-0"
+                v-tooltip="tooltip"
             >
                 {{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
             </label>
@@ -151,7 +157,7 @@ export default {
                     :ref="key"
                     class="form-check-input"
                     type="radio"
-                    :checked="modelValue[name].includes(value)"
+                    :checked="modelValue[name] === value"
                     :id="key + '-radio-input'"
                     @change="changedCheckedValue(value)"
                 >

@@ -37,31 +37,18 @@ function toBuffer(u8) {
 
 function decodeWasmException(mod, e) {
     if (typeof e === 'number') {
-        // Emscripten C++ exception pointer. Try every known introspection path.
         const tries = [];
         if (mod) {
-            // 1. Official helper (requires -sEXPORT_EXCEPTION_HANDLING_HELPERS=1).
             if (typeof mod.getExceptionMessage === 'function') {
                 try {
                     const r = mod.getExceptionMessage(e);
                     if (r) return Array.isArray(r) ? r.join(': ') : String(r);
                 } catch (err) { tries.push(`getExceptionMessage:${err && err.message}`); }
             }
-            // 2. Older helper.
             if (typeof mod.getCppExceptionMessage === 'function') {
                 try { const r = mod.getCppExceptionMessage(e); if (r) return String(r); }
                 catch (err) { tries.push(`getCppExceptionMessage:${err && err.message}`); }
             }
-            // 3. Manual ITANIUM ABI: pointer is to exception object; what() is offset.
-            // Try ___cxa_get_exception_ptr / what virtual-call (rarely present).
-            if (typeof mod.___cxa_get_exception_ptr === 'function' && typeof mod.UTF8ToString === 'function') {
-                try {
-                    const objPtr = mod.___cxa_get_exception_ptr(e);
-                    // Heuristic: read pointer at objPtr+4 (vptr+slot 0 typically what()).
-                    // This is unreliable; fall through silently.
-                } catch (err) { tries.push(`cxaGet:${err && err.message}`); }
-            }
-            // 4. Last resort: UTF8 from raw ptr (works iff exception WAS a const char*).
             if (typeof mod.UTF8ToString === 'function') {
                 try {
                     const msg = mod.UTF8ToString(e);
@@ -74,8 +61,6 @@ function decodeWasmException(mod, e) {
         return `WASM exception ptr=${e}` + (tries.length ? ` [tries: ${tries.join(', ')}]` : '');
     }
     if (e instanceof Error) {
-        // Prefer message when it carries our tagged content; stack often
-        // shadows it with a raw "addr@http..." trace from the wasm runtime.
         const msg = e.message || '';
         if (msg && (msg.startsWith('[mvbpp]') || msg.startsWith('[MVB]')
                     || msg.includes('ctor failed') || msg.includes('schema'))) {
@@ -86,151 +71,283 @@ function decodeWasmException(mod, e) {
     return String(e);
 }
 
-const DEFAULTS = { scale: 1.0, wireSeg: 16, coreSeg: 32, tolMm: 0.1, angTol: 0.1, binary: true };
+// ── Unified-API plumbing ────────────────────────────────────────────────────
+// New MVB++ binding signature for every drawXxx (STEP/STL builder):
+//   drawXxx(json, mode, plane, offset, format, scale, polygonSegments, symmetry, side)
+//
+// The frontend's old worker exposed STL-specific helpers
+// (buildCoreSTL/buildSpacersSTL/...). We keep those names but route them
+// through the unified API so call-sites do not need to be rewritten.
+
+const DEFAULTS = {
+    scale:   1.0,
+    wireSeg: 16,
+    coreSeg: 32,
+    binary:  true,            // STL only — kept for API compatibility
+};
 
 function o(opts) { return { ...DEFAULTS, ...opts }; }
+
+function symmetryToken(planes) {
+    // 0 = full, 1 = half, 2 = quarter (matches old buildXxxSTL semantics).
+    if (!planes) return 'none';
+    if (planes === 1) return 'half';
+    if (planes === 2) return 'quarter';
+    return 'none';
+}
+
+function callDraw(name, fn, args, { quiet = false } = {}) {
+    try {
+        return toBuffer(fn(...args));
+    } catch (e) {
+        const msg = decodeWasmException(_mvbpp, e);
+        if (!quiet) {
+            console.error(`[MVB Worker] ${name} failed:`, msg, 'raw:', e);
+        }
+        const err = new Error(`[MVB] ${name}: ${msg}`);
+        err.mvbMessage = msg;
+        throw err;
+    }
+}
+
+// "Optional component absent" markers thrown by deliver()/builders when the
+// magnetic legitimately has no spacers / no PCB / etc. Treated as null by
+// callers, not as errors.
+const ABSENT_PATTERNS = [
+    'STL export produced empty output',
+    'filtered out all geometry',
+    'no SPACER',
+    'no PCB',
+    'no FR4',
+];
+function isAbsentGeometry(e) {
+    const m = String(e && (e.mvbMessage || e.message) || e);
+    return ABSENT_PATTERNS.some(p => m.includes(p));
+}
+
+function hasSpacerEntries(magnetic) {
+    const gd = magnetic?.core?.geometricalDescription
+            ?? magnetic?.core?.geometrical_description;
+    if (!Array.isArray(gd)) return false;
+    return gd.some(e => {
+        const t = (e?.type || '').toString().toLowerCase();
+        return t === 'spacer' || t.includes('spacer');
+    });
+}
+
+function hasPrintedWinding(magnetic) {
+    const groups = magnetic?.coil?.groupsDescription
+                ?? magnetic?.coil?.groups_description;
+    if (!Array.isArray(groups) || !groups.length) return false;
+    const t = (groups[0]?.type || '').toString().toLowerCase();
+    return t === 'printed';
+}
+
+function inlineBobbin(magnetic) {
+    const b = magnetic?.coil?.bobbin;
+    if (!b || typeof b !== 'object') return null;
+    if (!b.processedDescription && !b.processed_description) return null;
+    return b;
+}
 
 function timed(name, fn) {
     return async (...args) => {
         const t0 = performance.now();
         const result = await fn(...args);
-        console.log(`[MVB] ${name} seg=${DEFAULTS.coreSeg} took ${(performance.now() - t0).toFixed(0)}ms`);
+        console.log(`[MVB] ${name} took ${(performance.now() - t0).toFixed(0)}ms`);
         return result;
     };
 }
 
+// ── STL/STEP builders (legacy names → unified API) ──────────────────────────
+
 Comlink.expose({
     waitReady: () => init(),
 
+    // Whole magnetic in one call
     buildMagneticSTL: timed('buildMagneticSTL', async (magnetic, opts = {}) => {
         await init();
         const d = o(opts);
-        try {
-            return toBuffer(_mvbpp.buildMagneticSTL(
-                JSON.stringify(magnetic), opts.includeBobbin ?? true,
-                d.scale, opts.symmetryPlanes ?? 0, d.wireSeg, d.coreSeg,
-                d.tolMm, d.angTol, d.binary,
-            ));
-        } catch(e) {
-            const msg = decodeWasmException(_mvbpp, e);
-            console.error('[MVB Worker] buildMagneticSTL failed:', msg, 'raw:', e);
-            throw new Error('[MVB] buildMagneticSTL: ' + msg);
-        }
+        const sym = symmetryToken(opts.symmetryPlanes);
+        const side = opts.side ?? '';
+        return callDraw('drawMagnetic[stl]', _mvbpp.drawMagnetic, [
+            JSON.stringify(magnetic), '3D', 'XY', 0.0, 'stl',
+            d.scale, d.coreSeg, sym, side,
+        ]);
     }),
 
     buildMagneticSTEP: async (magnetic, opts = {}) => {
         await init();
         const d = o(opts);
-        return toBuffer(_mvbpp.buildMagneticSTEP(
-            JSON.stringify(magnetic), opts.includeBobbin ?? true,
-            d.scale, opts.symmetryPlanes ?? 0, d.wireSeg, d.coreSeg,
-        ));
+        const sym = symmetryToken(opts.symmetryPlanes);
+        const side = opts.side ?? '';
+        return callDraw('drawMagnetic[step]', _mvbpp.drawMagnetic, [
+            JSON.stringify(magnetic), '3D', 'XY', 0.0, 'step',
+            d.scale, d.coreSeg, sym, side,
+        ]);
     },
 
+    // Core only (drawCore now accepts a Magnetic JSON and enriches itself)
     buildCoreSTL: timed('buildCoreSTL', async (magnetic, opts = {}) => {
         await init();
         const d = o(opts);
-        try {
-            return toBuffer(_mvbpp.buildCoreSTL(
-                JSON.stringify(magnetic), d.scale, d.coreSeg, d.tolMm, d.angTol, d.binary,
-            ));
-        } catch(e) {
-            const msg = decodeWasmException(_mvbpp, e);
-            console.error('[MVB Worker] buildCoreSTL failed:', msg, 'raw:', e);
-            throw new Error('[MVB] buildCoreSTL: ' + msg);
-        }
+        const sym = symmetryToken(opts.symmetryPlanes);
+        const side = opts.side ?? '';
+        return callDraw('drawCore[stl]', _mvbpp.drawCore, [
+            JSON.stringify(magnetic), '3D', 'XY', 0.0, 'stl',
+            d.scale, d.coreSeg, sym, side,
+        ]);
     }),
 
     buildSpacersSTL: timed('buildSpacersSTL', async (magnetic, opts = {}) => {
         await init();
+        // Most magnetics have no spacers — short-circuit before touching WASM
+        // so we don't trigger the "filtered out all geometry" exception path.
+        if (!hasSpacerEntries(magnetic)) return null;
         const d = o(opts);
-        return toBuffer(_mvbpp.buildSpacersSTL(
-            JSON.stringify(magnetic), d.scale, d.tolMm, d.angTol, d.binary,
-        ));
+        const sym = symmetryToken(opts.symmetryPlanes);
+        const side = opts.side ?? '';
+        try {
+            return callDraw('drawSpacer[stl]', _mvbpp.drawSpacer, [
+                JSON.stringify(magnetic), '3D', 'XY', 0.0, 'stl',
+                d.scale, d.coreSeg, sym, side,
+            ], { quiet: true });
+        } catch (e) {
+            if (isAbsentGeometry(e)) return null;
+            throw e;
+        }
     }),
 
     buildBobbinSTL: timed('buildBobbinSTL', async (magnetic, opts = {}) => {
         await init();
+        // Pull the bobbin sub-object directly. We deliberately do NOT enrich
+        // the whole magnetic here — enrichment can fail for unrelated reasons
+        // (missing wire references, incomplete coil, etc.) and a missing
+        // bobbin is a legitimate "nothing to draw" state, not an error.
+        const bobbin = inlineBobbin(magnetic);
+        if (!bobbin) return null;
         const d = o(opts);
-        return toBuffer(_mvbpp.buildBobbinSTL(
-            JSON.stringify(magnetic), d.scale, d.tolMm, d.angTol, d.binary,
-        ));
+        const sym = symmetryToken(opts.symmetryPlanes);
+        const side = opts.side ?? '';
+        try {
+            return callDraw('drawBobbin[stl]', _mvbpp.drawBobbin, [
+                JSON.stringify(bobbin), '3D', 'XY', 0.0, 'stl',
+                d.scale, d.coreSeg, sym, side,
+            ], { quiet: true });
+        } catch (e) {
+            if (isAbsentGeometry(e)) return null;
+            throw e;
+        }
     }),
 
     buildTurnsSTL: timed('buildTurnsSTL', async (magnetic, opts = {}) => {
         await init();
         const d = o(opts);
-        return toBuffer(_mvbpp.buildTurnsSTL(
-            JSON.stringify(magnetic), d.scale, d.wireSeg, d.tolMm, d.angTol, d.binary,
-        ));
+        const sym = symmetryToken(opts.symmetryPlanes);
+        const side = opts.side ?? '';
+        // drawTurns now accepts either a JSON array of MAS::Turn objects
+        // (concentric only) or a full Magnetic JSON (required for toroidal
+        // turns since they need bobbin context). Always pass the magnetic
+        // so both layouts work uniformly.
+        const turns = magnetic?.coil?.turnsDescription
+                   ?? magnetic?.coil?.turns_description;
+        if (!turns || !turns.length) return null;
+        // Skip extremely complex coils that crash the WASM renderer (OOM in
+        // OCCT boolean ops / meshing with hundreds of turns).
+        if (turns.length > 120) {
+            console.warn(`[MVB] buildTurnsSTL: skipping ${turns.length} turns (too complex for WASM renderer)`);
+            return null;
+        }
+        return callDraw('drawTurns[stl]', _mvbpp.drawTurns, [
+            JSON.stringify(magnetic), '3D', 'XY', 0.0, 'stl',
+            d.scale, d.wireSeg, sym, side,
+        ]);
     }),
 
     buildFR4BoardSTL: timed('buildFR4BoardSTL', async (magnetic, opts = {}) => {
         await init();
+        // Only PRINTED (planar) coils have an FR4 board — short-circuit
+        // otherwise to avoid noisy "filtered out all geometry" exceptions.
+        if (!hasPrintedWinding(magnetic)) return null;
         const d = o(opts);
-        return toBuffer(_mvbpp.buildFR4BoardSTL(
-            JSON.stringify(magnetic), d.scale,
-            opts.borderToWireDistance ?? 1.0,
-            opts.coreToLayerDistance ?? 0.5,
-            d.tolMm, d.angTol, d.binary,
-        ));
+        const sym = symmetryToken(opts.symmetryPlanes);
+        const side = opts.side ?? '';
+        try {
+            return callDraw('drawBoard[stl]', _mvbpp.drawBoard, [
+                JSON.stringify(magnetic), '3D', 'XY', 0.0, 'stl',
+                d.scale, d.coreSeg, sym, side,
+            ], { quiet: true });
+        } catch (e) {
+            if (isAbsentGeometry(e)) return null;
+            throw e;
+        }
     }),
 
-    getSymmetryPlanes: async (magnetic) => {
-        await init();
-        return Array.from(_mvbpp.getSymmetryPlanes(JSON.stringify(magnetic)));
-    },
+    // ── Metadata ─────────────────────────────────────────────────────────────
 
     getSupportedFamilies: async () => {
         await init();
         return Array.from(_mvbpp.getSupportedFamilies());
     },
 
-    drawDimensionedFrontView: async (magnetic, widthPx = 800, labelPx = 14, projColor = '#000000', dimColor = '#0000ff') => {
+    // ── 2D dimensioned drawings (SVG strings) ───────────────────────────────
+    // The new API has a single drawView(json, dimensions, plane, offset,
+    // widthPx, format) — old plane-specific helpers map to it.
+    // MVB++ convention: front view = XZ plane, top view = XY plane.
+
+    drawDimensionedFrontView: async (magnetic, widthPx = 800, _labelPx = 14, _projColor = '#000000', _dimColor = '#0000ff') => {
         await init();
         try {
-            return _mvbpp.drawDimensionedFrontView(JSON.stringify(magnetic), widthPx, labelPx, projColor, dimColor);
-        } catch(e) {
+            return _mvbpp.drawView(JSON.stringify(magnetic), true, 'XZ', 0.0, widthPx, 'svg');
+        } catch (e) {
             const msg = decodeWasmException(_mvbpp, e);
-            console.error('[MVB Worker] drawDimensionedFrontView failed:', msg, 'raw:', e);
+            console.error('[MVB Worker] drawView[front] failed:', msg, 'raw:', e);
             throw new Error('[MVB] drawDimensionedFrontView: ' + msg);
         }
     },
 
-    drawDimensionedTopView: async (magnetic, widthPx = 800, labelPx = 14, projColor = '#000000', dimColor = '#0000ff') => {
+    drawDimensionedTopView: async (magnetic, widthPx = 800, _labelPx = 14, _projColor = '#000000', _dimColor = '#0000ff') => {
         await init();
         try {
-            return _mvbpp.drawDimensionedTopView(JSON.stringify(magnetic), widthPx, labelPx, projColor, dimColor);
-        } catch(e) {
+            return _mvbpp.drawView(JSON.stringify(magnetic), true, 'XY', 0.0, widthPx, 'svg');
+        } catch (e) {
             const msg = decodeWasmException(_mvbpp, e);
-            console.error('[MVB Worker] drawDimensionedTopView failed:', msg, 'raw:', e);
+            console.error('[MVB Worker] drawView[top] failed:', msg, 'raw:', e);
             throw new Error('[MVB] drawDimensionedTopView: ' + msg);
         }
     },
 
-    drawCoreGappingTechnicalDrawing: async (magnetic, widthPx = 800, labelPx = 14, projColor = '#000000', dimColor = '#0000ff') => {
+    // No dedicated gapping technical drawing in the new API — emit the
+    // dimensioned front view, which now also annotates gaps.
+    drawCoreGappingTechnicalDrawing: async (magnetic, widthPx = 800, _labelPx = 14, _projColor = '#000000', _dimColor = '#0000ff') => {
         await init();
-        return _mvbpp.drawCoreGappingTechnicalDrawing(JSON.stringify(magnetic), widthPx, labelPx, projColor, dimColor);
+        try {
+            return _mvbpp.drawView(JSON.stringify(magnetic), true, 'XZ', 0.0, widthPx, 'svg');
+        } catch (e) {
+            const msg = decodeWasmException(_mvbpp, e);
+            console.error('[MVB Worker] drawView[gapping] failed:', msg, 'raw:', e);
+            throw new Error('[MVB] drawCoreGappingTechnicalDrawing: ' + msg);
+        }
     },
 
-    drawCoreProjection: async (magnetic, plane = 'XZ', coreSeg = 32, widthPx = 800, strokeWidth = 1.5, strokeColor = '#000000') => {
+    drawCoreProjection: async (magnetic, plane = 'XZ', _coreSeg = 32, widthPx = 800, _strokeWidth = 1.5, _strokeColor = '#000000') => {
         await init();
-        return _mvbpp.drawCoreProjection(JSON.stringify(magnetic), plane, coreSeg, widthPx, strokeWidth, strokeColor);
+        return _mvbpp.drawView(JSON.stringify(magnetic), false, plane, 0.0, widthPx, 'svg');
     },
 
-    drawCoreCrossSection: async (magnetic, plane = 'XZ', sectionOffset = 0, coreSeg = 32, widthPx = 800, strokeWidth = 1.5, strokeColor = '#000000') => {
+    drawCoreCrossSection: async (magnetic, plane = 'XZ', sectionOffset = 0, _coreSeg = 32, widthPx = 800, _strokeWidth = 1.5, _strokeColor = '#000000') => {
         await init();
-        return _mvbpp.drawCoreCrossSection(JSON.stringify(magnetic), plane, sectionOffset, coreSeg, widthPx, strokeWidth, strokeColor);
+        return _mvbpp.drawView(JSON.stringify(magnetic), false, plane, sectionOffset, widthPx, 'svg');
     },
 
-    drawAssemblyProjection: async (magnetic, plane = 'XZ', components = 7, symmetryPlanes = 0, wireSeg = 16, coreSeg = 32, widthPx = 800, strokeWidth = 1.5, strokeColor = '#000000') => {
+    drawAssemblyProjection: async (magnetic, plane = 'XZ', _components = 7, _symmetryPlanes = 0, _wireSeg = 16, _coreSeg = 32, widthPx = 800, _strokeWidth = 1.5, _strokeColor = '#000000') => {
         await init();
-        return _mvbpp.drawAssemblyProjection(JSON.stringify(magnetic), plane, components, symmetryPlanes, wireSeg, coreSeg, widthPx, strokeWidth, strokeColor);
+        return _mvbpp.drawView(JSON.stringify(magnetic), false, plane, 0.0, widthPx, 'svg');
     },
 
-    drawAssemblyCrossSection: async (magnetic, plane = 'XZ', sectionOffset = 0, components = 7, symmetryPlanes = 0, wireSeg = 16, coreSeg = 32, widthPx = 800, strokeWidth = 1.5, strokeColor = '#000000') => {
+    drawAssemblyCrossSection: async (magnetic, plane = 'XZ', sectionOffset = 0, _components = 7, _symmetryPlanes = 0, _wireSeg = 16, _coreSeg = 32, widthPx = 800, _strokeWidth = 1.5, _strokeColor = '#000000') => {
         await init();
-        return _mvbpp.drawAssemblyCrossSection(JSON.stringify(magnetic), plane, sectionOffset, components, symmetryPlanes, wireSeg, coreSeg, widthPx, strokeWidth, strokeColor);
+        return _mvbpp.drawView(JSON.stringify(magnetic), false, plane, sectionOffset, widthPx, 'svg');
     },
 });
 
