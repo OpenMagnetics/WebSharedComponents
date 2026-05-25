@@ -137,12 +137,19 @@ export default {
             type: Boolean,
             default: true,
         },
+        enableTemperaturePlot: {
+            type: Boolean,
+            default: true,
+        },
     },
     data() {
+        const initialMode = (!this.enableTemperaturePlot && this.plotModeInit === PLOT_MODES.TEMPERATURE_FIELD)
+            ? PLOT_MODES.BASIC
+            : this.plotModeInit;
         return {
             posting: false,
             zoomingPlot: this.zoomedInit,
-            currentPlotMode: this.plotModeInit,
+            currentPlotMode: initialMode,
             includeFringing: this.includeFringingInit,
             blockingRebounds: false,
             recentChange: false,
@@ -166,6 +173,12 @@ export default {
         currentModeLabel() {
             return PLOT_MODE_LABELS[this.currentPlotMode] || 'Basic';
         },
+        effectiveAvailablePlotModes() {
+            if (this.enableTemperaturePlot) {
+                return this.availablePlotModes;
+            }
+            return this.availablePlotModes.filter(m => m !== PLOT_MODES.TEMPERATURE_FIELD);
+        },
     },
     watch: {
         forceUpdate: {
@@ -181,6 +194,10 @@ export default {
             deep: true,
         },
         plotModeInit(newValue) {
+            if (!this.enableTemperaturePlot && newValue === PLOT_MODES.TEMPERATURE_FIELD) {
+                this.currentPlotMode = PLOT_MODES.BASIC;
+                return;
+            }
             this.currentPlotMode = newValue;
         },
         includeFringingInit(newValue) {
@@ -700,6 +717,9 @@ export default {
             this.$emit("zoomOut");
         },
         setPlotMode(mode) {
+            if (mode === PLOT_MODES.TEMPERATURE_FIELD && !this.enableTemperaturePlot) {
+                return;
+            }
             if (this.currentPlotMode === mode) {
                 // Toggle back to basic if clicking the same mode
                 this.currentPlotMode = PLOT_MODES.BASIC;
@@ -738,6 +758,11 @@ export default {
                     this.calculateElectricFieldPlot();
                     break;
                 case PLOT_MODES.TEMPERATURE_FIELD:
+                    if (!this.enableTemperaturePlot) {
+                        this.currentPlotMode = PLOT_MODES.BASIC;
+                        this.calculateBasicPlot();
+                        break;
+                    }
                     this.calculateTemperatureFieldPlot();
                     break;
                 case PLOT_MODES.WIRES_LOSSES:
@@ -831,7 +856,7 @@ export default {
                         </button>
                     </div>
                     <div v-if="modelValue.magnetic != null && enableOptions && modelValue.magnetic.coil.turnsDescription != null" class="text-center">
-                        <template v-for="mode in availablePlotModes" :key="mode">
+                        <template v-for="mode in effectiveAvailablePlotModes" :key="mode">
                             <button
                                 v-if="mode !== PLOT_MODES.BASIC"
                                 :style="buttonStyle"
