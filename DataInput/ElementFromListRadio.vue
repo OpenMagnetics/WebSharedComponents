@@ -112,21 +112,21 @@ export default {
 
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex" v-tooltip="tooltip">
-        <div class="grid">
-            <input 
+        <div class="row m-0" v-if="!titleSameRow">
+            <input
                 :style="combinedStyle([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-alt-title-label'"
-                v-if="altText != null && !titleSameRow"
+                v-if="altText != null"
                 type="text"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 class="element-radio-label p-0 mb-2 border-0"
                 @change="$emit('changeText', $event.target.value)"
                 :value="altText"
             >
-            <label 
+            <label
                 :style="combinedStyle([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 :data-cy="dataTestLabel + '-title'"
-                v-if="altText == null && !titleSameRow"
+                v-if="altText == null"
                 :class="combinedClass([labelFontSize, labelWidthProportionClass, labelBgColor, textColor])"
                 class="element-radio-label p-0"
                 v-tooltip="tooltip"
@@ -134,7 +134,7 @@ export default {
                 {{replaceTitle == null? toTitleCase(name) : toTitleCase(replaceTitle)}}
             </label>
         </div>
-        <div class="grid">
+        <div class="row align-items-center m-0">
             <label
                 :style="combinedStyle([labelFontSize, labelWidthProportionClass, labelBgColor, textColor, labelWidthProportionClass])"
                 :data-cy="dataTestLabel + '-same-row-label'"
@@ -185,10 +185,9 @@ export default {
 
 <style scoped>
 .element-radio-label {
-    font-size: clamp(0.6rem, 2cqi, 0.875rem);
+    font-size: 0.875rem;
     overflow: hidden;
     white-space: nowrap;
-    container-type: inline-size;
     border-radius: var(--p-border-radius);
 }
 </style>

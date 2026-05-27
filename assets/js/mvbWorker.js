@@ -252,12 +252,6 @@ Comlink.expose({
         const turns = magnetic?.coil?.turnsDescription
                    ?? magnetic?.coil?.turns_description;
         if (!turns || !turns.length) return null;
-        // Skip extremely complex coils that crash the WASM renderer (OOM in
-        // OCCT boolean ops / meshing with hundreds of turns).
-        if (turns.length > 120) {
-            console.warn(`[MVB] buildTurnsSTL: skipping ${turns.length} turns (too complex for WASM renderer)`);
-            return null;
-        }
         return callDraw('drawTurns[stl]', _mvbpp.drawTurns, [
             JSON.stringify(magnetic), '3D', 'XY', 0.0, 'stl',
             d.scale, d.wireSeg, sym, side,

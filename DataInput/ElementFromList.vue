@@ -231,15 +231,17 @@ export default {
 </template>
 
 <style scoped>
-.efl-container {
+.efl-container:not([class*="col-"]) {
     width: 100%;
 }
 
 .efl-row {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    gap: 0.25rem;
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
 }
 
 .efl-row-between {
@@ -247,10 +249,9 @@ export default {
 }
 
 .efl-label {
-    font-size: clamp(0.6rem, 2cqi, 0.875rem);
+    font-size: 0.875rem;
     overflow: hidden;
     white-space: nowrap;
-    container-type: inline-size;
     border-radius: var(--p-border-radius);
     padding: 0;
     margin: 0;

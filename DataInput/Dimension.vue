@@ -359,7 +359,7 @@ export default {
                     @update:modelValue="changeMultiplier"/>
                 <label
                     :style="combinedStyle([labelBgColor, textColor, valueFontSize, unitExtraStyleClass])"
-                    v-if="unit == null && altUnit != ''"
+                    v-if="unit == null && altUnit != null && altUnit !== ''"
                     class="dim-alt-unit"
                     :data-cy="dataTestLabel + '-DimensionUnit-text'"
                 >{{altUnit}}</label>
@@ -372,24 +372,27 @@ export default {
 </template>
 
 <style scoped>
-.dim-container {
+.dim-container:not([class*="col-"]) {
     width: 100%;
 }
 
 .dim-row {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    gap: 0.25rem;
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
 }
 
 .dim-label {
     border-radius: var(--p-border-radius);
-    font-size: clamp(0.6rem, 2cqi, 0.875rem);
+    font-size: 0.875rem;
     overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
-    container-type: inline-size;
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    min-width: 0;
     padding: 0;
 }
 
@@ -398,7 +401,8 @@ export default {
     align-items: stretch;
     gap: 0;
     flex: 1 1 auto;
-    min-width: 0;
+    flex-wrap: nowrap;
+    min-width: 7rem;
 }
 
 .dim-value-row-end {

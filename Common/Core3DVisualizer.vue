@@ -39,6 +39,12 @@ export default {
             type: String,
             default: "#1a1a1a",
         },
+        // For the shape customizer: render a single piece regardless of the
+        // core's declared numberStacks.
+        ignoreStacks: {
+            type: Boolean,
+            default: false,
+        },
     },
     components: {
         Camera,
@@ -222,6 +228,9 @@ export default {
                 if (coreAux.functionalDescription?.shape?.familySubtype != null) {
                     coreAux.functionalDescription.shape.familySubtype =
                         String(coreAux.functionalDescription.shape.familySubtype);
+                }
+                if (this.ignoreStacks && coreAux.functionalDescription) {
+                    coreAux.functionalDescription.numberStacks = 1;
                 }
 
                 // Build core STL via MVB++ WASM (no backend needed).

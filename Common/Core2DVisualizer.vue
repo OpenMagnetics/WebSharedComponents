@@ -30,6 +30,13 @@ export default {
             type: Boolean,
             default: false,
         },
+        // For the shape customizer: render a single piece regardless of the
+        // core's declared numberStacks. Avoids the dimension-displacement bug
+        // when defining one piece interactively.
+        ignoreStacks: {
+            type: Boolean,
+            default: false,
+        },
     },
     data() {
         const errorMessage = "";
@@ -91,6 +98,9 @@ export default {
                 if (coreAux.functionalDescription?.shape?.familySubtype != null) {
                     coreAux.functionalDescription.shape.familySubtype =
                         String(coreAux.functionalDescription.shape.familySubtype);
+                }
+                if (this.ignoreStacks && coreAux.functionalDescription) {
+                    coreAux.functionalDescription.numberStacks = 1;
                 }
                 const magnetic = { core: coreAux };
                 const width = this.$refs.Core2DVisualizerContainer?.clientWidth || 400;

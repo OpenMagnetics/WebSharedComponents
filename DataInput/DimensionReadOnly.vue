@@ -221,20 +221,20 @@ export default {
         <div class="dim-ro-row">
             <label
                 v-if="replaceTitle == null"
-                :style="combinedStyle([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
+                :style="combinedStyle([valueFontSize, labelWidthProportionClass, textColor])"
                 :data-cy="dataTestLabel + '-title'"
                 class="dimension-readonly-label"
-                :class="combinedClass([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
+                :class="combinedClass([valueFontSize, labelWidthProportionClass, textColor])"
                 v-tooltip="tooltip"
             >
                 {{shortenedName}}<sub>{{subscriptName}}</sub>
             </label>
             <label
                 v-else
-                :style="combinedStyle([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
+                :style="combinedStyle([valueFontSize, labelWidthProportionClass, textColor])"
                 :data-cy="dataTestLabel + '-title'"
                 class="dimension-readonly-label"
-                :class="combinedClass([valueFontSize, labelWidthProportionClass, labelBgColor, textColor])"
+                :class="combinedClass([valueFontSize, labelWidthProportionClass, textColor])"
                 v-tooltip="tooltip"
             >
                 {{replaceTitle}}<sub>{{subscriptName}}</sub>
@@ -242,12 +242,12 @@ export default {
             <div v-show="localData.scaledValue != null" :class="valueWidthProportionClass" class="dim-ro-value-wrap">
                 <div class="dim-ro-value-row">
                     <input
-                        :style="combinedStyle([valueFontSize, labelBgColor, textColor])"
+                        :style="combinedStyle([valueFontSize, textColor])"
                         :disabled="true"
                         :data-cy="dataTestLabel + '-number-label'"
                         type="number"
                         class="dim-ro-input"
-                        :class="combinedClass([valueFontSize, labelBgColor, textColor])"
+                        :class="combinedClass([valueFontSize, textColor])"
                         :value="visuallyScaledValue"
                         ref="inputRef"
                     >
@@ -260,14 +260,14 @@ export default {
                         :min="unitMin != null ? unitMin : min"
                         :max="unitMax != null ? unitMax : max"
                         :valueFontSize="valueFontSize"
-                        :valueBgColor="labelBgColor"
+                        :valueBgColor="null"
                         :textColor="textColor"
                         :extraStyleClass="''"
                         :unit="unit"
                         class="dim-ro-unit"
                     />
                     <label
-                        :style="combinedStyle([labelBgColor, textColor, valueFontSize])"
+                        :style="combinedStyle([textColor, valueFontSize])"
                         :data-cy="dataTestLabel + '-DimensionUnit-text'"
                         v-if="unit == null"
                         class="dim-ro-alt-unit"
@@ -290,15 +290,17 @@ export default {
    in the host app. If you want a "clean" look in this component
    specifically, hide them on the local `.dim-input` class instead. */
 
-.dim-ro-container {
+.dim-ro-container:not([class*="col-"]) {
   width: 100%;
 }
 
 .dim-ro-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  gap: 0.25rem;
+  flex-wrap: nowrap;
+  width: 100%;
+  min-width: 0;
 }
 
 .dim-ro-value-wrap {
@@ -310,6 +312,9 @@ export default {
   display: flex;
   align-items: stretch;
   gap: 0;
+  flex-wrap: nowrap;
+  min-width: 0;
+  width: 100%;
 }
 
 .dim-ro-input {
@@ -318,12 +323,26 @@ export default {
   text-align: end;
   padding: 0 0.25rem 0 0;
   border: 0;
-  background-color: transparent;
+  background-color: transparent !important;
 }
 
 .dim-ro-unit {
   flex: 0 0 auto;
   border: 0 !important;
+  background-color: transparent !important;
+}
+
+.dim-ro-unit :deep(select),
+.dim-ro-unit :deep(input) {
+  background-color: transparent !important;
+}
+
+.dimension-readonly-label {
+  background-color: transparent !important;
+}
+
+.dim-ro-alt-unit {
+  background-color: transparent !important;
 }
 
 .dim-ro-alt-unit {
@@ -333,10 +352,9 @@ export default {
 
 .dimension-readonly-label {
   border-radius: var(--p-border-radius);
-  font-size: clamp(0.6rem, 2cqi, 0.875rem);
+  font-size: 0.875rem;
   overflow: hidden;
   white-space: nowrap;
-  container-type: inline-size;
   flex: 0 0 auto;
   padding: 0;
 }

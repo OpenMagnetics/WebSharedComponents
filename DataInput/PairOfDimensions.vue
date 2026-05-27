@@ -178,7 +178,7 @@ export default {
 </template>
 
 <style scoped>
-.pod-container {
+.pod-container:not([class*="col-"]) {
     width: 100%;
 }
 

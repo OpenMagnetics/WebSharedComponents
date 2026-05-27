@@ -1,4 +1,4 @@
-import { CTI, CoreShapeFamily, CoreType, GapType, InsulationStandards, InsulationType, IsolationSide, Market, OvervoltageCategory, PollutionDegree, Topologies, WiringTechnology } from '../ts/MAS.ts'
+import { CTI, ConnectionType, CoreShapeFamily, CoreType, GapType, InsulationStandards, InsulationType, IsolationSide, Market, OvervoltageCategory, PollutionDegree, Topologies, WiringTechnology } from '../ts/MAS.ts'
 export const coreAdviserWeights = {
     "Efficiency": 40,
     "Dimensions": 30,
@@ -291,7 +291,7 @@ export const defaultDesignRequirements = {
     "maximumWeight": 300,
     "isolationSides": [IsolationSide.Primary],
     "maximumDimensions": {"width": null, "height": 0.05, "depth": null},
-    "terminalType": ["FlyingLead"],
+    "terminalType": [ConnectionType.FlyingLead],
     "wiringTechnology": WiringTechnology.Wound
 }
 

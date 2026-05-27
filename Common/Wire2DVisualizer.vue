@@ -161,8 +161,7 @@ export default {
                         this.widthProportion = `${originalProportion * 100}%`;
                     }
 
-                    this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`width=`, `class="scaling-wire-svg" width=`);
-                    this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`<svg`, `<svg class="h-full w-full"`);
+                    this.$refs.wire2DPlotView.innerHTML = this.$refs.wire2DPlotView.innerHTML.replace(`<svg`, `<svg class="scaling-wire-svg"`);
                     this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex] = this.$refs.wire2DPlotView.innerHTML;
                 } catch(error) {
                     console.error(error);

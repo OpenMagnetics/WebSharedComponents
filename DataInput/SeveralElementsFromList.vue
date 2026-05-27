@@ -97,18 +97,16 @@ export default {
 
 <template>
     <div :data-cy="dataTestLabel + '-container'" class="container-flex">
-        <div class="grid" :class="justifyContent? 'text-left ml-0 pl-0' : 'm-0 pl-3'">
+        <div class="d-flex flex-wrap align-items-center justify-content-between" :class="justifyContent? 'text-left ml-0 pl-0' : 'm-0 pl-3'" style="gap: 0.5rem 1rem;">
             <label
                 :style="combinedStyle([labelBgColor, textColor, labelFontSize])"
                 :data-cy="dataTestLabel + '-title'"
-                class="several-elements-label"
+                class="several-elements-label me-2"
                 :class="combinedClass([labelBgColor, textColor, labelFontSize])"
             >
                 {{toTitleCase(name)}}
             </label>
-        <div class="grid">
-        </div>
-            <div :class="classInput" class="form-check ml-4" v-for="[key, value] in Object.entries(options)" :key="key">
+            <div :class="classInput" class="form-check m-0" v-for="[key, value] in Object.entries(options)" :key="key">
                 <input
                     :style="combinedStyle([textColor])"
                     :disabled="optionsToDisable.includes(value) || disabled"
@@ -135,10 +133,9 @@ export default {
 
 <style scoped>
 .several-elements-label {
-    font-size: clamp(0.6rem, 2cqi, 0.875rem);
+    font-size: 0.875rem;
     overflow: hidden;
     white-space: nowrap;
-    container-type: inline-size;
     border-radius: var(--p-border-radius);
 }
 </style>
