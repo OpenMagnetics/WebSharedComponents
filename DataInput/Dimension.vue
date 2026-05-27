@@ -107,7 +107,7 @@ export default {
         },
         valueBgColor: {
             type: [String, Object],
-            default: () => ({ backgroundColor: 'var(--p-form-field-background, #ffffff)', border: '1px solid var(--p-form-field-border-color, #ced4da)' })
+            default: () => ({ backgroundColor: 'var(--p-form-field-background, var(--bs-white))', border: '1px solid var(--p-form-field-border-color, #ced4da)' })
         },
         textColor: {
             type: [String, Object],

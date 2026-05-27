@@ -37,7 +37,7 @@ export default {
         },
         backgroundColor: {
             type: String,
-            default: "#1a1a1a",
+            default: "var(--bs-dark)",
         },
         // For the shape customizer: render a single piece regardless of the
         // core's declared numberStacks.

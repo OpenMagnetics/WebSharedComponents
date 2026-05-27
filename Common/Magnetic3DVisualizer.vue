@@ -144,7 +144,7 @@ export default {
     },
     backgroundColor: {
       type: String,
-      default: "#1a1a1a",
+      default: "var(--bs-dark)",
     },
     buttonColor: {
       type: String,
@@ -653,7 +653,7 @@ export default {
 }
 
 .visibility-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(var(--bs-white-rgb), 0.2);
 }
 
 .visibility-btn.active {

@@ -151,20 +151,20 @@ export default {
             },
             tooltip: {
                 trigger: 'item',
-                backgroundColor: 'rgba(20, 20, 20, 0.92)',
-                borderColor: 'rgba(83, 151, 150, 0.6)',
+                backgroundColor: 'rgba(var(--bs-dark-rgb), 0.92)',
+                borderColor: 'rgba(var(--bs-primary-rgb), 0.6)',
                 borderWidth: 1,
                 padding: 8,
-                textStyle: { color: '#f2f2f2', fontSize: 11, fontWeight: 600 },
-                extraCssText: 'border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);',
+                textStyle: { color: 'var(--bs-light)', fontSize: 11, fontWeight: 600 },
+                extraCssText: 'border-radius: 6px; box-shadow: 0 4px 12px rgba(var(--bs-black-rgb), 0.5);',
                 axisPointer: {
                     type: 'cross',
-                    lineStyle: { color: 'rgba(255, 255, 255, 0.25)', type: 'dashed' },
-                    crossStyle: { color: 'rgba(255, 255, 255, 0.25)' },
+                    lineStyle: { color: 'rgba(var(--bs-white-rgb), 0.25)', type: 'dashed' },
+                    crossStyle: { color: 'rgba(var(--bs-white-rgb), 0.25)' },
                     label: {
                         precision: 2,
-                        backgroundColor: 'rgba(83, 151, 150, 0.85)',
-                        color: '#ffffff',
+                        backgroundColor: 'rgba(var(--bs-primary-rgb), 0.85)',
+                        color: 'var(--bs-white)',
                     }
                 },
                 formatter: (params) => {
@@ -219,9 +219,9 @@ export default {
                 type: this.xAxisOptions.type,
                 splitLine: {
                     show: this.showGrid,
-                    lineStyle: { color: 'rgba(0, 0, 0, 0.08)' },
+                    lineStyle: { color: 'rgba(var(--bs-black-rgb), 0.08)' },
                 },
-                axisLine: { lineStyle: { color: 'rgba(0, 0, 0, 0.15)' } },
+                axisLine: { lineStyle: { color: 'rgba(var(--bs-black-rgb), 0.15)' } },
                 axisTick: { show: false },
                 axisLabel: {
                     fontSize: this.axisLabelFontSize,
@@ -442,7 +442,7 @@ export default {
                     position: side,
                     splitLine: {
                         show: index === 0 ? this.showGrid : false,
-                        lineStyle: { color: 'rgba(0, 0, 0, 0.08)' },
+                        lineStyle: { color: 'rgba(var(--bs-black-rgb), 0.08)' },
                     },
                     axisLine: { show: false },
                     axisTick: { show: false },
@@ -540,7 +540,7 @@ export default {
                         rippleEffect: { brushType: 'stroke', scale: 2.5 },
                         color: this.pointsColor,
                         itemStyle: {
-                            borderColor: '#ffffff',
+                            borderColor: 'var(--bs-white)',
                             borderWidth: 1.5,
                         },
                         showSymbol: true,

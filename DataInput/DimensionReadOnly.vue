@@ -94,7 +94,7 @@ export default {
         },
         valueBgColor: {
             type: [String, Object],
-            default: () => ({ backgroundColor: 'var(--p-form-field-background, #ffffff)', border: '1px solid var(--p-form-field-border-color, #ced4da)' }),
+            default: () => ({ backgroundColor: 'var(--p-form-field-background, var(--bs-white))', border: '1px solid var(--p-form-field-border-color, #ced4da)' }),
         },
         textColor: {
             type: [String, Object],
@@ -366,7 +366,7 @@ export default {
 input {
   border-radius: var(--p-border-radius);
   color: var(--p-form-field-color, #333333);
-  background-color: var(--p-form-field-background, #ffffff);
+  background-color: var(--p-form-field-background, var(--bs-white));
   border: 1px solid var(--p-form-field-border-color, #ced4da);
   font-family: var(--p-font-family);
 }

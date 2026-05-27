@@ -91,15 +91,15 @@ export default {
         },
         visualizerBgColor: {
             type: [String, Object],
-            default: "#1a1a1a",
+            default: "var(--bs-dark)",
         },
         visualizerLineColor: {
             type: [String, Object],
-            default: "#d4d4d4",
+            default: "var(--bs-light)",
         },
         visualizerTextColor: {
             type: [String, Object],
-            default: "#d4d4d4",
+            default: "var(--bs-light)",
         },
         chartPaddings:{
             type: Object,
@@ -130,7 +130,7 @@ export default {
 
         const xAxisOptions = {
             label: this.propertiesConfiguration.xAxisLabel,
-            colorLabel: '#d4d4d4',
+            colorLabel: 'var(--bs-light)',
             type: this.propertiesConfiguration.xAxisMode == "linear"? "value" : this.propertiesConfiguration.xAxisMode,
             unit: this.propertiesConfiguration.xAxisUnit,
             numberDecimals: this.propertiesConfiguration.xAxisNumberDecimals,

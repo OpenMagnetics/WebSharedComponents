@@ -38,7 +38,7 @@ export default {
         },
         backgroundColor: {
             type: String,
-            default: "#1a1a1a",
+            default: "var(--bs-dark)",
         },
     },
     data() {

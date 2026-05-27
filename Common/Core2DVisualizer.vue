@@ -24,7 +24,7 @@ export default {
         },
         backgroundColor: {
             type: String,
-            default: "#1a1a1a",
+            default: "var(--bs-dark)",
         },
         gappingMode: {
             type: Boolean,
@@ -104,15 +104,18 @@ export default {
                 }
                 const magnetic = { core: coreAux };
                 const width = this.$refs.Core2DVisualizerContainer?.clientWidth || 400;
+                const cs = getComputedStyle(document.documentElement);
+                const projColor = cs.getPropertyValue('--bs-secondary').trim() || '#aaaaaa';
+                const dimColor = cs.getPropertyValue('--bs-info').trim() || '#4499ff';
 
                 if (this.gappingMode) {
-                    const gapSvg = await drawCoreGappingTechnicalDrawing(magnetic, width, 12, '#aaaaaa', '#4499ff');
+                    const gapSvg = await drawCoreGappingTechnicalDrawing(magnetic, width, 12, projColor, dimColor);
                     if (this.$refs.frontView) this.$refs.frontView.innerHTML = gapSvg;
                     if (this.$refs.topView) this.$refs.topView.innerHTML = '';
                 } else {
                     const [frontSvg, topSvg] = await Promise.all([
-                        drawDimensionedFrontView(magnetic, width, 12, '#aaaaaa', '#4499ff'),
-                        drawDimensionedTopView(magnetic, width, 12, '#aaaaaa', '#4499ff'),
+                        drawDimensionedFrontView(magnetic, width, 12, projColor, dimColor),
+                        drawDimensionedTopView(magnetic, width, 12, projColor, dimColor),
                     ]);
                     if (this.$refs.frontView) this.$refs.frontView.innerHTML = frontSvg;
                     if (this.$refs.topView) this.$refs.topView.innerHTML = topSvg;

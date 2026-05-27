@@ -43,7 +43,7 @@ export default {
         },
         valueBgColor: {
             type: [String, Object],
-            default: () => ({ backgroundColor: 'var(--p-form-field-background, #ffffff)' })
+            default: () => ({ backgroundColor: 'var(--p-form-field-background, var(--bs-white))' })
         },
         textColor: {
             type: [String, Object],

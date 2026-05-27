@@ -92,7 +92,7 @@ export default {
         },
         valueBgColor: {
             type: [String, Object],
-            default: () => ({ backgroundColor: 'var(--bs-white, #ffffff)', border: '1px solid var(--bs-border-color, #ced4da)' }),
+            default: () => ({ backgroundColor: 'var(--bs-white, var(--bs-white))', border: '1px solid var(--bs-border-color, #ced4da)' }),
         },
         textColor: {
             type: [String, Object],
@@ -618,12 +618,12 @@ button.dwt-add-btn {
   background-image: linear-gradient(135deg,
       rgba(var(--bs-primary-rgb), 1) 0%,
       rgba(var(--bs-primary-rgb), 0.8) 100%) !important;
-  color: #ffffff !important;
+  color: var(--bs-white) !important;
   box-shadow:
       0 0 0 1px rgb(var(--bs-primary-rgb) / 0.3),
       0 2px 6px rgb(var(--bs-primary-rgb) / 0.35),
-      inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+      inset 0 1px 0 rgba(var(--bs-white-rgb), 0.25);
+  text-shadow: 0 1px 1px rgba(var(--bs-black-rgb), 0.25);
   transition: filter 0.15s, transform 0.1s, box-shadow 0.2s;
   white-space: nowrap;
   min-height: 1.75rem;
