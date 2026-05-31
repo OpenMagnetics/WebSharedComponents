@@ -151,20 +151,20 @@ export default {
             },
             tooltip: {
                 trigger: 'item',
-                backgroundColor: 'rgba(var(--bs-dark-rgb), 0.92)',
-                borderColor: 'rgba(var(--bs-primary-rgb), 0.6)',
+                backgroundColor: 'rgba(var(--p-dark-rgb), 0.92)',
+                borderColor: 'rgba(var(--p-primary-rgb), 0.6)',
                 borderWidth: 1,
                 padding: 8,
-                textStyle: { color: 'var(--bs-light)', fontSize: 11, fontWeight: 600 },
-                extraCssText: 'border-radius: 6px; box-shadow: 0 4px 12px rgba(var(--bs-black-rgb), 0.5);',
+                textStyle: { color: 'var(--p-light)', fontSize: 11, fontWeight: 600 },
+                extraCssText: 'border-radius: 6px; box-shadow: 0 4px 12px rgba(var(--p-black-rgb), 0.5);',
                 axisPointer: {
                     type: 'cross',
-                    lineStyle: { color: 'rgba(var(--bs-white-rgb), 0.25)', type: 'dashed' },
-                    crossStyle: { color: 'rgba(var(--bs-white-rgb), 0.25)' },
+                    lineStyle: { color: 'rgba(var(--p-white-rgb), 0.25)', type: 'dashed' },
+                    crossStyle: { color: 'rgba(var(--p-white-rgb), 0.25)' },
                     label: {
                         precision: 2,
-                        backgroundColor: 'rgba(var(--bs-primary-rgb), 0.85)',
-                        color: 'var(--bs-white)',
+                        backgroundColor: 'rgba(var(--p-primary-rgb), 0.85)',
+                        color: 'var(--p-white)',
                     }
                 },
                 formatter: (params) => {
@@ -540,7 +540,7 @@ export default {
                         rippleEffect: { brushType: 'stroke', scale: 2.5 },
                         color: this.pointsColor,
                         itemStyle: {
-                            borderColor: 'var(--bs-white)',
+                            borderColor: 'var(--p-white)',
                             borderWidth: 1.5,
                         },
                         showSymbol: true,

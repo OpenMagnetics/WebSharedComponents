@@ -62,11 +62,11 @@ export default {
         },
         valueBgColor: {
             type: [String, Object],
-            default: () => ({ backgroundColor: 'var(--bs-white, var(--bs-white))', border: '1px solid var(--bs-border-color, #ced4da)' })
+            default: () => ({ backgroundColor: 'var(--p-white, var(--p-white))', border: '1px solid var(--p-border-color, #ced4da)' })
         },
         textColor: {
             type: [String, Object],
-            default: () => ({ color: 'var(--bs-body-color, #333333)' })
+            default: () => ({ color: 'var(--p-body-color, #333333)' })
         },
         disabled: {
             type: Boolean,

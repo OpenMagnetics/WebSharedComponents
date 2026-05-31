@@ -24,7 +24,7 @@ export default {
         },
         backgroundColor: {
             type: String,
-            default: "var(--bs-dark)",
+            default: "var(--p-dark)",
         },
         gappingMode: {
             type: Boolean,
@@ -105,8 +105,8 @@ export default {
                 const magnetic = { core: coreAux };
                 const width = this.$refs.Core2DVisualizerContainer?.clientWidth || 400;
                 const cs = getComputedStyle(document.documentElement);
-                const projColor = cs.getPropertyValue('--bs-secondary').trim() || '#aaaaaa';
-                const dimColor = cs.getPropertyValue('--bs-info').trim() || '#4499ff';
+                const projColor = cs.getPropertyValue('--p-secondary').trim() || '#aaaaaa';
+                const dimColor = cs.getPropertyValue('--p-info').trim() || '#4499ff';
 
                 if (this.gappingMode) {
                     const gapSvg = await drawCoreGappingTechnicalDrawing(magnetic, width, 12, projColor, dimColor);

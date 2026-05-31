@@ -283,15 +283,15 @@ export default {
     height: 2.25rem;
 }
 .dwt-remove-addon:hover {
-    background: rgba(var(--bs-danger-rgb), 0.15) !important;
-    color: var(--bs-danger);
+    background: rgba(var(--p-danger-rgb), 0.15) !important;
+    color: var(--p-danger);
 }
 .dwt-remove-label {
     font-size: 0.75rem;
 }
 .dwt-remove-icon {
     font-size: 0.65rem;
-    color: var(--bs-danger);
+    color: var(--p-danger);
 }
 .dwt-input {
     flex: 1 1 auto;
@@ -355,15 +355,15 @@ export default {
 .dwt-add-btn {
     width: 100%;
     font-size: 0.75rem;
-    color: var(--bs-primary) !important;
-    border-color: rgba(var(--bs-primary-rgb), 0.5) !important;
-    background: rgba(var(--bs-primary-rgb), 0.08) !important;
+    color: var(--p-primary) !important;
+    border-color: rgba(var(--p-primary-rgb), 0.5) !important;
+    background: rgba(var(--p-primary-rgb), 0.08) !important;
     transition: background 0.15s, border-color 0.15s, color 0.15s !important;
 }
 .dwt-add-btn:hover {
-    color: var(--bs-white) !important;
-    background: var(--bs-primary) !important;
-    border-color: var(--bs-primary) !important;
+    color: var(--p-white) !important;
+    background: var(--p-primary) !important;
+    border-color: var(--p-primary) !important;
 }
 .dwt-add-btn i { color: inherit; }
 .dwt-error {

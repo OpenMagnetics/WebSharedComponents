@@ -99,11 +99,11 @@ export default {
         },
         backgroundColor: {
             type: String,
-            default: "var(--bs-dark)",
+            default: "var(--p-dark)",
         },
         textColor: {
             type: String,
-            default: "var(--bs-white)",
+            default: "var(--p-white)",
         },
         buttonStyle: {
             type: [Object, String],
@@ -580,8 +580,8 @@ export default {
                 settings.painterAdvancedLitz = false;
                 await mkf.set_settings(JSON.stringify(settings));
                 // Ensure color values are plain strings (not reactive objects)
-                const textColorStr = String(this.textColor || 'var(--bs-white)');
-                const bgColorStr = String(this.backgroundColor || 'var(--bs-dark)');
+                const textColorStr = String(this.textColor || 'var(--p-white)');
+                const bgColorStr = String(this.backgroundColor || 'var(--p-dark)');
                 const result = await mkf.plot_temperature_field(
                     JSON.stringify(this.modelValue.magnetic),
                     JSON.stringify(this.modelValue.inputs.operatingPoints[this.operatingPointIndex]),
