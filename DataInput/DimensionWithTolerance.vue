@@ -613,18 +613,16 @@ button.dwt-add-btn {
   font-weight: 600;
   letter-spacing: 0.01em;
   cursor: pointer;
-  border: 1px solid rgba(var(--bs-primary-rgb), 0.85) !important;
-  background-color: var(--bs-primary) !important;
-  background-image: linear-gradient(135deg,
-      rgba(var(--bs-primary-rgb), 1) 0%,
-      rgba(var(--bs-primary-rgb), 0.8) 100%) !important;
-  color: var(--bs-white) !important;
+  border: 1px solid rgba(var(--bs-primary-rgb), 0.7) !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--bs-primary) !important;
   box-shadow:
-      0 0 0 1px rgb(var(--bs-primary-rgb) / 0.3),
-      0 2px 6px rgb(var(--bs-primary-rgb) / 0.35),
-      inset 0 1px 0 rgba(var(--bs-white-rgb), 0.25);
-  text-shadow: 0 1px 1px rgba(var(--bs-black-rgb), 0.25);
-  transition: filter 0.15s, transform 0.1s, box-shadow 0.2s;
+      0 0 0 1px rgb(var(--bs-primary-rgb) / 0.18),
+      0 1px 4px rgb(var(--bs-black-rgb) / 0.2),
+      inset 0 1px 0 rgba(var(--bs-white-rgb), 0.04);
+  text-shadow: none;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
   white-space: nowrap;
   min-height: 1.75rem;
   height: 1.75rem;
@@ -634,7 +632,8 @@ button.dwt-add-btn {
 }
 
 .dwt-add-btn:hover {
-  filter: brightness(1.15);
+  background-color: var(--bs-primary) !important;
+  color: var(--bs-white) !important;
   transform: translateY(-1px);
 }
 

@@ -570,7 +570,7 @@ export default {
       :data-cy="`${dataTestLabel}-canvas`" 
       ref="renderer" 
       resize=true 
-      :orbit-ctrl="{ enableDamping: true, dampingFactor: 0.05, autoRotate: true }" 
+      :orbit-ctrl="{ enableDamping: true, dampingFactor: 0.05, autoRotate : false }" 
       shadow 
       class="p-0 m-0"
     >

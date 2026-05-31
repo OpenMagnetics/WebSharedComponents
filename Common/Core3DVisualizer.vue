@@ -284,7 +284,7 @@ export default {
 
 <template>
     <img data-cy="CoreShapeArtisanVisualizer-loading" v-if="updating" class="mx-auto block col-12" alt="loading" style="height: auto;" :src="loadingGif">
-    <Renderer  data-cy="CoreShapeArtisanVisualizer-canvas" ref="renderer" resize=true :orbit-ctrl="{ enableDamping: true, dampingFactor: 0.05, autoRotate : true }" shadow class="p-0 m-0">
+    <Renderer  data-cy="CoreShapeArtisanVisualizer-canvas" ref="renderer" resize=true :orbit-ctrl="{ enableDamping: true, dampingFactor: 0.05, autoRotate : false }" shadow class="p-0 m-0">
         <Camera ref="camera" />
         <Scene ref="scene" :background="backgroundColor">
             <SpotLight :color="'white'" :intensity="50" :position="{ y: 150, z: 100 }" :cast-shadow="true" :shadow-map-size="{ width: 1024, height: 1024 }" />
