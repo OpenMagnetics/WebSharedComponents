@@ -211,6 +211,10 @@ export const tooltipsConverterWizards = {
     pfcIlRipple:      "Peak-to-peak inductor current ripple at the worst-case operating point.",
     pfcIline:         "RMS line current at minimum input voltage.",
     pfcPin:           "Average input power (per phase for interleaved boost).",
+    // ---------- PFC topology variant ----------
+    topologyVariant:  "PFC power-stage topology. Boost is the classic bridge+boost. Bridgeless / semi-bridgeless / totem-pole drop the input rectifier for higher efficiency. Interleaved boost uses N phase-shifted cells. SEPIC / Ćuk are buck-boost-class (output can be below the line peak).",
+    numberOfPhases:   "Number of interleaved (phase-shifted) boost cells. 2 or 3.",
+    wideBandgapSwitch:"Active switches are wide-bandgap (GaN/SiC). Required for totem-pole in CCM (Si body-diode reverse recovery makes Si CCM totem-pole infeasible).",
 
     // ---------- Forward variants diagnostics (forwardDiagnostics) ----------
     fwdDuty:          "Maximum operating duty cycle D_max specified by the user.",
@@ -505,6 +509,15 @@ export const dropdownLabelsConverterWizards = {
         continuousConductionMode:    'Continuous (CCM)',
         criticalConductionMode:      'Critical (BCM)',
         discontinuousConductionMode: 'Discontinuous (DCM)',
+    },
+    pfcVariant: {
+        boost:           'Boost (classic)',
+        bridgeless:      'Bridgeless',
+        semiBridgeless:  'Semi-Bridgeless',
+        interleavedBoost:'Interleaved Boost',
+        totemPole:       'Totem-Pole',
+        sepic:           'SEPIC',
+        cuk:             'Ćuk',
     },
     srcRectifierType: {
         fullBridgeDiode:    'Full-Bridge Diode',

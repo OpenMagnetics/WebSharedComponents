@@ -1032,6 +1032,9 @@ export const defaultPfcWizardInputs = {
     },
     designLevel: 'Help me with the design',
     mode: 'continuousConductionMode',
+    topologyVariant: 'boost', // boost|bridgeless|semiBridgeless|interleavedBoost|totemPole|sepic|cuk
+    numberOfPhases: 2,        // interleavedBoost only (2 or 3)
+    wideBandgapSwitch: true,  // GaN/SiC; required for totemPole in CCM
     outputVoltage: 400,      // 400V DC bus for universal input PFC
     outputPower: 300,        // 300W - typical for small-medium PFC
     switchingFrequency: 65000,  // 65kHz - good balance of size/losses
