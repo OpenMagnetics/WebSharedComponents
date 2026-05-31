@@ -38,19 +38,19 @@ export default {
         },
         valueFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: ''
         },
         labelFontSize: {
             type: [String, Object],
-            default: 'fs-6'
+            default: ''
         },
         labelWidthProportionClass:{
             type: String,
-            default: 'col-xs-12 col-md-4'
+            default: 'col-12 md:col-4'
         },
         valueWidthProportionClass:{
             type: String,
-            default: 'col-xs-8 col-md-8'
+            default: 'col-8 md:col-8'
         },
         labelBgColor: {
             type: [String, Object],
@@ -180,7 +180,7 @@ export default {
                 class="border-round col-12">
                 {{title}}
             </label>
-            <div class="offset-1 col-11">
+            <div class="col-offset-1 col-11">
                 <ElementFromList
                     v-tooltip="tooltipsMagneticBuilder.coreGappingType"
                     class="col-12 text-left m-0 p-0"

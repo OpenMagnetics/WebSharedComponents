@@ -570,7 +570,7 @@ export default {
       :data-cy="`${dataTestLabel}-canvas`" 
       ref="renderer" 
       resize=true 
-      :orbit-ctrl="{ enableDamping: true, dampingFactor: 0.05, autoRotate: true }" 
+      :orbit-ctrl="{ enableDamping: true, dampingFactor: 0.05, autoRotate : false }" 
       shadow 
       class="p-0 m-0"
     >
@@ -586,7 +586,7 @@ export default {
     <!-- Visibility toggle buttons below canvas -->
     <div class="visibility-controls" v-if="!updating && hasMagneticLoaded">
       <button 
-        :class="['btn btn-sm visibility-btn', internalShowCore ? 'active' : '']"
+        :class="['p-button p-button-sm visibility-btn', internalShowCore ? 'active' : '']"
         :style="{ color: buttonColor, borderColor: buttonColor }"
         @click="internalShowCore = !internalShowCore"
         title="Toggle Core visibility"
@@ -594,7 +594,7 @@ export default {
         <i :class="['bi', internalShowCore ? 'bi-eye' : 'bi-eye-slash']"></i> Core
       </button>
       <button 
-        :class="['btn btn-sm visibility-btn', internalShowBobbin ? 'active' : '']"
+        :class="['p-button p-button-sm visibility-btn', internalShowBobbin ? 'active' : '']"
         :style="{ color: buttonColor, borderColor: buttonColor }"
         @click="internalShowBobbin = !internalShowBobbin"
         title="Toggle Bobbin visibility"
@@ -602,7 +602,7 @@ export default {
         <i :class="['bi', internalShowBobbin ? 'bi-eye' : 'bi-eye-slash']"></i> Bobbin
       </button>
       <button 
-        :class="['btn btn-sm visibility-btn', internalShowTurns ? 'active' : '']"
+        :class="['p-button p-button-sm visibility-btn', internalShowTurns ? 'active' : '']"
         :style="{ color: buttonColor, borderColor: buttonColor }"
         @click="internalShowTurns = !internalShowTurns"
         title="Toggle Turns visibility"

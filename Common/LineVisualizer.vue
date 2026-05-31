@@ -219,9 +219,9 @@ export default {
                 type: this.xAxisOptions.type,
                 splitLine: {
                     show: this.showGrid,
-                    lineStyle: { color: 'rgba(var(--bs-black-rgb), 0.08)' },
+                    lineStyle: { color: 'rgba(255, 255, 255, 0.12)' },
                 },
-                axisLine: { lineStyle: { color: 'rgba(var(--bs-black-rgb), 0.15)' } },
+                axisLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.25)' } },
                 axisTick: { show: false },
                 axisLabel: {
                     fontSize: this.axisLabelFontSize,
@@ -442,7 +442,7 @@ export default {
                     position: side,
                     splitLine: {
                         show: index === 0 ? this.showGrid : false,
-                        lineStyle: { color: 'rgba(var(--bs-black-rgb), 0.08)' },
+                        lineStyle: { color: 'rgba(255, 255, 255, 0.12)' },
                     },
                     axisLine: { show: false },
                     axisTick: { show: false },

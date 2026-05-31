@@ -1,130 +1,71 @@
 <script setup>
-import { toTitleCase, getMultiplier, combinedStyle, combinedClass } from '../assets/js/utils.js'
-
+import { toTitleCase } from '../assets/js/utils.js'
+import Checkbox from 'primevue/checkbox'
 </script>
 <script>
 export default {
+    components: { Checkbox },
+    emits: ['update'],
     props: {
-        name:{
-            type: String,
-            required: true
-        },
-        modelValue:{
-            type: Object,
-            required: true
-        },
-        options:{
-            type: Object,
-            required: true
-        },
-        dataTestLabel: {
-            type: String,
-            default: '',
-        },
-        optionsToDisable: {
-            type: Array,
-            default: () => [],
-        },
-        classInput: {
-            type: String,
-            default: 'col-lg-6 col-xl-2',
-        },
-        justifyContent: {
-            type: Boolean,
-            default: false,
-        },
-        disabled: {
-            type: Boolean,
-            default: false,
-        },
-        valueFontSize: {
-            type: [String, Object],
-            default: () => ({ fontSize: '0.875rem' })
-        },
-        labelFontSize: {
-            type: [String, Object],
-            default: () => ({ fontSize: '0.875rem' })
-        },
-        labelBgColor: {
-            type: [String, Object],
-            default: () => ({ backgroundColor: 'transparent' }),
-        },
-        valueBgColor: {
-            type: [String, Object],
-            default: () => ({ backgroundColor: 'var(--bs-white, var(--bs-white))', border: '1px solid var(--bs-border-color, #ced4da)' }),
-        },
-        textColor: {
-            type: [String, Object],
-            default: () => ({ color: 'var(--bs-body-color, #333333)' }),
-        },
-    },
-    data() {
-        return {
-        }
+        name: { type: String, required: true },
+        modelValue: { type: Object, required: true },
+        options: { type: Object, required: true },
+        dataTestLabel: { type: String, default: '' },
+        optionsToDisable: { type: Array, default: () => [] },
+        classInput: { type: String, default: '' },
+        justifyContent: { type: Boolean, default: false },
+        disabled: { type: Boolean, default: false },
+        valueFontSize: { type: [String, Object], default: () => ({}) },
+        labelFontSize: { type: [String, Object], default: () => ({}) },
+        labelBgColor: { type: [String, Object], default: () => ({}) },
+        valueBgColor: { type: [String, Object], default: () => ({}) },
+        textColor: { type: [String, Object], default: () => ({}) },
     },
     computed: {
-        selectedLabel() {
-        }
-    },
-    watch: { 
-    },
-    mounted () {
+        currentSelection() {
+            return this.modelValue[this.name] || []
+        },
     },
     methods: {
-        changedCheckedValue(checkedValue) {
-            let found = false;
-            const newList = [];
-            for (let [key, value] of Object.entries(this.modelValue[this.name])) {
-                if (value == checkedValue) {
-                    found = true;
-                }
-                else {
-                    newList.push(value);
-                }
-        
-            }
-            if (!found) {
-                this.modelValue[this.name].push(checkedValue);
-            }
-            else {
-                this.modelValue[this.name] = newList;
-            }
-            this.$emit("update", checkedValue, this.name);
+        toTitleCase,
+        onToggle(value) {
+            const cur = this.modelValue[this.name] || []
+            const idx = cur.indexOf(value)
+            if (idx >= 0) this.modelValue[this.name] = cur.filter(v => v !== value)
+            else this.modelValue[this.name] = [...cur, value]
+            this.$emit('update', value, this.name)
         },
-    }
+    },
 }
 </script>
 
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex">
-        <div class="d-flex flex-wrap align-items-center justify-content-between" :class="justifyContent? 'text-left ml-0 pl-0' : 'm-0 pl-3'" style="gap: 0.5rem 1rem;">
+    <div :data-cy="dataTestLabel + '-container'" class="sefl-container">
+        <div class="sefl-row">
             <label
-                :style="combinedStyle([labelBgColor, textColor, labelFontSize])"
+                :style="[labelBgColor, textColor, labelFontSize]"
                 :data-cy="dataTestLabel + '-title'"
-                class="several-elements-label me-2"
-                :class="combinedClass([labelBgColor, textColor, labelFontSize])"
-            >
-                {{toTitleCase(name)}}
+                class="sefl-label">
+                {{ toTitleCase(name) }}
             </label>
-            <div :class="classInput" class="form-check m-0" v-for="[key, value] in Object.entries(options)" :key="key">
-                <input
-                    :style="combinedStyle([textColor])"
-                    :disabled="optionsToDisable.includes(value) || disabled"
+            <div
+                v-for="[key, value] in Object.entries(options)"
+                :key="key"
+                class="sefl-option"
+                :class="classInput">
+                <Checkbox
+                    :input-id="name + '-' + value + '-cb'"
                     :data-cy="dataTestLabel + '-' + value + '-checkbox-input'"
-                    :ref="key"
-                    class="form-check-input border"
-                    type="checkbox"
-                    :checked="modelValue[name].includes(value)"
-                    :id="name + '-checkbox-input'"
-                    :class="combinedClass([disabled? labelBgColor : valueBgColor, textColor, valueFontSize, disabled? 'border-0' : ''])"
-                    @change="changedCheckedValue(value)"
-                >
-                <label 
-                    :style="combinedStyle([labelBgColor, textColor, valueFontSize])"
-                    class="form-check-label"
-                    :class="combinedClass([labelBgColor, textColor, valueFontSize])"
-                    :for="name + '-checkbox-input'">
-                    {{value}}
+                    binary
+                    :model-value="currentSelection.includes(value)"
+                    @update:model-value="onToggle(value)"
+                    :disabled="optionsToDisable.includes(value) || disabled"
+                />
+                <label
+                    :style="[labelBgColor, textColor, valueFontSize]"
+                    class="sefl-option-label"
+                    :for="name + '-' + value + '-cb'">
+                    {{ value }}
                 </label>
             </div>
         </div>
@@ -132,10 +73,28 @@ export default {
 </template>
 
 <style scoped>
-.several-elements-label {
+.sefl-container { width: 100%; }
+.sefl-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    width: 100%;
+}
+.sefl-label {
     font-size: 0.875rem;
     overflow: hidden;
     white-space: nowrap;
-    border-radius: var(--p-border-radius);
+}
+.sefl-option {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.sefl-option-label {
+    font-size: 0.875rem;
+    cursor: pointer;
+    user-select: none;
 }
 </style>

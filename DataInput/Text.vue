@@ -1,164 +1,102 @@
 <script setup>
-import { toTitleCase, combinedStyle, combinedClass } from '../assets/js/utils.js'
+import { toTitleCase } from '../assets/js/utils.js'
+import InputText from 'primevue/inputtext'
 </script>
-
 <script>
 export default {
+    components: { InputText },
+    emits: ['hasError'],
     props: {
-        name: {
-            type: String,
-            required: true
-        },
-        modelValue: {
-            type: Object,
-            required: true
-        },
-        defaultValue: {
-            type: String,
-            default: '',
-        },
-        dataTestLabel: {
-            type: String,
-            default: '',
-        },
-        replaceTitle:{
-            type: String,
-            default: null,
-        },
-        canBeEmpty: {
-            type: Boolean,
-            default: true,
-        },
-        valueFontSize: {
-            type: [String, Object],
-            default: () => ({ fontSize: '0.875rem' })
-        },
-        labelFontSize: {
-            type: [String, Object],
-            default: () => ({ fontSize: '0.875rem' })
-        },
-        labelBgColor: {
-            type: [String, Object],
-            default: () => ({ backgroundColor: 'transparent' }),
-        },
-        valueBgColor: {
-            type: [String, Object],
-            default: () => ({ backgroundColor: 'var(--bs-white, var(--bs-white))', border: '1px solid var(--bs-border-color, #ced4da)' }),
-        },
-        textColor: {
-            type: [String, Object],
-            default: () => ({ color: 'var(--bs-body-color, #333333)' }),
-        },
-        labelWidthProportionClass: {
-            type: String,
-            default: 'col-4'
-        },
-        valueWidthProportionClass: {
-            type: String,
-            default: " col-8",
-        },
-        extraStyleClass:{
-            type: String,
-            default: ''
-        },
+        name: { type: String, required: true },
+        modelValue: { type: Object, required: true },
+        defaultValue: { type: String, default: '' },
+        dataTestLabel: { type: String, default: '' },
+        replaceTitle: { type: String, default: null },
+        canBeEmpty: { type: Boolean, default: true },
+        valueFontSize: { type: [String, Object], default: () => ({}) },
+        labelFontSize: { type: [String, Object], default: () => ({}) },
+        labelBgColor: { type: [String, Object], default: () => ({}) },
+        valueBgColor: { type: [String, Object], default: () => ({}) },
+        textColor: { type: [String, Object], default: () => ({}) },
+        labelWidthProportionClass: { type: String, default: '' },
+        valueWidthProportionClass: { type: String, default: '' },
+        extraStyleClass: { type: String, default: '' },
     },
     data() {
-        let localData = "";
-
-        if (this.modelValue[this.name] == null &&
-            this.defaultValue != null) {
-            localData = this.defaultValue;
-        }
-
-        if (this.modelValue[this.name] != null) {
-            localData = this.modelValue[this.name];
-        }
-
-        const errorMessages = ''
-
-        return {
-            localData,
-            errorMessages
-        }
+        let localData = ''
+        if (this.modelValue[this.name] == null && this.defaultValue != null) localData = this.defaultValue
+        if (this.modelValue[this.name] != null) localData = this.modelValue[this.name]
+        return { localData, errorMessages: '' }
     },
-    computed: {
-    },
-    watch: { 
-        modelValue(newValue, oldValue) {
-            this.localData = newValue[this.name];
-            setTimeout(() => {this.changeText(newValue[this.name]);}, 10);
+    watch: {
+        modelValue(newValue) {
+            this.localData = newValue[this.name]
+            setTimeout(() => this.changeText(newValue[this.name]), 10)
         },
     },
-    mounted () {
-        this.changeText(this.modelValue[this.name])
-    },
+    mounted() { this.changeText(this.modelValue[this.name]) },
     methods: {
+        toTitleCase,
         changeText(newValue) {
-            if (newValue == '' && !this.canBeEmpty) {
-                this.errorMessages = toTitleCase(name) + " cannot be empty. Please enter a value."
-                this.$emit("hasError")
+            if (newValue === '' && !this.canBeEmpty) {
+                this.errorMessages = toTitleCase(this.name) + ' cannot be empty. Please enter a value.'
+                this.$emit('hasError')
+            } else {
+                this.errorMessages = ''
+                this.modelValue[this.name] = newValue
             }
-            else {
-                this.errorMessages = ""
-                this.modelValue[this.name] = newValue;
-            }
-        }
-    }
+        },
+    },
 }
 </script>
 
-
 <template>
-    <div :data-cy="dataTestLabel + '-container'" class="container-flex px-2 m-0">
-        <div class="grid">
+    <div :data-cy="dataTestLabel + '-container'" class="text-input-container">
+        <div class="text-input-row">
             <label
-                v-if="labelWidthProportionClass != 'col-0'"
-                :style="combinedStyle([labelWidthProportionClass, labelBgColor, textColor])"
+                v-if="labelWidthProportionClass !== 'col-0'"
+                :style="[labelFontSize, labelBgColor, textColor]"
+                :class="labelWidthProportionClass"
                 :data-cy="dataTestLabel + '-title'"
                 :for="name + '-text-input'"
-                :class="combinedClass([labelWidthProportionClass, labelBgColor, textColor])"
-                class="data-input-label text-lg"
-            >
-                {{replaceTitle != null? replaceTitle : toTitleCase(name)}}
+                class="text-input-label">
+                {{ replaceTitle != null ? replaceTitle : toTitleCase(name) }}
             </label>
-            <input
-                :style="combinedStyle([valueWidthProportionClass, valueBgColor, textColor, extraStyleClass])"
+            <InputText
                 :data-cy="dataTestLabel + '-text-input'"
-                type="text"
-                :class="combinedClass([valueWidthProportionClass, valueBgColor, textColor, extraStyleClass])"
-                class="data-input-text m-0 px-0"
+                :class="[valueWidthProportionClass, extraStyleClass]"
+                class="text-input-value"
                 :id="name + '-text-input'"
                 @change="changeText($event.target.value)"
-                :value="localData"
-            >
-            <label class="data-input-error text-center col-12 pt-1" style="font-size: 0.9em; white-space: pre-wrap;">{{errorMessages}}</label>
+                :model-value="localData" />
         </div>
+        <label v-if="errorMessages" class="text-input-error">{{ errorMessages }}</label>
     </div>
 </template>
 
 <style scoped>
-.data-input-label {
-    border-radius: var(--p-border-radius);
-    font-size: clamp(0.625rem, 1.2vw, 0.875rem);
+.text-input-container { width: 100%; }
+.text-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
 }
-
-.data-input-text {
-    border: 1px solid var(--p-surface-400);
-    border-radius: var(--p-border-radius);
-    font-family: var(--p-font-family);
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    box-sizing: border-box;
-    height: 1.75rem;
-    line-height: 1.25rem;
+.text-input-label {
+    font-size: 0.875rem;
+    white-space: nowrap;
 }
-
-.data-input-text:focus {
-    border-color: var(--p-primary-color);
-    box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--p-primary-color) 25%, transparent);
+.text-input-value {
+    flex: 1 1 auto;
+    min-width: 0;
 }
-
-.data-input-error {
+.text-input-error {
     color: var(--p-red-400);
+    text-align: center;
+    font-size: 0.85rem;
+    display: block;
+    width: 100%;
+    padding-top: 0.25rem;
+    white-space: pre-wrap;
 }
 </style>

@@ -816,15 +816,15 @@ export default {
 <template>
     <div v-if="modelValue.magnetic != null && showWarning && modelValue.magnetic.coil.turnsDescription == null" class="container">
         <div class="grid">
-            <i class="col-12 bi bi-exclamation-triangle-fill display-1"></i>
+            <i class="col-12 pi pi-exclamation-triangle display-1"></i>
             <label class="text-danger col-12 pt-1 text-lg" style="font-size: 1em">Winding turns not possible</label>
         </div>
     </div>
     <div v-if="showWarning && !$stateStore.wire2DVisualizerState.showAnyway" class="container">
         <div class="grid">
-            <i class="col-12 bi bi-exclamation-triangle-fill display-1"></i>
+            <i class="col-12 pi pi-exclamation-triangle display-1"></i>
             <label class="text-danger col-12 pt-1 text-lg" style="font-size: 1em">Turns don't fit in winding window</label>
-            <button class="btn btn-danger offset-3 col-6 text-lg" @click="showCoilAnyway()">Show me anyway</button>
+            <button class="p-button p-button-danger col-offset-3 col-6 text-lg" @click="showCoilAnyway()">Show me anyway</button>
         </div>
     </div>
 
@@ -835,7 +835,7 @@ export default {
             </div>
             <div class="zoom-modal-content" :style="{ backgroundColor: backgroundColor }">
                 <button class="zoom-modal-close" :style="{ color: textColor }" @click="zoomOut()">
-                    <i class="bi bi-x-lg"></i>
+                    <i class="pi pi-times"></i>
                 </button>
                 <div class="zoom-modal-image" ref="zoomPlotView"></div>
             </div>
@@ -851,8 +851,8 @@ export default {
                 <div :class="{ 'plot-loading': posting }">
                     <div data-cy="MagneticAdvise-core-field-plot-image" ref="plotView" class="mt-2 scaling-svg-container"/>
                     <div v-if="enableZoom" class="text-center mt-1">
-                        <button class="btn btn-sm btn-outline-secondary" @click="zoomIn()">
-                            <i class="bi bi-arrows-fullscreen"></i> Expand
+                        <button class="p-button p-button-sm btn-outline-secondary" @click="zoomIn()">
+                            <i class="pi pi-window-maximize"></i> Expand
                         </button>
                     </div>
                     <div v-if="modelValue.magnetic != null && enableOptions && modelValue.magnetic.coil.turnsDescription != null" class="text-center">
@@ -871,7 +871,7 @@ export default {
                     <div v-if="modelValue.magnetic != null && showFringingOption && modelValue.magnetic.coil.turnsDescription != null" class="text-center">
                         <button
                             :style="buttonStyle"
-                            class="btn btn-primary ml-1 mt-1"
+                            class="p-button p-button-primary ml-1 mt-1"
                             @click="swapIncludeFringing()"
                         >
                             {{ includeFringing ? 'Exclude Fringing' : 'Include Fringing' }}

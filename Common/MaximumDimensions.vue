@@ -56,7 +56,7 @@ export default {
             <label :data-cy="dataTestLabel + '-title'" class="max-dim-label text-lg text-left col-12">{{'Maximum Dimensions'}}</label>
         </div>
         <div v-for="field in ['width', 'height', 'depth']" :key="field" class="grid">
-            <div class="text-base offset-1 col-11 grid flex justify-content-between">
+            <div class="text-base col-offset-1 col-11 grid flex justify-content-between">
                 <Dimension
                     v-if="modelValue[field] != null"
                     :name="field"
@@ -71,8 +71,8 @@ export default {
                     valueWidthProportionClass="col-8"
                     @update="dimensionUpdated($event, field)"
                 />
-                <button v-if="modelValue[field] != null" class="col-12 px-xl-3 px-md-0 btn btn-sm btn-outline-danger mt-1" @click="removeField(field)">Remove</button>
-                <button v-if="modelValue[field] == null" class="col-12 px-xl-3 px-md-0 btn btn-primary" @click="add(field)">{{'Add ' + field.charAt(0).toUpperCase() + field.slice(1)}}</button>
+                <button v-if="modelValue[field] != null" class="col-12 px-xl-3 px-md-0 p-button p-button-sm btn-outline-danger mt-1" @click="removeField(field)">Remove</button>
+                <button v-if="modelValue[field] == null" class="col-12 px-xl-3 px-md-0 p-button p-button-primary" @click="add(field)">{{'Add ' + field.charAt(0).toUpperCase() + field.slice(1)}}</button>
             </div>
         </div>
         <div class="grid">

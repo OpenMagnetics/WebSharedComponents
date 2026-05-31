@@ -283,15 +283,15 @@ export default {
                     class="btn col-5 p-0"
                     @click="onEdit"
                 >
-                    <i class="bi bi-pencil-square"></i>
+                    <i class="pi pi-pencil"></i>
                 </button>
                 <button
                     v-if="showGraph"
                     :style="showConfiguration? $styleStore.controlPanel.activeButton : $styleStore.controlPanel.button"
-                    class="btn offset-1 col-5 p-0"
+                    class="btn col-offset-1 col-5 p-0"
                     @click="showConfiguration = !showConfiguration && ! showEditor"
                 >
-                    <i class="bi bi-gear-fill"></i>
+                    <i class="pi pi-cog"></i>
                 </button>
             </div>
         </div>
@@ -303,7 +303,7 @@ export default {
                 <div class="grid">
                     <ElementFromList
                         v-if="Object.keys(propertyLabels).length > 1"
-                        class="offset-1 col-10 mb-1 text-left"
+                        class="col-offset-1 col-10 mb-1 text-left"
                         :dataTestLabel="dataTestLabel + '-PropertySelector'"
                         :name="'propertyToEdit'"
                         :titleSameRow="true"
@@ -345,8 +345,8 @@ export default {
                         :max="100000"
                         :modelValue="coefficients[selectedEquationToEdit]"
                         :forceUpdate="forceUpdate"
-                        :labelWidthProportionClass="'col-sm-12 col-md-4'"
-                        :valueWidthProportionClass="'col-sm-12 col-md-8'"
+                        :labelWidthProportionClass="'col-12 md:col-4'"
+                        :valueWidthProportionClass="'col-12 md:col-8'"
                         :valueFontSize="$styleStore.magneticBuilder.inputFontSize"
                         :labelFontSize="$styleStore.magneticBuilder.inputTitleFontSize"
                         :labelBgColor="{'background': 'transparent'}"
@@ -407,7 +407,7 @@ export default {
                 >            
                     {{'Property is missing'}}
                 </label>
-                <button class="btn btn-primary" @click="addFirstValue()">Add values</button>
+                <button class="p-button p-button-primary" @click="addFirstValue()">Add values</button>
             </span>
             <div 
                 v-if="!showEditor"
