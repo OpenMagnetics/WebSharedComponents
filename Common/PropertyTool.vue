@@ -43,6 +43,18 @@ export default {
             type: [Boolean, Array[Boolean]],
             default: true,
         },
+        // Gradient area fill under the line(s). Forwarded to LineVisualizer.
+        showArea: {
+            type: Boolean,
+            default: true,
+        },
+        // echarts tooltip trigger forwarded to LineVisualizer. 'axis' shows the
+        // value at the cursor's x anywhere on the line (needed when showPoints
+        // is false); 'item' (default) only fires on a data point.
+        tooltipTrigger: {
+            type: String,
+            default: 'item',
+        },
         addElementButtonColor: {
             type: [String, Object],
             default: () => ({ color: 'var(--p-text-color-secondary-color, #6c757d)' }),
@@ -436,6 +448,8 @@ export default {
                     :forceUpdate="forceUpdate"
                     :chartStyle="chartStyle"
                     :showPoints="showPoints"
+                    :showArea="showArea"
+                    :tooltipTrigger="tooltipTrigger"
                     :toolbox="false"
                     :bgColor="visualizerBgColor"
                     :lineColor="visualizerLineColor"

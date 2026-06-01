@@ -80,6 +80,13 @@ export default {
             type: [Boolean, Array[Boolean]],
             default: true,
         },
+        // echarts tooltip trigger. 'item' (default) only shows on hover over a
+        // data point — poor for lines drawn with showPoints:false. 'axis' shows
+        // the value(s) at the cursor's x-position anywhere along the line.
+        tooltipTrigger: {
+            type: String,
+            default: 'item',
+        },
         forceUpdate:{
             type: Number,
             default: 0
@@ -150,7 +157,7 @@ export default {
                 }
             },
             tooltip: {
-                trigger: 'item',
+                trigger: this.tooltipTrigger,
                 backgroundColor: 'rgba(var(--p-dark-rgb), 0.92)',
                 borderColor: 'rgba(var(--p-primary-rgb), 0.6)',
                 borderWidth: 1,
@@ -168,28 +175,36 @@ export default {
                     }
                 },
                 formatter: (params) => {
+                    // 'item' trigger passes a single param; 'axis' trigger passes
+                    // an array (one per series at the hovered x). Handle both.
+                    const formatOne = (param) => {
+                        if (param.seriesIndex < this.data.length) {
+                            const xDatum = this.data[param.seriesIndex].data.x[param.dataIndex];
+                            const yDatum = this.data[param.seriesIndex].data.y[param.dataIndex];
+                            const xAux = formatUnit(xDatum, this.xAxisOptions.unit);
+                            const yAux = formatUnit(yDatum, this.data[param.seriesIndex].unit);
+                            const xText = this.xAxisOptions.unit == null? removeTrailingZeroes(xDatum, 2) : `${removeTrailingZeroes(xAux.label, 2)} ${xAux.unit}`;
+                            const yText = this.data[param.seriesIndex].unit == null? removeTrailingZeroes(yDatum, 2) : `${removeTrailingZeroes(yAux.label, 2)} ${yAux.unit}`;
 
-                    if (params.seriesIndex < this.data.length) {
-                        const xDatum = this.data[params.seriesIndex].data.x[params.dataIndex];
-                        const yDatum = this.data[params.seriesIndex].data.y[params.dataIndex];
-                        const xAux = formatUnit(xDatum, this.xAxisOptions.unit);
-                        const yAux = formatUnit(yDatum, this.data[params.seriesIndex].unit);
-                        const xText = this.xAxisOptions.unit == null? removeTrailingZeroes(xDatum, 2) : `${removeTrailingZeroes(xAux.label, 2)} ${xAux.unit}`;
-                        const yText = this.data[params.seriesIndex].unit == null? removeTrailingZeroes(yDatum, 2) : `${removeTrailingZeroes(yAux.label, 2)} ${yAux.unit}`;
+                            return `${yText} @ ${xText}`;
+                        }
+                        else {
+                            const newIndex = param.seriesIndex - this.data.length;
+                            const xDatum = this.points[newIndex].data.x;
+                            const yDatum = this.points[newIndex].data.y;
+                            const xAux = formatUnit(xDatum, this.xAxisOptions.unit);
+                            const yAux = formatUnit(yDatum, this.points[newIndex].unit);
+                            const xText = this.xAxisOptions.unit == null? removeTrailingZeroes(xDatum, 2) : `${removeTrailingZeroes(xAux.label, 2)} ${xAux.unit}`;
+                            const yText = this.points[newIndex].unit == null? removeTrailingZeroes(yDatum, 2) : `${removeTrailingZeroes(yAux.label, 2)} ${yAux.unit}`;
 
-                        return `${yText} @ ${xText}`;
+                            return `Requirement: ${yText} @ ${xText}`;
+                        }
+                    };
+
+                    if (Array.isArray(params)) {
+                        return params.map(formatOne).join('<br/>');
                     }
-                    else {
-                        const newIndex = params.seriesIndex - this.data.length;
-                        const xDatum = this.points[newIndex].data.x;
-                        const yDatum = this.points[newIndex].data.y;
-                        const xAux = formatUnit(xDatum, this.xAxisOptions.unit);
-                        const yAux = formatUnit(yDatum, this.points[newIndex].unit);
-                        const xText = this.xAxisOptions.unit == null? removeTrailingZeroes(xDatum, 2) : `${removeTrailingZeroes(xAux.label, 2)} ${xAux.unit}`;
-                        const yText = this.data[params.seriesIndex].unit == null? removeTrailingZeroes(yDatum, 2) : `${removeTrailingZeroes(yAux.label, 2)} ${yAux.unit}`;
-
-                        return `Requirement: ${yText} @ ${xText}`;
-                    }
+                    return formatOne(params);
                 },
             },
             toolbox: !this.toolbox? null : {
