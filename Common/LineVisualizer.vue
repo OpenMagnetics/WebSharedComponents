@@ -234,9 +234,11 @@ export default {
                 type: this.xAxisOptions.type,
                 splitLine: {
                     show: this.showGrid,
-                    lineStyle: { color: 'rgba(255, 255, 255, 0.12)' },
+                    // Theme-agnostic gridline: visible on both light and dark
+                    // backgrounds (the old white was invisible on light surfaces).
+                    lineStyle: { color: 'rgba(128, 128, 128, 0.18)' },
                 },
-                axisLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.25)' } },
+                axisLine: { lineStyle: { color: this.textColor || 'rgba(128, 128, 128, 0.55)' } },
                 axisTick: { show: false },
                 axisLabel: {
                     fontSize: this.axisLabelFontSize,
@@ -457,7 +459,8 @@ export default {
                     position: side,
                     splitLine: {
                         show: index === 0 ? this.showGrid : false,
-                        lineStyle: { color: 'rgba(255, 255, 255, 0.12)' },
+                        // Theme-agnostic gridline (see xAxis note).
+                        lineStyle: { color: 'rgba(128, 128, 128, 0.18)' },
                     },
                     axisLine: { show: false },
                     axisTick: { show: false },
