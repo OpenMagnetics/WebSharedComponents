@@ -236,7 +236,7 @@ export default {
                     show: this.showGrid,
                     // Theme-agnostic gridline: visible on both light and dark
                     // backgrounds (the old white was invisible on light surfaces).
-                    lineStyle: { color: 'rgba(128, 128, 128, 0.18)' },
+                    lineStyle: { color: 'rgba(128, 128, 128, 0.35)' },
                 },
                 axisLine: { lineStyle: { color: this.textColor || 'rgba(128, 128, 128, 0.55)' } },
                 axisTick: { show: false },
@@ -460,7 +460,7 @@ export default {
                     splitLine: {
                         show: index === 0 ? this.showGrid : false,
                         // Theme-agnostic gridline (see xAxis note).
-                        lineStyle: { color: 'rgba(128, 128, 128, 0.18)' },
+                        lineStyle: { color: 'rgba(128, 128, 128, 0.35)' },
                     },
                     axisLine: { show: false },
                     axisTick: { show: false },
