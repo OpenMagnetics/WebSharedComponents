@@ -58,6 +58,13 @@ export async function buildCoreSTL(magnetic, opts = {}) {
     return api.buildCoreSTL(magnetic, opts);
 }
 
+// Build one physical piece of the core from a CoreShape (with dimensions):
+// a single half-set for a two-piece concentric core, the whole ring for a toroid.
+export async function buildCorePieceSTL(shape, opts = {}) {
+    const api = await waitForMvb();
+    return api.buildCorePieceSTL(shape, opts);
+}
+
 export async function buildSpacersSTL(magnetic, opts = {}) {
     const api = await waitForMvb();
     return api.buildSpacersSTL(magnetic, opts);

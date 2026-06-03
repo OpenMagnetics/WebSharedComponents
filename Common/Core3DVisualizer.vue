@@ -3,7 +3,7 @@ import { MeshPhysicalMaterial, Object3D, Mesh, Box3, Vector3} from 'three';
 import {Camera, EffectComposer, InstancedMesh, PhongMaterial, Renderer, RenderPass, SphereGeometry, SpotLight, Scene, AmbientLight} from 'troisjs';
 import { deepCopy, hexToRgb } from '../assets/js/utils.js'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
-import { initMvbWorker, buildCoreSTL } from '../assets/js/mvbRuntime.js'
+import { initMvbWorker, buildCoreSTL, buildCorePieceSTL } from '../assets/js/mvbRuntime.js'
 </script>
 
 <script>
@@ -99,7 +99,13 @@ export default {
                 }
             },
           deep: true
-        }
+        },
+        // Re-render when the full-core / one-piece toggle flips (the core
+        // itself is unchanged, so the forceUpdate watcher above won't fire).
+        'fullCoreModel'() {
+            this.removeObject3D(this.current3dObject);
+            this.computeShape();
+        },
     },
     methods: {
         removeObject3D(object3D) {
@@ -125,6 +131,14 @@ export default {
             const camera = this.$refs.camera.camera;
             const loader = new STLLoader();
             const geometry = loader.parse(arrayBuffer);
+            // Recenter the geometry on the origin. fitCameraToCenteredObject aims
+            // the camera at (0,0,0); a single piece (drawCorePiece) is offset along
+            // its stacking axis, so without this it renders low/clipped. No-op for
+            // the full core, which MVB++ already centers.
+            geometry.computeBoundingBox();
+            const geoCenter = new Vector3();
+            geometry.boundingBox.getCenter(geoCenter);
+            geometry.translate(-geoCenter.x, -geoCenter.y, -geoCenter.z);
             const color = hexToRgb('#7b7c7d');
             const material = new MeshPhysicalMaterial();
             material.color.r = color.r / 255;
@@ -234,10 +248,25 @@ export default {
                 }
 
                 // Build core STL via MVB++ WASM (no backend needed).
-                // Core3DVisualizer is core-only (no coil), so buildCoreSTL is always correct.
-                const magnetic = { core: coreAux };
+                // Full core, or a single physical piece when fullCoreModel is off:
+                // drawCorePiece builds one piece from the CoreShape — one half-set
+                // of a two-piece concentric core, or the whole ring for a toroid.
+                // Falls back to the full core when the shape isn't an object with
+                // dimensions (e.g. a bare named shape, which drawCorePiece can't parse).
                 const stlOpts = { tolMm: 0.5, angTol: 0.5, binary: true };
-                const arrayBuffer = await buildCoreSTL(magnetic, stlOpts);
+                const shape = coreAux.functionalDescription?.shape;
+                const family = (shape?.family ?? shape ?? '').toString().toLowerCase();
+                const isToroid = family === 'toroidal' || family === 't';
+                // One piece only applies to two-piece concentric sets. Toroids are a
+                // single continuous piece, so they always render whole. Also need an
+                // object shape with dimensions (drawCorePiece can't parse a bare name).
+                const canDrawPiece = shape && typeof shape === 'object' && !isToroid;
+                let arrayBuffer;
+                if (!this.fullCoreModel && canDrawPiece) {
+                    arrayBuffer = await buildCorePieceSTL(shape, stlOpts);
+                } else {
+                    arrayBuffer = await buildCoreSTL({ core: coreAux }, stlOpts);
+                }
 
                 this.removeObject3D(this.current3dObject);
                 if (arrayBuffer && this.$refs.scene?.scene) {

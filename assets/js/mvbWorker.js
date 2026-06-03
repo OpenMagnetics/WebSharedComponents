@@ -199,6 +199,18 @@ Comlink.expose({
         ]);
     }),
 
+    // Single physical piece of the core (one half-set of a two-piece concentric
+    // set; the whole ring for a toroid). Takes a CoreShape (with dimensions),
+    // not a magnetic — drawCorePiece builds exactly one piece from the shape.
+    buildCorePieceSTL: timed('buildCorePieceSTL', async (shape, opts = {}) => {
+        await init();
+        const d = o(opts);
+        return callDraw('drawCorePiece[stl]', _mvbpp.drawCorePiece, [
+            JSON.stringify(shape), '3D', 'XY', 0.0, 'stl',
+            d.scale, d.coreSeg, 'none', '',
+        ]);
+    }),
+
     buildSpacersSTL: timed('buildSpacersSTL', async (magnetic, opts = {}) => {
         await init();
         // Most magnetics have no spacers — short-circuit before touching WASM
@@ -289,10 +301,10 @@ Comlink.expose({
     // widthPx, format) — old plane-specific helpers map to it.
     // MVB++ convention: front view = XZ plane, top view = XY plane.
 
-    drawDimensionedFrontView: async (magnetic, widthPx = 800, _labelPx = 14, _projColor = '#000000', _dimColor = '#0000ff') => {
+    drawDimensionedFrontView: async (magnetic, widthPx = 800, labelPx = 14, projColor = '#000000', dimColor = '#1976d2') => {
         await init();
         try {
-            return _mvbpp.drawView(JSON.stringify(magnetic), true, 'XZ', 0.0, widthPx, 'svg');
+            return _mvbpp.drawDimensionedView(JSON.stringify(magnetic), 'XZ', widthPx, labelPx, projColor, dimColor);
         } catch (e) {
             const msg = decodeWasmException(_mvbpp, e);
             console.error('[MVB Worker] drawView[front] failed:', msg, 'raw:', e);
@@ -300,10 +312,10 @@ Comlink.expose({
         }
     },
 
-    drawDimensionedTopView: async (magnetic, widthPx = 800, _labelPx = 14, _projColor = '#000000', _dimColor = '#0000ff') => {
+    drawDimensionedTopView: async (magnetic, widthPx = 800, labelPx = 14, projColor = '#000000', dimColor = '#1976d2') => {
         await init();
         try {
-            return _mvbpp.drawView(JSON.stringify(magnetic), true, 'XY', 0.0, widthPx, 'svg');
+            return _mvbpp.drawDimensionedView(JSON.stringify(magnetic), 'XY', widthPx, labelPx, projColor, dimColor);
         } catch (e) {
             const msg = decodeWasmException(_mvbpp, e);
             console.error('[MVB Worker] drawView[top] failed:', msg, 'raw:', e);
@@ -313,10 +325,10 @@ Comlink.expose({
 
     // No dedicated gapping technical drawing in the new API — emit the
     // dimensioned front view, which now also annotates gaps.
-    drawCoreGappingTechnicalDrawing: async (magnetic, widthPx = 800, _labelPx = 14, _projColor = '#000000', _dimColor = '#0000ff') => {
+    drawCoreGappingTechnicalDrawing: async (magnetic, widthPx = 800, labelPx = 14, projColor = '#000000', dimColor = '#1976d2') => {
         await init();
         try {
-            return _mvbpp.drawView(JSON.stringify(magnetic), true, 'XZ', 0.0, widthPx, 'svg');
+            return _mvbpp.drawDimensionedView(JSON.stringify(magnetic), 'XZ', widthPx, labelPx, projColor, dimColor);
         } catch (e) {
             const msg = decodeWasmException(_mvbpp, e);
             console.error('[MVB Worker] drawView[gapping] failed:', msg, 'raw:', e);

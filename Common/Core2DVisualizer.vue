@@ -105,8 +105,13 @@ export default {
                 const magnetic = { core: coreAux };
                 const width = this.$refs.Core2DVisualizerContainer?.clientWidth || 400;
                 const cs = getComputedStyle(document.documentElement);
-                const projColor = cs.getPropertyValue('--p-secondary').trim() || '#aaaaaa';
-                const dimColor = cs.getPropertyValue('--p-info').trim() || '#4499ff';
+                // Core outline (projection) color. Externally configurable via the
+                // --core-2d-line-color CSS variable so each app (OM, asgard, …) can
+                // theme it; defaults to white so the outline is visible on the dark
+                // builder background instead of the near-invisible --p-secondary.
+                const projColor = cs.getPropertyValue('--core-2d-line-color').trim() || '#ffffff';
+                const dimColor = cs.getPropertyValue('--core-2d-dimension-color').trim()
+                    || cs.getPropertyValue('--p-info').trim() || '#4499ff';
 
                 if (this.gappingMode) {
                     const gapSvg = await drawCoreGappingTechnicalDrawing(magnetic, width, 12, projColor, dimColor);
