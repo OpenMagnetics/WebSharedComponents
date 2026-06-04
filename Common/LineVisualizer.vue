@@ -95,6 +95,18 @@ export default {
         pointsColor: {
             type: String,
         },
+        // Y-axis tick labels + axis name default to the series colour (so a red
+        // series gives a red, bold-ish left edge). Pass yAxisLabelColor to decouple
+        // them (e.g. a neutral textColor) and yAxisLabelFontWeight to un-bold them.
+        // Defaults preserve the original series-coloured, weight-500 look.
+        yAxisLabelColor: {
+            type: String,
+            default: null,
+        },
+        yAxisLabelFontWeight: {
+            type: [String, Number],
+            default: 500,
+        },
         showPoints: {
             type: [Boolean, Array[Boolean]],
             default: true,
@@ -482,13 +494,14 @@ export default {
                 }
                 
                 const axisColor = resolveCssColor(datum.colorLabel || this.lineColor)
+                const labelColor = this.yAxisLabelColor ? resolveCssColor(this.yAxisLabelColor) : axisColor
                 options.yAxis.push({
                     type: datum.type,
                     name: this.showYAxisName ? (datum.unit || '') : '',
                     nameLocation: 'middle',
                     nameGap: 25,
                     nameTextStyle: {
-                        color: axisColor,
+                        color: labelColor,
                         fontSize: this.axisLabelFontSize,
                     },
                     position: side,
@@ -501,8 +514,8 @@ export default {
                     axisTick: { show: false },
                     axisLabel: {
                         fontSize: this.axisLabelFontSize,
-                        color: axisColor,
-                        fontWeight: 500,
+                        color: labelColor,
+                        fontWeight: this.yAxisLabelFontWeight,
                         margin: 8,
                         formatter: (value) => {
                             // Hide right axis labels only if same unit AND similar scale (unless forceAxisMin/Max which indicates dual display)

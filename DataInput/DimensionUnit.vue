@@ -47,6 +47,11 @@ export default {
             }
             return best
         },
+        // Only one prefix is available (e.g. unitMin === unitMax): there is no real
+        // choice, so the dropdown chevron is rendered as a static bordered box.
+        hasSingleOption() {
+            return this.multiplierEntries.length <= 1
+        },
     },
 }
 </script>
@@ -55,7 +60,7 @@ export default {
     <Select
         v-bind="$attrs"
         class="unit-select"
-        :class="[extraStyleClass, extraStyleClass === '' ? 'unit-select-centered' : '', readOnly ? 'unit-select-static' : '']"
+        :class="[extraStyleClass, extraStyleClass === '' ? 'unit-select-centered' : '', readOnly ? 'unit-select-static' : '', hasSingleOption ? 'unit-select-single' : '']"
         :options="multiplierEntries"
         option-label="label"
         option-value="value"
@@ -106,5 +111,15 @@ export default {
     background: transparent !important;
     box-shadow: none !important;
     opacity: 1 !important;
+}
+/* Single available prefix: no real choice, so drop the chevron and render as a
+   static bordered box — matching the fixed-unit (.dim-alt-unit) fields and the
+   multi-option dropdowns minus the selector, so the value box keeps its right
+   border / seam and the number doesn't shift. */
+.unit-select-single :deep(.p-select-dropdown) {
+    display: none;
+}
+.unit-select-single :deep(.p-select-label) {
+    padding-right: 0.5rem;
 }
 </style>
