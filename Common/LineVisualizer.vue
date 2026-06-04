@@ -29,6 +29,25 @@ use([
 </script>
 
 <script>
+// ECharts renders to <canvas>, which cannot parse CSS custom properties:
+// passing "var(--p-primary)" or "rgba(var(--p-x-rgb), .8)" as a fill/stroke is
+// silently ignored and ECharts falls back to its default grey. Consumers pass
+// theme colors as such var() strings (e.g. inputTextColor = "var(--wuerth-body-
+// color, #333333)"), so resolve any CSS color string to a concrete rgb() value
+// via a hidden probe element before handing it to the chart.
+function resolveCssColor(color) {
+    if (typeof color !== 'string' || color === '' || !color.includes('var(')) {
+        return color;
+    }
+    const probe = document.createElement('span');
+    probe.style.color = color;
+    probe.style.display = 'none';
+    document.body.appendChild(probe);
+    const resolved = getComputedStyle(probe).color;
+    document.body.removeChild(probe);
+    return resolved || color;
+}
+
 export default {
     props: {
         dataTestLabel: {
@@ -141,6 +160,7 @@ export default {
     ],
     data() {
         const limits = this.processLimits()
+        const textColor = resolveCssColor(this.textColor)
 
         const options = {
             title: {
@@ -149,11 +169,11 @@ export default {
                 text: this.title,
                 textStyle: {
                     fontSize: this.titleFontSize,
-                    color: this.textColor,
+                    color: textColor,
                 },
                 subtextStyle: {
                     fontSize: Math.round(this.titleFontSize * 0.68),
-                    color: this.textColor,
+                    color: textColor,
                 }
             },
             tooltip: {
@@ -170,8 +190,22 @@ export default {
                     crossStyle: { color: 'rgba(var(--p-white-rgb), 0.25)' },
                     label: {
                         precision: 2,
-                        backgroundColor: 'rgba(var(--p-primary-rgb), 0.85)',
-                        color: 'var(--p-white)',
+                        // Drawn on the canvas axes (unlike the HTML tooltip above),
+                        // so resolve the var() colors or they render as grey boxes.
+                        backgroundColor: resolveCssColor('rgba(var(--p-primary-rgb), 0.85)'),
+                        color: resolveCssColor('var(--p-white)'),
+                        // Show the crosshair read-out with the SI-prefixed unit
+                        // (e.g. "4.86 MHz", "15.83 dB") instead of the raw value,
+                        // matching the axis tick labels.
+                        formatter: (params) => {
+                            const isX = params.axisDimension === 'x';
+                            const unit = isX
+                                ? this.xAxisOptions.unit
+                                : (this.data[params.axisIndex]?.unit ?? this.data[0]?.unit);
+                            if (unit == null) return `${removeTrailingZeroes(params.value, 2)}`;
+                            const aux = formatUnit(params.value, unit);
+                            return `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
+                        },
                     }
                 },
                 formatter: (params) => {
@@ -223,7 +257,7 @@ export default {
                 itemHeight: 8,
                 itemGap: 14,
                 textStyle: {
-                    color: this.textColor,
+                    color: textColor,
                     fontSize: 11,
                     fontWeight: 400,
                 }
@@ -238,11 +272,11 @@ export default {
                     // backgrounds (the old white was invisible on light surfaces).
                     lineStyle: { color: 'rgba(128, 128, 128, 0.35)' },
                 },
-                axisLine: { lineStyle: { color: this.textColor || 'rgba(128, 128, 128, 0.55)' } },
+                axisLine: { lineStyle: { color: textColor || 'rgba(128, 128, 128, 0.55)' } },
                 axisTick: { show: false },
                 axisLabel: {
                     fontSize: this.axisLabelFontSize,
-                    color: this.textColor,
+                    color: textColor,
                     fontWeight: 500,
                     margin: 8,
                     hideOverlap: true,
@@ -447,13 +481,14 @@ export default {
                     firstIndexPerSide[side] = index;
                 }
                 
+                const axisColor = resolveCssColor(datum.colorLabel || this.lineColor)
                 options.yAxis.push({
                     type: datum.type,
                     name: this.showYAxisName ? (datum.unit || '') : '',
                     nameLocation: 'middle',
                     nameGap: 25,
                     nameTextStyle: {
-                        color: datum.colorLabel || this.lineColor,
+                        color: axisColor,
                         fontSize: this.axisLabelFontSize,
                     },
                     position: side,
@@ -466,7 +501,7 @@ export default {
                     axisTick: { show: false },
                     axisLabel: {
                         fontSize: this.axisLabelFontSize,
-                        color: datum.colorLabel || this.lineColor,
+                        color: axisColor,
                         fontWeight: 500,
                         margin: 8,
                         formatter: (value) => {
@@ -511,7 +546,7 @@ export default {
                     showPoints = this.showPoints[index];
                 }
 
-                const seriesColor = datum.colorLabel || this.lineColor;
+                const seriesColor = axisColor;
                 options.series.push(
                     {
                         data: this.processData(index),
@@ -556,7 +591,7 @@ export default {
                         data: [[point.data.x, point.data.y]],
                         type: 'effectScatter',
                         rippleEffect: { brushType: 'stroke', scale: 2.5 },
-                        color: this.pointsColor,
+                        color: resolveCssColor(this.pointsColor),
                         itemStyle: {
                             borderColor: 'var(--p-white)',
                             borderWidth: 1.5,
