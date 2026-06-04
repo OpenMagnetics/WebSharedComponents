@@ -297,7 +297,7 @@ export default {
     font-size: 0.5rem;
 }
 .dim-input-full :deep(.p-inputnumber-input) {
-    border-radius: var(--p-border-radius);
+    border-radius: var(--p-form-field-border-radius, 6px);
 }
 .dim-input-with-unit :deep(.p-inputnumber-input) {
     border-top-right-radius: 0;
@@ -342,8 +342,8 @@ export default {
     background: var(--p-inputtext-background);
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
-    border-top-right-radius: var(--p-border-radius);
-    border-bottom-right-radius: var(--p-border-radius);
+    border-top-right-radius: var(--p-form-field-border-radius, 6px);
+    border-bottom-right-radius: var(--p-form-field-border-radius, 6px);
 }
 .dim-error-row {
     display: flex;
