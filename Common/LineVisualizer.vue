@@ -179,10 +179,10 @@ export default {
             tooltip: {
                 trigger: this.tooltipTrigger,
                 backgroundColor: 'rgba(var(--p-dark-rgb), 0.92)',
-                borderColor: 'rgba(var(--p-primary-rgb), 0.6)',
+                borderColor: 'rgba(var(--p-white-rgb), 0.2)',
                 borderWidth: 1,
                 padding: 8,
-                textStyle: { color: 'var(--p-light)', fontSize: 11, fontWeight: 600 },
+                textStyle: { color: 'var(--p-light)', fontSize: 11, fontWeight: 400 },
                 extraCssText: 'border-radius: 6px; box-shadow: 0 4px 12px rgba(var(--p-black-rgb), 0.5);',
                 axisPointer: {
                     type: 'cross',

@@ -324,10 +324,26 @@ export default {
     padding-bottom: 0 !important;
     padding-left: 0.5rem !important;
 }
+/* Fixed unit label (altUnit, e.g. ºC / % / years): render the same bordered box
+   as the metric-prefix dropdown, just without the chevron, so single-unit fields
+   match the multi-option ones. The adjacent input carries border-right:0, so this
+   box's left border is the seam between them. */
 .dim-alt-unit {
-    padding: 0.25rem 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex: 0 0 auto;
-    align-self: center;
+    align-self: stretch;
+    height: 1.75rem;
+    padding: 0 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    border: 1px solid var(--p-inputtext-border-color);
+    background: var(--p-inputtext-background);
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: var(--p-border-radius);
+    border-bottom-right-radius: var(--p-border-radius);
 }
 .dim-error-row {
     display: flex;

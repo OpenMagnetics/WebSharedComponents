@@ -55,7 +55,7 @@ export default {
     <Select
         v-bind="$attrs"
         class="unit-select"
-        :class="[extraStyleClass, extraStyleClass === '' ? 'unit-select-centered' : '']"
+        :class="[extraStyleClass, extraStyleClass === '' ? 'unit-select-centered' : '', readOnly ? 'unit-select-static' : '']"
         :options="multiplierEntries"
         option-label="label"
         option-value="value"
@@ -87,16 +87,9 @@ export default {
 .unit-select :deep(.p-select-dropdown) {
     width: 1.5rem;
 }
-/* When the unit Select is read-only / disabled (used by
-   DimensionReadOnly), hide the dropdown chevron and drop the
-   border-box appearance so it reads as static text. */
-.unit-select.p-disabled,
-.unit-select[aria-disabled="true"] {
-    border: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    opacity: 1 !important;
-}
+/* Disabled but not read-only (e.g. an auto-calculated field in an editable
+   form): hide the chevron so the unit can't be changed, but keep the bordered
+   box so it looks exactly like the active multi-option dropdown. */
 .unit-select.p-disabled :deep(.p-select-dropdown),
 .unit-select[aria-disabled="true"] :deep(.p-select-dropdown) {
     display: none;
@@ -104,5 +97,14 @@ export default {
 .unit-select.p-disabled :deep(.p-select-label),
 .unit-select[aria-disabled="true"] :deep(.p-select-label) {
     padding-right: 0.5rem;
+}
+/* Truly read-only (DimensionReadOnly passes readOnly): drop the border-box so
+   the unit reads as static text next to the value. */
+.unit-select.unit-select-static.p-disabled,
+.unit-select.unit-select-static[aria-disabled="true"] {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
 }
 </style>
