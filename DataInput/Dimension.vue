@@ -299,12 +299,24 @@ export default {
 .dim-input-full :deep(.p-inputnumber-input) {
     border-radius: var(--p-form-field-border-radius, 6px);
 }
+/* Fixed value:unit proportion — 2/3 value, 1/3 unit — instead of letting each
+   field size to its content. flex-basis 0 makes the split depend only on the
+   grow factors (2:1); the value keeps its min-width floor for the spinner
+   buttons, so on a wide-enough row the split is a clean 2:1. */
+.dim-input-with-unit {
+    flex: 2 1 0;
+}
 .dim-input-with-unit :deep(.p-inputnumber-input) {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
     border-right: 0;
 }
+.dim-unit {
+    flex: 1 1 0;
+    min-width: 0;
+}
 .dim-unit :deep(.p-select) {
+    width: 100%;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
 }
