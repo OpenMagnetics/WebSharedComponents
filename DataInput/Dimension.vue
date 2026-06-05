@@ -197,7 +197,11 @@ export default {
             </label>
             <div v-if="localData.scaledValue != null"
                 class="dim-value-row"
-                :class="[justifyContent ? 'dim-value-row-end' : '', valueWidthProportionClass]">
+                :class="[
+                    justifyContent ? 'dim-value-row-end' : '',
+                    valueWidthProportionClass,
+                    (unit != null || (altUnit != null && altUnit !== '')) ? 'dim-value-row-has-unit' : 'dim-value-row-no-unit',
+                ]">
                 <InputNumber
                     :model-value="displayValue"
                     @update:model-value="changeScaledValue"
@@ -261,22 +265,27 @@ export default {
     padding: 0;
 }
 .dim-value-row {
-    display: flex;
+    /* Grid gives a deterministic value:unit split regardless of the value length
+       or the unit-string width, instead of each field sizing to its content.
+       min-width: 0 on the cells lets the columns honour the ratio. */
+    display: grid;
     align-items: center;
     gap: 0;
-    flex: 1 1 auto;
-    flex-wrap: nowrap;
     min-width: 7rem;
     /* PrimeFlex .col-N applies padding: 0.5rem; cancel it so the inputs sit
        flush with the row baseline (label) instead of being pushed down. */
     padding: 0 !important;
 }
-.dim-value-row-end {
-    justify-content: flex-end;
+/* Value 2/3, unit 1/3 when a unit (dropdown or fixed) is shown; full-width value otherwise. */
+.dim-value-row-has-unit {
+    grid-template-columns: 2fr 1fr;
+}
+.dim-value-row-no-unit {
+    grid-template-columns: 1fr;
 }
 .dim-input {
-    flex: 1 1 auto;
-    min-width: 6.5rem; /* room for value text + stacked spinner buttons */
+    min-width: 0;
+    width: 100%;
     display: flex;
     align-items: stretch;
 }
@@ -303,16 +312,14 @@ export default {
    field size to its content. flex-basis 0 makes the split depend only on the
    grow factors (2:1); the value keeps its min-width floor for the spinner
    buttons, so on a wide-enough row the split is a clean 2:1. */
-.dim-input-with-unit {
-    flex: 2 1 0;
-}
 .dim-input-with-unit :deep(.p-inputnumber-input) {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
     border-right: 0;
 }
+/* The unit cell (dropdown or fixed-unit box) fills its 1/3 grid column. */
 .dim-unit {
-    flex: 1 1 0;
+    width: 100%;
     min-width: 0;
 }
 .dim-unit :deep(.p-select) {
@@ -344,11 +351,10 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Same fixed 1/3 share as the unit dropdown, so a static fixed unit (e.g.
-       "years") lines up with units that do have a selector. */
-    flex: 1 1 0;
+    /* Fills the same 1/3 grid column as the unit dropdown, so a static fixed unit
+       (e.g. "years") lines up with units that have a selector. */
+    width: 100%;
     min-width: 0;
-    align-self: stretch;
     height: 1.75rem;
     padding: 0 0.5rem;
     font-size: 0.875rem;
