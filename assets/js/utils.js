@@ -132,6 +132,19 @@ const ARRAY_OF_ENUM_KEYS = new Set([
     'terminalType',
 ]);
 
+// Keys whose schema type is a CLOSED enum — an unmapped value fails MAS schema
+// validation and blocks the whole load — AND which are never used to hold a
+// free-form name/reference. ONLY for these do we drop a legacy value with no
+// current equivalent (the fields are optional), so old MAS files still load.
+// This deliberately EXCLUDES overloaded keys such as `material`
+// (DMR96/copper/ETFE), `family` (DMR / shape families), `shape` (U 93/52/30),
+// `coating`, `type`, `standard`, `application` — those legitimately carry
+// names/references that must never be dropped.
+const DROPPABLE_LEGACY_ENUM_KEYS = new Set([
+    'topology',
+    'wiringTechnology',
+]);
+
 function normaliseEnumValue(key, val) {
     if (typeof val !== 'string') return val;
     const maps = ENUM_NORMALISATION[key];
@@ -174,8 +187,11 @@ export function normaliseMasEnumCasing(node, parentKey = null) {
             // value that the schema validator would reject — this lets old MAS
             // files still load. Free-form string keys (no enum map) are left
             // untouched, so names/descriptions/references are never dropped.
+            // Only drop a legacy value for an allow-listed CLOSED-enum key
+            // (optional, never a name). Overloaded keys like material/family/
+            // shape keep their value — it's a name/reference, not a removed enum.
             const maps = ENUM_NORMALISATION[key];
-            if (maps && !maps.valid.has(normalised)) {
+            if (DROPPABLE_LEGACY_ENUM_KEYS.has(key) && maps && !maps.valid.has(normalised)) {
                 // eslint-disable-next-line no-console
                 console.warn(`[normaliseMasEnumCasing] Dropping legacy "${key}" value ${JSON.stringify(val)}: no equivalent in the current MAS schema.`);
                 delete node[key];
