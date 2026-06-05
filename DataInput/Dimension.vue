@@ -344,7 +344,10 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    flex: 0 0 auto;
+    /* Same fixed 1/3 share as the unit dropdown, so a static fixed unit (e.g.
+       "years") lines up with units that do have a selector. */
+    flex: 1 1 0;
+    min-width: 0;
     align-self: stretch;
     height: 1.75rem;
     padding: 0 0.5rem;
