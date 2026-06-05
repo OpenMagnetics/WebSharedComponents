@@ -236,6 +236,7 @@ export default {
                 v-if="replaceTitle == null"
                 :data-cy="dataTestLabel + '-title'"
                 class="dim-label"
+                :style="labelFontSize"
                 v-tooltip="tooltip">
                 {{ shortenedName }}
             </label>
@@ -243,6 +244,7 @@ export default {
                 v-else-if="replaceTitle !== ''"
                 :data-cy="dataTestLabel + '-title'"
                 class="dim-label"
+                :style="labelFontSize"
                 v-tooltip="tooltip">
                 {{ replaceTitle }}
             </label>
@@ -303,7 +305,11 @@ export default {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    flex: 0 1 auto;
+    /* Give the label a consistent basis so rows align (inputs start at the same
+       x) and the filling value row can't squeeze the text to an ellipsis. It
+       still shrinks if the container is genuinely too narrow. Panels that need a
+       different width override .dim-label. */
+    flex: 0 1 9rem;
     min-width: 0;
     padding: 0;
 }
@@ -315,6 +321,12 @@ export default {
     align-items: center;
     gap: 0;
     min-width: 7rem;
+    /* Fill the width left after the label so every value control — input+unit
+       OR a unit-less input — right-aligns with the others (and with the
+       dropdowns), instead of sizing to its content. flex-basis 0 (not auto) so
+       the value row grows into the free space WITHOUT first claiming its content
+       width, which would otherwise overflow the row and squeeze the label. */
+    flex: 1 1 0;
     /* PrimeFlex .col-N applies padding: 0.5rem; cancel it so the inputs sit
        flush with the row baseline (label) instead of being pushed down. */
     padding: 0 !important;
@@ -324,6 +336,9 @@ export default {
     grid-template-columns: 2fr 1fr;
 }
 .dim-value-row-no-unit {
+    /* Single column: the input fills the value row (which itself fills the row
+       via .dim-value-row's flex), so a unit-less input occupies the space the
+       unit box would have taken instead of leaving it empty. */
     grid-template-columns: 1fr;
 }
 .dim-input {
