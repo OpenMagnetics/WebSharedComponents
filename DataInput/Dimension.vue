@@ -8,35 +8,57 @@ export default {
     components: { InputNumber },
     emits: ['update'],
     props: {
-        name: { type: String, required: true },
-        unit: { type: String, default: null, required: false },
+        // --- Binding ---
+        // The form object holding the value, plus the key within it. The value in
+        // base SI units lives at modelValue[name]. (A future change may switch this
+        // to a plain v-model on the value.)
         modelValue: { type: Object, required: true },
+        name: { type: String, required: true },
         defaultValue: { type: Number },
-        min: { type: Number, default: 1e-12 },
-        max: { type: Number, default: 1e+12 },
-        unitMin: { type: Number, default: null },
-        unitMax: { type: Number, default: null },
-        numberDecimals: { type: Number, default: 6 },
-        dataTestLabel: { type: String, default: '' },
-        allowNegative: { type: Boolean, default: false },
-        allowZero: { type: Boolean, default: false },
-        altUnit: { type: String, default: null },
-        visualScale: { type: Number, default: 1 },
-        useMetricPrefixes: { type: Boolean, default: true },
+        // Bump to force the component to re-read modelValue[name] after an external
+        // change (the cached scaled value does not react to it on its own).
         forceUpdate: { type: Number, default: 0 },
+
+        // --- Label ---
+        // null -> Title-Cased name; '' -> no label; any other string -> that text.
         replaceTitle: { type: String },
         tooltip: { type: String, default: null },
-        justifyContent: { type: Boolean, default: false },
+        dataTestLabel: { type: String, default: '' },
+
+        // --- Unit ---
+        unit: { type: String, default: null },          // SI unit with a metric-prefix selector
+        altUnit: { type: String, default: null },         // fixed unit shown as a static box (no selector)
+        unitMin: { type: Number, default: null },
+        unitMax: { type: Number, default: null },
+        useMetricPrefixes: { type: Boolean, default: true },
+        defaultZeroUnit: { type: Number, default: null },
+
+        // --- Value constraints / formatting ---
+        min: { type: Number, default: 1e-12 },
+        max: { type: Number, default: 1e+12 },
+        numberDecimals: { type: Number, default: 6 },
+        allowNegative: { type: Boolean, default: false },
+        allowZero: { type: Boolean, default: false },
+        visualScale: { type: Number, default: 1 },       // multiply the displayed value (e.g. ratio -> %)
+
+        // --- State ---
         disabled: { type: Boolean, default: false },
-        valueFontSize: { type: [String, Object], default: () => ({ fontSize: '0.875rem' }) },
-        labelFontSize: { type: [String, Object], default: () => ({ fontSize: '0.875rem' }) },
+
+        // --- Deprecated: accepted but ignored ---
+        // Styling now comes entirely from the PrimeVue theme, and the value:unit
+        // split is a fixed 2fr:1fr grid. These props remain declared only so the
+        // ~40 existing call sites don't emit attribute-fallthrough warnings or
+        // leak `textcolor="[object Object]"` onto the root element. Do not use
+        // them in new code — remove them from a call site when you next touch it.
+        valueFontSize: { type: [String, Object], default: null },
+        labelFontSize: { type: [String, Object], default: null },
+        labelBgColor: { type: [String, Object], default: null },
+        valueBgColor: { type: [String, Object], default: null },
+        textColor: { type: [String, Object], default: null },
         labelWidthProportionClass: { type: String, default: '' },
         valueWidthProportionClass: { type: String, default: '' },
-        labelBgColor: { type: [String, Object], default: () => ({}) },
-        valueBgColor: { type: [String, Object], default: () => ({}) },
-        textColor: { type: [String, Object], default: () => ({}) },
         unitExtraStyleClass: { type: String, default: '' },
-        defaultZeroUnit: { type: Number, default: null },
+        justifyContent: { type: [Boolean, String], default: false },
     },
     data() {
         const localData = { multiplier: null, scaledValue: null }
@@ -179,8 +201,6 @@ export default {
         <div class="dim-row">
             <label
                 v-if="replaceTitle == null"
-                :style="[labelFontSize, labelBgColor, textColor]"
-                :class="labelWidthProportionClass"
                 :data-cy="dataTestLabel + '-title'"
                 class="dim-label"
                 v-tooltip="tooltip">
@@ -188,8 +208,6 @@ export default {
             </label>
             <label
                 v-else-if="replaceTitle !== ''"
-                :style="[labelFontSize, labelBgColor, textColor]"
-                :class="labelWidthProportionClass"
                 :data-cy="dataTestLabel + '-title'"
                 class="dim-label"
                 v-tooltip="tooltip">
@@ -197,11 +215,7 @@ export default {
             </label>
             <div v-if="localData.scaledValue != null"
                 class="dim-value-row"
-                :class="[
-                    justifyContent ? 'dim-value-row-end' : '',
-                    valueWidthProportionClass,
-                    (unit != null || (altUnit != null && altUnit !== '')) ? 'dim-value-row-has-unit' : 'dim-value-row-no-unit',
-                ]">
+                :class="(unit != null || (altUnit != null && altUnit !== '')) ? 'dim-value-row-has-unit' : 'dim-value-row-no-unit'">
                 <InputNumber
                     :model-value="displayValue"
                     @update:model-value="changeScaledValue"
@@ -223,16 +237,11 @@ export default {
                     :max="unitMax != null ? unitMax : max"
                     :unit="unit"
                     :use-metric-prefixes="useMetricPrefixes"
-                    :extra-style-class="unitExtraStyleClass"
-                    :value-bg-color="valueBgColor"
-                    :value-font-size="valueFontSize"
-                    :text-color="textColor"
                     class="dim-unit"
                     @update:model-value="changeMultiplier"
                 />
                 <label
                     v-if="unit == null && altUnit != null && altUnit !== ''"
-                    :style="[labelBgColor, textColor, valueFontSize]"
                     class="dim-alt-unit"
                     :data-cy="dataTestLabel + '-DimensionUnit-text'">
                     {{ altUnit }}
@@ -305,6 +314,17 @@ export default {
     padding: 0;
     font-size: 0.5rem;
 }
+/* Spinner arrows are hidden by default and only revealed while hovering or
+   editing the field, so the value reads cleanly until you interact with it.
+   They are absolutely positioned, so fading them in causes no layout shift. */
+.dim-input :deep(.p-inputnumber-button-group) {
+    opacity: 0;
+    transition: opacity 0.12s ease;
+}
+.dim-input:hover :deep(.p-inputnumber-button-group),
+.dim-input:focus-within :deep(.p-inputnumber-button-group) {
+    opacity: 1;
+}
 .dim-input-full :deep(.p-inputnumber-input) {
     border-radius: var(--p-form-field-border-radius, 6px);
 }
@@ -317,13 +337,13 @@ export default {
     border-bottom-right-radius: 0;
     border-right: 0;
 }
-/* The unit cell (dropdown or fixed-unit box) fills its 1/3 grid column. */
+/* The unit cell (dropdown or fixed-unit box) fills its 1/3 grid column. The
+   DimensionUnit's PrimeVue Select root carries the .dim-unit class itself, so the
+   square left corners (flush seam with the value input, like the fixed-unit box)
+   must be set on .dim-unit directly — a :deep(.p-select) descendant never matches. */
 .dim-unit {
     width: 100%;
     min-width: 0;
-}
-.dim-unit :deep(.p-select) {
-    width: 100%;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
 }
@@ -350,7 +370,7 @@ export default {
 .dim-alt-unit {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;  /* left-align the unit text */
     /* Fills the same 1/3 grid column as the unit dropdown, so a static fixed unit
        (e.g. "years") lines up with units that have a selector. */
     width: 100%;

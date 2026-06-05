@@ -78,7 +78,7 @@ export default {
     padding: 0 !important;
 }
 .unit-select-centered :deep(.p-select-label) {
-    text-align: center;
+    text-align: left;
 }
 .unit-select :deep(.p-select-label) {
     padding: 0.25rem 0.5rem;
@@ -87,7 +87,7 @@ export default {
     height: 1.75rem;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;  /* left-align the unit label by default */
 }
 .unit-select :deep(.p-select-dropdown) {
     width: 1.5rem;
