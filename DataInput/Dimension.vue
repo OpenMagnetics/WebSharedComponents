@@ -43,6 +43,12 @@ export default {
 
         // --- State ---
         disabled: { type: Boolean, default: false },
+        // When true the field is allowed to hold no value: it renders an empty
+        // but editable input (instead of rendering nothing), keeps the unit
+        // selector visible, and clearing it writes null to modelValue[name] so
+        // the consumer gets None. Default false preserves the original
+        // required-value behaviour for every existing call site.
+        optional: { type: Boolean, default: false },
 
         // --- Deprecated: accepted but ignored ---
         // Styling now comes entirely from the PrimeVue theme, and the value:unit
@@ -97,6 +103,15 @@ export default {
                 }
             }
         }
+        // An optional field can start empty (scaledValue null). It still shows
+        // the unit selector, so give it a sensible in-range multiplier even with
+        // no value, mirroring the unitMin/unitMax clamping above.
+        if (this.optional && localData.multiplier == null) {
+            let mult = this.defaultZeroUnit != null ? this.defaultZeroUnit : 1
+            if (this.unitMin != null && mult < this.unitMin) mult = this.unitMin
+            if (this.unitMax != null && mult > this.unitMax) mult = this.unitMax
+            localData.multiplier = mult
+        }
         return {
             localData,
             errorMessages,
@@ -136,6 +151,8 @@ export default {
         checkErrors() {
             let hasError = false
             this.errorMessages = ''
+            // An optional field with no value is valid (it returns null/None).
+            if (this.optional && this.localData.scaledValue == null) return false
             if (this.localData.scaledValue == null) {
                 hasError = true
                 this.errorMessages += 'Value must be set. Set it or remove the requirement from the menu.\n'
@@ -153,6 +170,16 @@ export default {
             return hasError
         },
         update(actualValue) {
+            // Optional fields may be cleared back to "no value": write null to
+            // the bound model, leave the input empty, and skip clamping.
+            if (this.optional && (actualValue === null || actualValue === undefined
+                || actualValue === '' || Number.isNaN(Number(actualValue)))) {
+                this.localData.scaledValue = null
+                this.errorMessages = ''
+                this.modelValue[this.name] = null
+                this.$emit('update', null, this.name)
+                return
+            }
             if (this.max != null) {
                 if (this.allowNegative) {
                     if (Math.abs(actualValue) > this.max) actualValue = this.max * Math.sign(actualValue)
@@ -187,9 +214,15 @@ export default {
             }
         },
         changeMultiplier() {
+            // Changing the unit on an empty optional field must not materialise a value.
+            if (this.optional && this.localData.scaledValue == null) return
             this.update(this.localData.scaledValue * this.localData.multiplier)
         },
         changeScaledValue(value) {
+            if (this.optional && (value === null || value === undefined || value === '')) {
+                this.update(null)
+                return
+            }
             this.update((Number(value) || 0) * this.localData.multiplier / this.visualScale)
         },
     },
@@ -213,7 +246,7 @@ export default {
                 v-tooltip="tooltip">
                 {{ replaceTitle }}
             </label>
-            <div v-if="localData.scaledValue != null"
+            <div v-if="optional || localData.scaledValue != null"
                 class="dim-value-row"
                 :class="(unit != null || (altUnit != null && altUnit !== '')) ? 'dim-value-row-has-unit' : 'dim-value-row-no-unit'">
                 <InputNumber
@@ -223,7 +256,8 @@ export default {
                     :disabled="disabled"
                     :data-cy="dataTestLabel + '-number-input'"
                     :max-fraction-digits="numberDecimals"
-                    :allow-empty="false"
+                    :allow-empty="optional"
+                    :placeholder="optional ? '—' : undefined"
                     show-buttons
                     button-layout="stacked"
                     :class="['dim-input', unit == null && altUnit == null ? 'dim-input-full' : 'dim-input-with-unit']"
