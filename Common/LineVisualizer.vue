@@ -647,6 +647,21 @@ export default {
 
                 let minimumValue = removeTrailingZeroes(roundWithDecimals(elem.min * (elem.min < 0? this.linePaddings.bottom : 1.0 / this.linePaddings.bottom), 1.0 / Math.pow(10, numberDecimals)), numberDecimals);
                 let maximumValue = removeTrailingZeroes(roundWithDecimals(elem.max * this.linePaddings.top, 1.0 / Math.pow(10, numberDecimals)), numberDecimals);
+
+                // Degenerate range: a constant series collapses min==max (and rounding
+                // can snap a tiny padded span back to a single value). A log axis cannot
+                // render that at all; a linear one draws a zero-height band. Expand around
+                // the value so a flat line still draws.
+                if (maximumValue <= minimumValue) {
+                    if (this.data[index].type == "log" && elem.max > 0) {
+                        minimumValue = elem.max / 10;
+                        maximumValue = elem.max * 10;
+                    } else {
+                        const delta = Math.abs(elem.max) > 0 ? Math.abs(elem.max) * 0.5 : 1;
+                        minimumValue = elem.max - delta;
+                        maximumValue = elem.max + delta;
+                    }
+                }
                 yAxisLimits.min = Math.min(yAxisLimits.min, minimumValue);
                 yAxisLimits.max = Math.max(yAxisLimits.max, maximumValue);
                 
