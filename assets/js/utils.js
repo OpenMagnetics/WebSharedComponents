@@ -115,7 +115,7 @@ const ENUM_NORMALISATION = (() => {
                 if (k && !fuzzy.has(k)) fuzzy.set(k, v);
             }
         }
-        out[key] = { exact, fuzzy, valid: new Set(exact.values()) };
+        out[key] = { exact, fuzzy };
     }
     return out;
 })();
@@ -132,6 +132,18 @@ const ARRAY_OF_ENUM_KEYS = new Set([
     'terminalType',
 ]);
 
+// Explicit legacy -> current value aliases for enum keys whose old value can't
+// be derived by the case/punctuation-insensitive matcher (i.e. it was renamed
+// or replaced in the schema). This CONVERTS old MAS files to the current schema
+// instead of failing validation — nothing is dropped. Keyed by the
+// alphanumeric-lowercased legacy value, so "Full-Bridge Converter",
+// "full bridge converter", etc. all match.
+const LEGACY_ENUM_ALIASES = {
+    topology: {
+        fullbridgeconverter: 'phaseShiftedFullBridgeConverter',
+    },
+};
+
 function normaliseEnumValue(key, val) {
     if (typeof val !== 'string') return val;
     const maps = ENUM_NORMALISATION[key];
@@ -146,6 +158,10 @@ function normaliseEnumValue(key, val) {
     if (k) {
         const fuzzy = maps.fuzzy.get(k);
         if (fuzzy !== undefined) return fuzzy;
+        // 3) Explicit legacy alias (value renamed/replaced in the schema), so an
+        //    old MAS value is converted to its current equivalent.
+        const aliases = LEGACY_ENUM_ALIASES[key];
+        if (aliases && aliases[k] !== undefined) return aliases[k];
     }
     return val;
 }
@@ -166,21 +182,11 @@ export function normaliseMasEnumCasing(node, parentKey = null) {
     for (const key of Object.keys(node)) {
         const val = node[key];
         if (typeof val === 'string') {
+            // Normalise/convert in place — never drop. normaliseEnumValue maps a
+            // legacy value to its current equivalent (case/punctuation-insensitive
+            // or via LEGACY_ENUM_ALIASES); unrecognised strings (free-form names
+            // like material/shape) pass through unchanged.
             const normalised = normaliseEnumValue(key, val);
-            // Backward-compat: a legacy enum string with no equivalent in the
-            // current schema (e.g. a topology that was removed/renamed, like
-            // "Full-Bridge Converter") cannot be normalised. These MAS enum
-            // fields are optional, so drop the key rather than leave an invalid
-            // value that the schema validator would reject — this lets old MAS
-            // files still load. Free-form string keys (no enum map) are left
-            // untouched, so names/descriptions/references are never dropped.
-            const maps = ENUM_NORMALISATION[key];
-            if (maps && !maps.valid.has(normalised)) {
-                // eslint-disable-next-line no-console
-                console.warn(`[normaliseMasEnumCasing] Dropping legacy "${key}" value ${JSON.stringify(val)}: no equivalent in the current MAS schema.`);
-                delete node[key];
-                continue;
-            }
             // Legacy schemas stored some array-of-enum fields as a single
             // string ("Power" rather than ["power"]). Wrap so current
             // schema validates. Exception: DesignRequirements.application
