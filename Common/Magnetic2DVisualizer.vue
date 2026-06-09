@@ -133,6 +133,18 @@ export default {
             type: String,
             default: "0x3b3b3b",  // original dark gray
         },
+        // Core/ferrite fill and wire/copper fill for plot_turns. MKF's own
+        // defaults pick up the host's primary color (e.g. brand red in Asgard),
+        // which is wrong for a magnetic core. Default to the same neutral ferrite
+        // gray and copper tone the 3D visualizer uses so 2D and 3D agree.
+        ferriteColor: {
+            type: String,
+            default: "0x7b7c7d",  // neutral ferrite gray (matches 3D ferrite)
+        },
+        copperColor: {
+            type: String,
+            default: "0xb87333",  // copper (matches 3D copper)
+        },
         drawSpacer: {
             type: Boolean,
             default: true,
@@ -421,6 +433,8 @@ export default {
                 settings.painterColorInsulation = this.insulationColor;
                 settings.painterColorMargin = this.marginColor;
                 settings.painterColorSpacer = this.spacerColor;
+                settings.painterColorFerrite = this.ferriteColor;
+                settings.painterColorCopper = this.copperColor;
                 settings.painterDrawSpacer = this.drawSpacer;
                 await mkf.set_settings(JSON.stringify(settings));
                 const result = await mkf.plot_turns(JSON.stringify(this.modelValue.magnetic));
@@ -453,6 +467,7 @@ export default {
                 const settings = JSON.parse(await mkf.get_settings());
                 settings.painterSimpleLitz = true;
                 settings.painterAdvancedLitz = false;
+                settings.painterColorFerrite = this.ferriteColor;
                 settings.painterIncludeFringing = this.includeFringing;
                 await mkf.set_settings(JSON.stringify(settings));
 
@@ -489,6 +504,7 @@ export default {
                 const settings = JSON.parse(await mkf.get_settings());
                 settings.painterSimpleLitz = true;
                 settings.painterAdvancedLitz = false;
+                settings.painterColorFerrite = this.ferriteColor;
                 await mkf.set_settings(JSON.stringify(settings));
 
                 const result = await mkf.plot_electric_field(
@@ -578,6 +594,7 @@ export default {
                 const settings = JSON.parse(await mkf.get_settings());
                 settings.painterSimpleLitz = true;
                 settings.painterAdvancedLitz = false;
+                settings.painterColorFerrite = this.ferriteColor;
                 await mkf.set_settings(JSON.stringify(settings));
                 // Ensure color values are plain strings (not reactive objects)
                 const textColorStr = String(this.textColor || 'var(--p-white)');
@@ -626,6 +643,7 @@ export default {
                 const settings = JSON.parse(await mkf.get_settings());
                 settings.painterSimpleLitz = true;
                 settings.painterAdvancedLitz = false;
+                settings.painterColorFerrite = this.ferriteColor;
                 await mkf.set_settings(JSON.stringify(settings));
 
                 const result = await mkf.plot_wire_losses(
