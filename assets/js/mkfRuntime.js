@@ -152,22 +152,12 @@ function createMkfProxy(workerProxy) {
             
             // Return an async function that calls the worker
             return async (...args) => {
-                const startTime = performance.now();
-                let result;
-                
                 // Use explicit worker method if defined, otherwise use generic callMethod
                 if (workerExplicitMethods.has(prop)) {
-                    result = await workerProxy[prop](...args);
-                } else {
-                    // callMethod handles any MKF method with automatic type conversion
-                    result = await workerProxy.callMethod(prop, ...args);
+                    return await workerProxy[prop](...args);
                 }
-                
-                const elapsed = performance.now() - startTime;
-                if (elapsed > 100) {
-                }
-                
-                return result;
+                // callMethod handles any MKF method with automatic type conversion
+                return await workerProxy.callMethod(prop, ...args);
             };
         }
     });

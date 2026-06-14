@@ -336,11 +336,8 @@ export default {
     grid-template-columns: 2fr 1fr;
 }
 .dim-value-row-no-unit {
-    /* Reserve the same value:unit columns as a has-unit row but leave the unit
-       column empty, so a unit-less input is the SAME width as a has-unit input
-       (and lines up with it) instead of filling the unit space and looking
-       wider than its neighbours. */
-    grid-template-columns: 2fr 1fr;
+    /* No unit column — the input fills the full value-row width. */
+    grid-template-columns: 1fr;
 }
 .dim-input {
     min-width: 0;

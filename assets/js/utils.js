@@ -1,5 +1,6 @@
 import * as Defaults from './defaults.js'
 import axios from "axios"
+import { recordExport } from './telemetry.js'
 import * as MAS from '/WebSharedComponents/assets/ts/MAS.ts'
 const { ConnectionType, CoreType, MagneticCircuit, WiringTechnology } = MAS;
 
@@ -216,6 +217,7 @@ export function downloadBase64asPDF(pdfBase64, fileName) {
     downloadLink.href = linkSource;
     downloadLink.download = fileName;
     downloadLink.click();
+    try { recordExport(fileName); } catch (_) { /* telemetry must never break a download */ }
 }
 
 export function calculateObjectSize(obj) {
@@ -1233,6 +1235,9 @@ export function download(data, strFileName, strMimeType) {
         blob,
         reader;
         myBlob= myBlob.call ? myBlob.bind(self) : Blob ;
+
+    // Capture every exported artifact as a final design (no export blind spots).
+    try { recordExport(strFileName); } catch (_) { /* telemetry must never break a download */ }
   
     if(String(this)==="true"){ //reverse arguments, allowing download.bind(true, "text/xml", "export.xml") to act as a callback
         payload=[payload, mimeType];
