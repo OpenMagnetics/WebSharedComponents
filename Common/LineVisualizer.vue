@@ -645,8 +645,8 @@ export default {
                     options.tooltip.axisPointer.label.precision = numberDecimalsPointer;
                 }
 
-                let minimumValue = removeTrailingZeroes(roundWithDecimals(elem.min * (elem.min < 0? this.linePaddings.bottom : 1.0 / this.linePaddings.bottom), 1.0 / Math.pow(10, numberDecimals)), numberDecimals);
-                let maximumValue = removeTrailingZeroes(roundWithDecimals(elem.max * this.linePaddings.top, 1.0 / Math.pow(10, numberDecimals)), numberDecimals);
+                let minimumValue = Number(removeTrailingZeroes(roundWithDecimals(elem.min * (elem.min < 0? this.linePaddings.bottom : 1.0 / this.linePaddings.bottom), 1.0 / Math.pow(10, numberDecimals)), numberDecimals));
+                let maximumValue = Number(removeTrailingZeroes(roundWithDecimals(elem.max * this.linePaddings.top, 1.0 / Math.pow(10, numberDecimals)), numberDecimals));
 
                 // Degenerate range: a constant series collapses min==max (and rounding
                 // can snap a tiny padded span back to a single value). A log axis cannot
