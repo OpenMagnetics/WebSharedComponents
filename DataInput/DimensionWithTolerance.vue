@@ -249,14 +249,25 @@ export default {
 }
 .dwt-fields-row {
     display: flex;
-    flex-wrap: nowrap;
+    /* Wrap to extra rows when there isn't room for all fields on one line.
+       With grow enabled, fields still share a single row whenever they fit. */
+    flex-wrap: wrap;
     gap: 0.5rem;
     justify-content: space-between;
     width: 100%;
 }
 .dwt-field {
+    /* Size each field to its own content: a populated field (remove addon +
+       number input + unit select) reserves more than a narrow "Add …" button.
+       min-content stops a field from shrinking below its content (no overlap),
+       while staying as narrow as possible so the three fields share ONE row
+       whenever they fit — and only wrap once they genuinely can't.
+       flex-basis MUST be 0 (not auto): auto would use each field's max-content
+       for the wrap calc, and a populated field's wide number input would then
+       bump a sibling onto a second row even when the row had room. With basis 0
+       the wrap calc uses min-width (min-content), so packing is tight. */
     flex: 1 1 0;
-    min-width: 0;
+    min-width: min-content;
 }
 .dwt-group {
     width: 100%;
@@ -354,6 +365,8 @@ export default {
 }
 .dwt-add-btn {
     width: 100%;
+    /* Keep the label on one line so the field's min-content stays compact. */
+    white-space: nowrap;
     font-size: 0.75rem;
     color: var(--p-primary) !important;
     border-color: rgba(var(--p-primary-rgb), 0.5) !important;

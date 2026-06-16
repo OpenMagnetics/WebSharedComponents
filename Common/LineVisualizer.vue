@@ -190,11 +190,15 @@ export default {
             },
             tooltip: {
                 trigger: this.tooltipTrigger,
-                backgroundColor: 'rgba(var(--p-dark-rgb), 0.92)',
-                borderColor: 'rgba(var(--p-white-rgb), 0.2)',
+                // Resolve var() to concrete rgb() the way the axis/crosshair labels
+                // do. Text must use --p-white (the readable foreground, ~#d4d4d4),
+                // NOT --p-light: in the dark theme --p-light is a dark surface grey
+                // (#2a2a2a), which rendered as dark text on the dark tooltip box.
+                backgroundColor: resolveCssColor('rgba(var(--p-dark-rgb), 0.92)'),
+                borderColor: resolveCssColor('rgba(var(--p-white-rgb), 0.2)'),
                 borderWidth: 1,
                 padding: 8,
-                textStyle: { color: 'var(--p-light)', fontSize: 11, fontWeight: 400 },
+                textStyle: { color: resolveCssColor('var(--p-white)'), fontSize: 11, fontWeight: 400 },
                 extraCssText: 'border-radius: 6px; box-shadow: 0 4px 12px rgba(var(--p-black-rgb), 0.5);',
                 axisPointer: {
                     type: 'cross',
