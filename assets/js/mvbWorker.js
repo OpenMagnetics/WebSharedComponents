@@ -173,6 +173,7 @@ Comlink.expose({
         return callDraw('drawMagnetic[stl]', _mvbpp.drawMagnetic, [
             JSON.stringify(magnetic), '3D', 'XY', 0.0, 'stl',
             d.scale, d.coreSeg, sym, side,
+            true,  // paintCoating: draw turns at OUTER (insulation) diameter (ABT #7)
         ]);
     }),
 
@@ -184,6 +185,7 @@ Comlink.expose({
         return callDraw('drawMagnetic[step]', _mvbpp.drawMagnetic, [
             JSON.stringify(magnetic), '3D', 'XY', 0.0, 'step',
             d.scale, d.coreSeg, sym, side,
+            true,  // paintCoating: draw turns at OUTER (insulation) diameter (ABT #7)
         ]);
     },
 
@@ -267,6 +269,7 @@ Comlink.expose({
         return callDraw('drawTurns[stl]', _mvbpp.drawTurns, [
             JSON.stringify(magnetic), '3D', 'XY', 0.0, 'stl',
             d.scale, d.wireSeg, sym, side,
+            true,  // paintCoating: draw turns at OUTER (insulation) diameter (ABT #7)
         ]);
     }),
 
