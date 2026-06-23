@@ -37,8 +37,8 @@ const ENUM_KEYS_TO_ENUMS = {
     cti:                 [MAS.CTI],
     direction:           [MAS.Direction],
     family:              [MAS.BobbinFamily, MAS.CoreShapeFamily],
-    insulationGrade:     [MAS.InsulationType],
-    insulationType:      [MAS.InsulationType],
+    insulationGrade:     [MAS.IsolationClass],
+    insulationType:      [MAS.IsolationClass],
     isolationSide:       [MAS.IsolationSide],
     isolationSides:      [MAS.IsolationSide],
     label:               [MAS.WaveformLabel],
@@ -78,7 +78,7 @@ const ENUM_KEYS_TO_ENUMS = {
     switchType:          [MAS.ViennaSwitchType],
     temperatureClass:    [MAS.TemperatureClassEnum],
     terminalType:        [MAS.ConnectionType],
-    topology:            [MAS.Topologies],
+    topology:            [MAS.Topology],
     topologyVariant:     [MAS.PfcTopologyVariants],
     transitionMode:      [MAS.TransitionMode],
     turnsAlignment:      [MAS.CoilAlignment],
@@ -1063,12 +1063,12 @@ export async function checkAndFixMas(mas, mkf=null) {
         if (mas.magnetic.core.functionalDescription.shape != null && typeof(mas.magnetic.core.functionalDescription.shape) !== "string") {
             if (mas.magnetic.core.functionalDescription.shape.family == 't') {
                 mas.magnetic.core.functionalDescription.type = CoreType.Toroidal;
-                mas.magnetic.core.functionalDescription.magneticCircuit = MagneticCircuit.Closed;
+                mas.magnetic.core.functionalDescription.shape.magneticCircuit = MagneticCircuit.Closed;
                 mas.magnetic.core.functionalDescription.gapping = [];
             }
             else {
                 mas.magnetic.core.functionalDescription.type = CoreType.TwoPieceSet;
-                mas.magnetic.core.functionalDescription.magneticCircuit = MagneticCircuit.Open;
+                mas.magnetic.core.functionalDescription.shape.magneticCircuit = MagneticCircuit.Open;
             }
         }
     }
