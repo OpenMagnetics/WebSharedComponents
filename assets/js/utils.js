@@ -1066,14 +1066,20 @@ export async function checkAndFixMas(mas, mkf=null) {
         if (mas.magnetic.core.functionalDescription.shape != null && typeof(mas.magnetic.core.functionalDescription.shape) !== "string") {
             if (mas.magnetic.core.functionalDescription.shape.family == 't') {
                 mas.magnetic.core.functionalDescription.type = CoreType.Toroidal;
-                mas.magnetic.core.functionalDescription.magneticCircuit = MagneticCircuit.Closed;
+                // magneticCircuit lives on the shape in current MAS (it was removed
+                // from coreFunctionalDescription, which is additionalProperties:false).
+                mas.magnetic.core.functionalDescription.shape.magneticCircuit = MagneticCircuit.Closed;
                 mas.magnetic.core.functionalDescription.gapping = [];
             }
             else {
                 mas.magnetic.core.functionalDescription.type = CoreType.TwoPieceSet;
-                mas.magnetic.core.functionalDescription.magneticCircuit = MagneticCircuit.Open;
+                mas.magnetic.core.functionalDescription.shape.magneticCircuit = MagneticCircuit.Open;
             }
         }
+        // Legacy migration: magneticCircuit moved from coreFunctionalDescription onto
+        // the shape. Drop any obsolete copy left in old localStorage / imported MAS /
+        // fixtures so the current (additionalProperties:false) schema still validates.
+        delete mas.magnetic.core.functionalDescription.magneticCircuit;
     }
 
     if (mas.magnetic.coil != null) {
