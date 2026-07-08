@@ -264,7 +264,7 @@ export default {
                     :placeholder="optional ? '—' : undefined"
                     :show-buttons="showButtons"
                     button-layout="stacked"
-                    :class="['dim-input', unit == null && altUnit == null ? 'dim-input-full' : 'dim-input-with-unit']"
+                    :class="['dim-input', unit == null && altUnit == null ? 'dim-input-full' : 'dim-input-with-unit', showButtons ? '' : 'dim-input-no-buttons']"
                 />
                 <DimensionUnit
                     v-if="unit != null"
@@ -357,6 +357,12 @@ export default {
     font-size: 0.875rem;
     line-height: 1.25rem;
     width: 100%;
+}
+/* showButtons=false: no spinner column to clear, so drop the reserved right
+   padding — otherwise the right-aligned value sits with a dead gap before
+   the border/unit seam. */
+.dim-input-no-buttons :deep(.p-inputnumber-input) {
+    padding-right: 0.5rem;
 }
 .dim-input :deep(.p-inputnumber-button) {
     height: 0.875rem;
