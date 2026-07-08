@@ -43,6 +43,8 @@ export default {
 
         // --- State ---
         disabled: { type: Boolean, default: false },
+        // Set false to hide the increment/decrement spinner buttons.
+        showButtons: { type: Boolean, default: true },
         // When true the field is allowed to hold no value: it renders an empty
         // but editable input (instead of rendering nothing), keeps the unit
         // selector visible, and clearing it writes null to modelValue[name] so
@@ -260,7 +262,7 @@ export default {
                     :max-fraction-digits="numberDecimals"
                     :allow-empty="optional"
                     :placeholder="optional ? '—' : undefined"
-                    show-buttons
+                    :show-buttons="showButtons"
                     button-layout="stacked"
                     :class="['dim-input', unit == null && altUnit == null ? 'dim-input-full' : 'dim-input-with-unit']"
                 />
