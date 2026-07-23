@@ -1,7 +1,7 @@
 <script setup>
 import { toCamelCase, formatUnit, removeTrailingZeroes, getMultiplier, deepCopy, roundWithDecimals } from '../assets/js/utils.js'
 import { use } from 'echarts/core'
-import { LineChart, ScatterChart, EffectScatterChart } from 'echarts/charts'
+import { LineChart, ScatterChart, EffectScatterChart, CustomChart } from 'echarts/charts'
 import {
   TitleComponent,
   TooltipComponent,
@@ -12,7 +12,7 @@ import {
   MarkAreaComponent,
   MarkLineComponent,
 } from 'echarts/components'
-import { CanvasRenderer } from 'echarts/renderers'
+import { CanvasRenderer, SVGRenderer } from 'echarts/renderers'
 import VChart from 'vue-echarts';
 
 use([
@@ -27,7 +27,9 @@ use([
   ScatterChart,
   LineChart,
   EffectScatterChart,
-  CanvasRenderer
+  CustomChart,
+  CanvasRenderer,
+  SVGRenderer
 ])
 
 </script>
@@ -178,9 +180,18 @@ export default {
             type: Object,
             default: null,
         },
+        // 'canvas' (default) or 'svg'. SVG renders the chart as a <svg> DOM tree,
+        // which callers can serialize for scalable exports. Switching re-creates
+        // the chart (the instance is keyed on the renderer).
+        renderer: {
+            type: String,
+            default: 'canvas',
+        },
     },
     emits: [
         'click',
+        'datazoom',
+        'restore',
     ],
     data() {
         const limits = this.processLimits()
@@ -252,6 +263,9 @@ export default {
                         }
                         else {
                             const newIndex = param.seriesIndex - this.data.length;
+                            // Band (custom polygon) series sit after the points and
+                            // carry no hoverable data — skip them.
+                            if (!this.points[newIndex]) return '';
                             const xDatum = this.points[newIndex].data.x;
                             const yDatum = this.points[newIndex].data.y;
                             const xAux = formatUnit(xDatum, this.xAxisOptions.unit);
@@ -459,16 +473,24 @@ export default {
                     let yMinimum = Number.MAX_VALUE;
                     let yMaximum = Number.MIN_VALUE;
 
-                    if (datum && datum.data && datum.data.y && Array.isArray(datum.data.y)) {
-                        datum.data.y.forEach((elem) => {
-                            if (elem !== undefined && elem !== null && Number.isFinite(elem)) {
-                                yMaximum = Math.max(yMaximum, elem);
-                                if (datum.type == "log" && elem > Number.MIN_VALUE) {
-                                    yMinimum = Math.min(yMinimum, elem);
-                                } else if (datum.type != "log") {
-                                    yMinimum = Math.min(yMinimum, elem);
-                                }
+                    const updateWithValue = (elem) => {
+                        if (elem !== undefined && elem !== null && Number.isFinite(elem)) {
+                            yMaximum = Math.max(yMaximum, elem);
+                            if (datum.type == "log" && elem > Number.MIN_VALUE) {
+                                yMinimum = Math.min(yMinimum, elem);
+                            } else if (datum.type != "log") {
+                                yMinimum = Math.min(yMinimum, elem);
                             }
+                        }
+                    };
+                    if (datum && datum.data && datum.data.y && Array.isArray(datum.data.y)) {
+                        datum.data.y.forEach(updateWithValue)
+                    }
+                    // A tolerance band extends beyond the series itself — include
+                    // its envelope so the band is never clipped by the axis.
+                    if (datum && datum.band) {
+                        [datum.band.upper, datum.band.lower].forEach((edge) => {
+                            if (Array.isArray(edge)) edge.forEach(updateWithValue)
                         })
                     }
 
@@ -641,6 +663,56 @@ export default {
                 );
             })
 
+            // Tolerance bands: a series may carry band = {upper: [...], lower: [...]}
+            // (same length as its x array). Rendered as a single custom polygon so it
+            // works on log axes too (stacked-area bands don't). Appended AFTER the
+            // data and points series so their index-based tooltip mapping holds.
+            this.data.forEach((datum, index) => {
+                const band = datum.band
+                if (!band || !Array.isArray(band.upper) || !Array.isArray(band.lower)) return
+                if (!datum.data || !Array.isArray(datum.data.x)) return
+
+                const bandColor = resolveCssColor(datum.colorLabel || this.lineColor)
+                const isLog = datum.type == 'log'
+                const usable = (value) => value !== undefined && value !== null && Number.isFinite(value) && (!isLog || value > 0)
+                const upperPoints = []
+                const lowerPoints = []
+                const pointCount = Math.min(datum.data.x.length, band.upper.length, band.lower.length)
+                for (let pointIndex = 0; pointIndex < pointCount; pointIndex++) {
+                    const xVal = datum.data.x[pointIndex]
+                    if (!usable(xVal) || !usable(band.upper[pointIndex]) || !usable(band.lower[pointIndex])) continue
+                    upperPoints.push([xVal, band.upper[pointIndex]])
+                    lowerPoints.push([xVal, band.lower[pointIndex]])
+                }
+                if (upperPoints.length < 2) return
+
+                const side = datum.position || (index === 0 ? 'left' : 'right');
+                options.series.push({
+                    type: 'custom',
+                    name: `${datum.label} tolerance`,
+                    color: bandColor,
+                    yAxisIndex: this.forceAxisUniquePerSide ? firstIndexPerSide[side] : index,
+                    silent: true,
+                    tooltip: { show: false },
+                    z: 1,
+                    // The single datum must be a VALID point on both axes — a
+                    // scalar 0 gets filtered by log scales and renderItem would
+                    // never run. Any real band point works; the polygon itself
+                    // is built from the closure.
+                    data: [upperPoints[0]],
+                    renderItem: (params, api) => ({
+                        type: 'polygon',
+                        shape: { points: upperPoints.map((p) => api.coord(p)).concat(lowerPoints.map((p) => api.coord(p)).reverse()) },
+                        style: {
+                            fill: bandColor + '26',
+                            stroke: bandColor + '99',
+                            lineDash: [4, 4],
+                            lineWidth: 1,
+                        },
+                    }),
+                })
+            })
+
             options.xAxis.min = limits.xAxis.min * (limits.xAxis.min < 0? this.linePaddings.left : 1.0 / this.linePaddings.left);
             options.xAxis.max = limits.xAxis.max * this.linePaddings.right;
             options.xAxis.type = this.xAxisOptions.type;
@@ -721,13 +793,23 @@ export default {
         },
         onClick(event) {
             this.$emit('click', event);
-        }
+        },
+        onDataZoom(event) {
+            // Toolbox dataZoom fires with a batch carrying the selected value
+            // range. Forwarded so consumers can track the viewed x-window (the
+            // component is closed to template refs — script setup — so events
+            // are the supported channel).
+            this.$emit('datazoom', event);
+        },
+        onRestore() {
+            this.$emit('restore');
+        },
     },
 }
 </script>
 
 <template>
     <div ref="chartWrapper" class="chart" :style="chartStyle">
-        <v-chart v-if="chartVisible && options.yAxis.length > 0" class="chart" :option="options" autoresize :update-options="updateOpts" @click="onClick" style="width: 100%; height: 100%;"/>
+        <v-chart v-if="chartVisible && options.yAxis.length > 0" ref="vchart" :key="renderer" class="chart" :option="options" :init-options="{ renderer }" autoresize :update-options="updateOpts" @click="onClick" @datazoom="onDataZoom" @restore="onRestore" style="width: 100%; height: 100%;"/>
     </div>
 </template>
