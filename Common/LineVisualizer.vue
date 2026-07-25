@@ -41,6 +41,17 @@ use([
 // theme colors as such var() strings (e.g. inputTextColor = "var(--wuerth-body-
 // color, #333333)"), so resolve any CSS color string to a concrete rgb() value
 // via a hidden probe element before handing it to the chart.
+// Consumers describe axis scales as 'log'/'linear' (the MeasurementSchema
+// vocabulary), but ECharts axis types are 'log'/'value'/'time'/'category' —
+// an unmapped 'linear' makes ECharts look up the non-existent component
+// "yAxis.linear" and abort the render. Normalize at the boundary.
+function toAxisType(scale) {
+    if (scale === 'log' || scale === 'time' || scale === 'category' || scale === 'value') {
+        return scale;
+    }
+    return 'value';
+}
+
 function resolveCssColor(color) {
     if (typeof color !== 'string' || color === '' || !color.includes('var(')) {
         return color;
@@ -307,7 +318,7 @@ export default {
             xAxis: {
                 min: limits.xAxis.min,
                 max: limits.xAxis.max,
-                type: this.xAxisOptions.type,
+                type: toAxisType(this.xAxisOptions.type),
                 splitLine: {
                     show: this.showGrid,
                     // Theme-agnostic gridline: visible on both light and dark
@@ -535,7 +546,7 @@ export default {
                 const axisColor = resolveCssColor(datum.colorLabel || this.lineColor)
                 const labelColor = this.yAxisLabelColor ? resolveCssColor(this.yAxisLabelColor) : axisColor
                 options.yAxis.push({
-                    type: datum.type,
+                    type: toAxisType(datum.type),
                     name: this.showYAxisName ? (datum.unit || '') : '',
                     nameLocation: 'middle',
                     nameGap: 25,
@@ -715,7 +726,7 @@ export default {
 
             options.xAxis.min = limits.xAxis.min * (limits.xAxis.min < 0? this.linePaddings.left : 1.0 / this.linePaddings.left);
             options.xAxis.max = limits.xAxis.max * this.linePaddings.right;
-            options.xAxis.type = this.xAxisOptions.type;
+            options.xAxis.type = toAxisType(this.xAxisOptions.type);
 
             // Store individual axis limits
             const individualAxisLimits = [];
@@ -785,10 +796,38 @@ export default {
 
             if (this.forceAxisUniquePerSide) {
                 const uniqueYAxis = []
-                Object.entries(firstIndexPerSide).forEach(([_, axisIndex]) => {
+                const sideToNewIndex = {}
+                Object.entries(firstIndexPerSide).forEach(([side, axisIndex], newIndex) => {
+                    sideToNewIndex[side] = newIndex
                     uniqueYAxis.push(options.yAxis[axisIndex])
                 })
+                // Each compressed axis spans only ITS side's series. The shared
+                // limits above merged every series (a linear/negative right-side
+                // series would poison a log left axis into a collapsed range).
+                Object.keys(sideToNewIndex).forEach((side) => {
+                    let sideMin = Number.MAX_VALUE
+                    let sideMax = -Number.MAX_VALUE
+                    this.data.forEach((datum, index) => {
+                        const datumSide = datum.position || (index === 0 ? 'left' : 'right')
+                        if (datumSide !== side || !individualAxisLimits[index]) return
+                        sideMin = Math.min(sideMin, individualAxisLimits[index].min)
+                        sideMax = Math.max(sideMax, individualAxisLimits[index].max)
+                    })
+                    if (sideMin <= sideMax) {
+                        uniqueYAxis[sideToNewIndex[side]].min = sideMin
+                        uniqueYAxis[sideToNewIndex[side]].max = sideMax
+                    }
+                })
                 options.yAxis = uniqueYAxis
+                // Series still point at the ORIGINAL axis index of their side's
+                // first series; remap them onto the compressed axis array (data
+                // series and band polygons alike) or right-side series would
+                // reference an out-of-bounds axis.
+                options.series.forEach((series) => {
+                    if (series.yAxisIndex === undefined) return
+                    const side = Object.keys(firstIndexPerSide).find((key) => firstIndexPerSide[key] === series.yAxisIndex)
+                    if (side !== undefined) series.yAxisIndex = sideToNewIndex[side]
+                })
             }
         },
         onClick(event) {
