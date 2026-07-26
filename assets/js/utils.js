@@ -1066,6 +1066,34 @@ export function clean(object) {
     return object;
 }
 
+// MAS coil.bobbin ARRAY form: per-column bobbins (element 0 = the centre/main
+// column part, later elements ad-hoc lateral parts — separate BOM items).
+// Returns the merged effective bobbin geometry consumers should read: element 0
+// with every element's winding windows concatenated in array order (mirrors
+// OpenMagnetics::Coil::merge_per_column_bobbins in the engine). Scalar bobbins
+// (object or name string) pass through untouched. Elements given by NAME cannot
+// be resolved here — whoever builds the array must materialize full objects.
+export function effectiveBobbin(bobbin) {
+    if (!Array.isArray(bobbin)) {
+        return bobbin;
+    }
+    if (bobbin.length === 0) {
+        throw new Error('coil.bobbin is an empty array: the per-column form needs at least the centre-column bobbin (element 0)');
+    }
+    bobbin.forEach((part, index) => {
+        if (typeof part !== 'object' || part == null || part.processedDescription == null) {
+            throw new Error(`coil.bobbin[${index}] cannot be merged in the frontend: per-column bobbins must be full objects with a processedDescription (bobbin names are only resolvable in the engine)`);
+        }
+    });
+    return {
+        ...bobbin[0],
+        processedDescription: {
+            ...bobbin[0].processedDescription,
+            windingWindows: bobbin.flatMap((part) => part.processedDescription.windingWindows ?? []),
+        },
+    };
+}
+
 export function cleanCoil(coilToClean) {
     coilToClean = clean(coilToClean);
     if (coilToClean.sectionsDescription != null) {
