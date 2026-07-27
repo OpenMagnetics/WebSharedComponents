@@ -449,16 +449,24 @@ export default {
         },
         processLimits() {
             const limits = []
+            const isLogX = this.xAxisOptions && this.xAxisOptions.type === 'log';
 
             let xMinimum = Number.MAX_VALUE;
-            let xMaximum = Number.MIN_VALUE;
+            // NOT Number.MIN_VALUE: that is 5e-324, a POSITIVE number, so a max
+            // accumulator seeded with it never drops below it and an all-negative
+            // (or empty) x set yields max < min — a degenerate axis that renders
+            // as a lone "0" tick.
+            let xMaximum = -Number.MAX_VALUE;
 
             // Calculate x limits across all data
             if (this.data && Array.isArray(this.data)) {
                 this.data.forEach((datum) => {
                     if (datum && datum.data && datum.data.x && Array.isArray(datum.data.x)) {
                         datum.data.x.forEach((elem) => {
-                            if (elem !== undefined && elem !== null && !Number.isNaN(elem)) {
+                            // A log x-axis cannot place x <= 0; including it drags the
+                            // axis minimum to 0 and flattens the plot (the y-axis loop
+                            // below already guards this for log series).
+                            if (elem !== undefined && elem !== null && Number.isFinite(elem) && !(isLogX && elem <= 0)) {
                                 xMaximum = Math.max(xMaximum, elem);
                                 xMinimum = Math.min(xMinimum, elem);
                             }
