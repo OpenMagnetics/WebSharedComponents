@@ -1,6 +1,6 @@
 <script setup>
-import { toTitleCase, getMultiplier, removeTrailingZeroes } from '/WebSharedComponents/assets/js/utils.js'
-import DimensionUnit from '/WebSharedComponents/DataInput/DimensionUnit.vue'
+import { toTitleCase, getMultiplier, removeTrailingZeroes } from '../assets/js/utils.js'
+import DimensionUnit from './DimensionUnit.vue'
 import InputNumber from 'primevue/inputnumber'
 </script>
 <script>
@@ -30,15 +30,34 @@ export default {
         useMetricPrefixes: { type: Boolean, default: true },
         defaultZeroUnit: { type: Number, default: null },
 
-        // --- Value constraints ---
-        min: { type: Number, default: null },
-        max: { type: Number, default: null },
-        visualScale: { type: Number, default: 1 },
+        // --- Value constraints / formatting ---
+        min: { type: Number, default: 1e-12 },
+        max: { type: Number, default: 1e+12 },
+        numberDecimals: { type: Number, default: 6 },
+        allowNegative: { type: Boolean, default: false },
+        allowZero: { type: Boolean, default: false },
+        visualScale: { type: Number, default: 1 },       // multiply the displayed value (e.g. ratio -> %)
 
         // --- State ---
         disabled: { type: Boolean, default: false },
         showButtons: { type: Boolean, default: true },
         optional: { type: Boolean, default: false },
+
+        // --- Deprecated: accepted but ignored ---
+        // Styling now comes entirely from the PrimeVue theme, and the value:unit
+        // split is a fixed flex ratio. These props remain declared only so the
+        // ~40 existing call sites don't emit attribute-fallthrough warnings or
+        // leak `textcolor="[object Object]"` onto the root element. Do not use
+        // them in new code — remove them from a call site when you next touch it.
+        valueFontSize: { type: [String, Object], default: null },
+        labelFontSize: { type: [String, Object], default: null },
+        labelBgColor: { type: [String, Object], default: null },
+        valueBgColor: { type: [String, Object], default: null },
+        textColor: { type: [String, Object], default: null },
+        labelWidthProportionClass: { type: String, default: '' },
+        valueWidthProportionClass: { type: String, default: '' },
+        unitExtraStyleClass: { type: String, default: '' },
+        justifyContent: { type: [Boolean, String], default: false },
     },
     data() {
         const localData = { multiplier: null, scaledValue: null }
@@ -46,16 +65,16 @@ export default {
         const initial = this.modelValue[this.name]
         if (initial == null && this.defaultValue != null) {
             const aux = getMultiplier(this.defaultValue, 0.001)
-            localData.scaledValue = removeTrailingZeroes(aux.scaledValue, 6)
+            localData.scaledValue = removeTrailingZeroes(aux.scaledValue, this.numberDecimals)
             localData.multiplier = aux.multiplier
         }
         if (initial != null) {
             let aux
             if (this.unit != null) {
                 aux = getMultiplier(initial, 0.001)
-                localData.scaledValue = removeTrailingZeroes(aux.scaledValue, 6)
+                localData.scaledValue = removeTrailingZeroes(aux.scaledValue, this.numberDecimals)
             } else {
-                localData.scaledValue = removeTrailingZeroes(initial, 6)
+                localData.scaledValue = removeTrailingZeroes(initial, this.numberDecimals)
             }
             if (initial === 0) {
                 localData.multiplier = this.defaultZeroUnit != null ? this.defaultZeroUnit : 1
@@ -67,13 +86,13 @@ export default {
             if (this.unitMin != null && localData.multiplier < this.unitMin) {
                 localData.multiplier = this.unitMin
                 if (initial != null && this.unit != null) {
-                    localData.scaledValue = removeTrailingZeroes(initial / localData.multiplier, 6)
+                    localData.scaledValue = removeTrailingZeroes(initial / localData.multiplier, this.numberDecimals)
                 }
             }
             if (this.unitMax != null && localData.multiplier > this.unitMax) {
                 localData.multiplier = this.unitMax
                 if (initial != null && this.unit != null) {
-                    localData.scaledValue = removeTrailingZeroes(initial / localData.multiplier, 6)
+                    localData.scaledValue = removeTrailingZeroes(initial / localData.multiplier, this.numberDecimals)
                 }
             }
         }
@@ -98,7 +117,7 @@ export default {
     computed: {
         displayValue() {
             if (this.localData.scaledValue == null) return null
-            return Number(removeTrailingZeroes(this.localData.scaledValue * this.visualScale, 6))
+            return Number(removeTrailingZeroes(this.localData.scaledValue * this.visualScale, this.numberDecimals))
         },
     },
     mounted() {
@@ -121,13 +140,43 @@ export default {
             return shortenName
         },
         checkErrors() {
+            let hasError = false
             this.errorMessages = ''
+            // An optional field with no value is valid (it returns null/None).
             if (this.optional && this.localData.scaledValue == null) return false
             if (this.localData.scaledValue == null) {
-                this.errorMessages = 'Value must be set.'
-                return true
+                hasError = true
+                this.errorMessages += 'Value must be set. Set it or remove the requirement from the menu.\n'
             }
-            return false
+            if (isNaN(this.localData.scaledValue)) {
+                this.errorMessages += 'Value cannot be empty.\n'
+            }
+            if (this.localData.scaledValue != null) {
+                const nominal = this.localData.scaledValue * this.localData.multiplier
+                if ((nominal < 0 && !this.allowNegative) || (nominal === 0 && !this.allowZero)) {
+                    hasError = true
+                    this.errorMessages += 'Value must be greater or equal than 0.\n'
+                }
+            }
+            return hasError
+        },
+        // Shared min/max clamp honouring allowNegative/allowZero — used by both
+        // typed-value updates and unit changes so the two paths cannot drift.
+        clampValue(actualValue) {
+            if (this.max != null) {
+                if (this.allowNegative) {
+                    if (Math.abs(actualValue) > this.max) actualValue = this.max * Math.sign(actualValue)
+                } else if (actualValue > this.max) actualValue = this.max
+            }
+            if (this.min != null) {
+                if (this.allowNegative) {
+                    if (Math.abs(actualValue) < this.min) actualValue = this.min * Math.sign(actualValue)
+                } else if (this.allowZero) {
+                    if (actualValue <= 0) actualValue = 0
+                    else if (actualValue < this.min) actualValue = this.min
+                } else if (actualValue < this.min) actualValue = this.min
+            }
+            return actualValue
         },
         update(actualValue) {
             if (this.optional && (actualValue === null || actualValue === undefined
@@ -138,9 +187,7 @@ export default {
                 this.$emit('update', null, this.name)
                 return
             }
-            actualValue = Number(actualValue)
-            if (this.max != null && actualValue > this.max) actualValue = this.max
-            if (this.min != null && actualValue < this.min) actualValue = this.min
+            actualValue = this.clampValue(Number(actualValue))
             if (this.unit != null) {
                 const aux = getMultiplier(actualValue, 0.001)
                 let mult = aux.multiplier
@@ -151,7 +198,7 @@ export default {
                 if (sv !== 0) this.localData.multiplier = mult
                 else if (this.defaultZeroUnit != null) this.localData.multiplier = this.defaultZeroUnit
             } else {
-                this.localData.scaledValue = removeTrailingZeroes(actualValue, 6)
+                this.localData.scaledValue = removeTrailingZeroes(actualValue, this.numberDecimals)
                 this.localData.multiplier = 1
             }
             const hasError = this.checkErrors()
@@ -171,10 +218,19 @@ export default {
             // to k → still displays 5 but stores 5 kΩ = 5000 Ω, not 5000 kΩ).
             // Auto-scaling (1000 → 1k) only happens when the user types a value,
             // not when they manually pick a different prefix.
-            const newActualValue = (this.localData.scaledValue ?? 0) * newMultiplier
+            const rawValue = (this.localData.scaledValue ?? 0) * newMultiplier
+            const newActualValue = this.clampValue(rawValue)
             this.localData.multiplier = newMultiplier
-            this.modelValue[this.name] = newActualValue
-            this.$emit('update', newActualValue, this.name)
+            if (newActualValue !== rawValue) {
+                // The clamp fired: the displayed number must reflect what is
+                // actually stored, not the out-of-range wish.
+                this.localData.scaledValue = removeTrailingZeroes(newActualValue / newMultiplier, this.numberDecimals)
+            }
+            const hasError = this.checkErrors()
+            if (!hasError) {
+                this.modelValue[this.name] = newActualValue
+                this.$emit('update', newActualValue, this.name)
+            }
         },
         changeScaledValue(value) {
             // Collapse back-to-back emissions from PrimeVue InputNumber (keydown
@@ -209,6 +265,7 @@ export default {
                 v-if="replaceTitle == null"
                 :data-cy="dataTestLabel + '-title'"
                 class="dim-label"
+                :style="labelFontSize"
                 v-tooltip="tooltip">
                 {{ shortenedName }}
             </label>
@@ -216,6 +273,7 @@ export default {
                 v-else-if="replaceTitle !== ''"
                 :data-cy="dataTestLabel + '-title'"
                 class="dim-label"
+                :style="labelFontSize"
                 v-tooltip="tooltip">
                 {{ replaceTitle }}
             </label>
@@ -229,7 +287,7 @@ export default {
                     ref="inputRef"
                     :disabled="disabled"
                     :data-cy="dataTestLabel + '-number-input'"
-                    :max-fraction-digits="6"
+                    :max-fraction-digits="numberDecimals"
                     :allow-empty="optional"
                     :placeholder="optional ? '—' : undefined"
                     :show-buttons="showButtons"
