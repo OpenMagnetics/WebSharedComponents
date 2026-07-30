@@ -1,5 +1,5 @@
 <script setup>
-import { toCamelCase, formatUnit, removeTrailingZeroes, getMultiplier, deepCopy, roundWithDecimals } from '../assets/js/utils.js'
+import { toCamelCase, formatUnit, removeTrailingZeroes, getMultiplier, deepCopy } from '../assets/js/utils.js'
 import { use } from 'echarts/core'
 import { LineChart, ScatterChart, EffectScatterChart, CustomChart } from 'echarts/charts'
 import {
@@ -762,8 +762,26 @@ export default {
                     options.tooltip.axisPointer.label.precision = numberDecimalsPointer;
                 }
 
-                let minimumValue = Number(removeTrailingZeroes(roundWithDecimals(elem.min * (elem.min < 0? this.linePaddings.bottom : 1.0 / this.linePaddings.bottom), 1.0 / Math.pow(10, numberDecimals)), numberDecimals));
-                let maximumValue = Number(removeTrailingZeroes(roundWithDecimals(elem.max * this.linePaddings.top, 1.0 / Math.pow(10, numberDecimals)), numberDecimals));
+                // Snap the padded bounds OUTWARD (floor the min, ceil the max) so the
+                // axis always contains every sample. The previous round-to-nearest snap
+                // (via removeTrailingZeroes, which additionally caps at toFixed(5)) could
+                // move the axis minimum ABOVE the smallest samples — e.g. an 18.5 µH data
+                // minimum became a 2e-5 H axis floor — and ECharts silently clips points
+                // outside the axis range, so the curve tail just vanished. Skip snapping
+                // when the precision step is coarser than the value itself: snapping
+                // would distort the bound by orders of magnitude (and a log axis cannot
+                // survive a minimum floored to 0).
+                const precision = 1.0 / Math.pow(10, numberDecimals);
+                const snapOutward = (value, roundFn) => {
+                    if (!Number.isFinite(value) || value === 0 || precision > Math.abs(value)) {
+                        return value;
+                    }
+                    return roundFn(value / precision) * precision;
+                };
+                const paddedMin = elem.min * (elem.min < 0? this.linePaddings.bottom : 1.0 / this.linePaddings.bottom);
+                const paddedMax = elem.max * (elem.max < 0? 1.0 / this.linePaddings.top : this.linePaddings.top);
+                let minimumValue = snapOutward(paddedMin, Math.floor);
+                let maximumValue = snapOutward(paddedMax, Math.ceil);
 
                 // Degenerate range: a constant series collapses min==max (and rounding
                 // can snap a tiny padded span back to a single value). A log axis cannot
