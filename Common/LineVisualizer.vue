@@ -1,7 +1,7 @@
 <script setup>
 import { toCamelCase, formatUnit, removeTrailingZeroes, getMultiplier, deepCopy, roundWithDecimals } from '../assets/js/utils.js'
 import { use } from 'echarts/core'
-import { LineChart, ScatterChart, EffectScatterChart, CustomChart } from 'echarts/charts'
+import { LineChart, ScatterChart, EffectScatterChart, CustomChart, BarChart } from 'echarts/charts'
 import {
   TitleComponent,
   TooltipComponent,
@@ -28,6 +28,7 @@ use([
   LineChart,
   EffectScatterChart,
   CustomChart,
+  BarChart,
   CanvasRenderer,
   SVGRenderer
 ])
@@ -618,27 +619,37 @@ export default {
                 }
 
                 const seriesColor = axisColor;
+                // Per-series chart type. Defaults to 'line', so every existing consumer
+                // and every series that does not ask for a type behaves exactly as
+                // before. 'scatter' plots the points without joining them (measured
+                // samples that should not imply interpolation between them) and 'bar'
+                // compares discrete values. Only the properties that differ per type are
+                // varied; axes, tolerance bands, zoom and the dual-axis logic are shared.
+                const chartType = datum.chartType ?? 'line';
+                const isLine = chartType === 'line';
+                const isScatter = chartType === 'scatter';
                 options.series.push(
                     {
                         data: this.processData(index),
-                        type: 'line',
-                        smooth: datum.smooth ?? 0.15,
+                        type: chartType,
+                        smooth: isLine ? (datum.smooth ?? 0.15) : undefined,
                         name: this.legendLabels && this.legendLabels[index] ? this.legendLabels[index] : datum.label,
                         color: seriesColor,
-                        showSymbol: showPoints,
+                        showSymbol: isLine ? showPoints : undefined,
                         symbol: 'circle',
-                        symbolSize: 6,
-                        sampling: 'lttb',
+                        symbolSize: isScatter ? 8 : 6,
+                        sampling: isLine ? 'lttb' : undefined,
                         yAxisIndex: this.forceAxisUniquePerSide ? firstIndexPerSide[side] : index,
-                        lineStyle: {
+                        lineStyle: isLine ? {
                             type: datum.lineStyle ?? 'solid',
                             width: 1.5,
-                        },
+                        } : undefined,
+                        itemStyle: isLine ? undefined : { color: seriesColor },
                         emphasis: {
                             focus: 'series',
                             lineStyle: { width: 2 },
                         },
-                        areaStyle: this.showArea ? {
+                        areaStyle: this.showArea && isLine ? {
                             color: {
                                 type: 'linear',
                                 x: 0, y: 0, x2: 0, y2: 1,
