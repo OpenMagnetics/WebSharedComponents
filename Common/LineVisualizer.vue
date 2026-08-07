@@ -53,6 +53,15 @@ function toAxisType(scale) {
     return 'value';
 }
 
+// The scale a series actually renders on, which is not always the one the caller
+// asked for: a bar is baselined at zero and a log axis cannot represent zero, so
+// bars are always linear. Single source of truth for that override — the axis
+// construction and the degenerate-range fallback must agree, or the axis is built
+// as one type and rescued as the other.
+function effectiveAxisType(datum) {
+    return datum.chartType === 'bar' ? 'linear' : datum.type;
+}
+
 function resolveCssColor(color) {
     if (typeof color !== 'string' || color === '' || !color.includes('var(')) {
         return color;
@@ -490,15 +499,20 @@ export default {
             limits.yAxis = []
             if (this.data && Array.isArray(this.data)) {
                 this.data.forEach((datum, index) => {
+                    // Number.MIN_VALUE is the smallest POSITIVE double (5e-324), not the
+                    // most negative one — seeding the max tracker with it means an
+                    // all-negative series never updates yMaximum, so the axis top lands
+                    // at ~0 and the data is squashed against it. -Number.MAX_VALUE is the
+                    // real lower bound.
                     let yMinimum = Number.MAX_VALUE;
-                    let yMaximum = Number.MIN_VALUE;
+                    let yMaximum = -Number.MAX_VALUE;
 
                     const updateWithValue = (elem) => {
                         if (elem !== undefined && elem !== null && Number.isFinite(elem)) {
                             yMaximum = Math.max(yMaximum, elem);
-                            if (datum.type == "log" && elem > Number.MIN_VALUE) {
+                            if (effectiveAxisType(datum) == "log" && elem > Number.MIN_VALUE) {
                                 yMinimum = Math.min(yMinimum, elem);
-                            } else if (datum.type != "log") {
+                            } else if (effectiveAxisType(datum) != "log") {
                                 yMinimum = Math.min(yMinimum, elem);
                             }
                         }
@@ -522,6 +536,18 @@ export default {
                                 yMinimum = Math.min(yMinimum, point.data.y);
                             }
                         })
+                    }
+
+                    // A bar encodes its magnitude as a length measured from zero, so its
+                    // axis MUST contain zero. Every other type wants the axis framed on
+                    // the data instead, which is why the bounds above are data-derived —
+                    // but applied to bars that makes the baseline the data minimum, so a
+                    // 1 Ω floor renders every bar as "value − 1 Ω" and a half-height bar
+                    // means nothing. Explicit forceAxisMin/Max still win: a caller that
+                    // states its bounds has already decided.
+                    if (datum.chartType === 'bar') {
+                        yMinimum = Math.min(yMinimum, 0);
+                        yMaximum = Math.max(yMaximum, 0);
                     }
 
                     limits.yAxis.push({
@@ -555,7 +581,10 @@ export default {
                 const axisColor = resolveCssColor(datum.colorLabel || this.lineColor)
                 const labelColor = this.yAxisLabelColor ? resolveCssColor(this.yAxisLabelColor) : axisColor
                 options.yAxis.push({
-                    type: toAxisType(datum.type),
+                    // Bars are baselined at zero (see processLimits), and a log axis
+                    // cannot represent zero at all — so a bar series forces its axis
+                    // linear regardless of the type the caller asked for.
+                    type: toAxisType(effectiveAxisType(datum)),
                     name: this.showYAxisName ? (datum.unit || '') : '',
                     nameLocation: 'middle',
                     nameGap: 25,
@@ -799,7 +828,7 @@ export default {
                 // render that at all; a linear one draws a zero-height band. Expand around
                 // the value so a flat line still draws.
                 if (maximumValue <= minimumValue) {
-                    if (this.data[index].type == "log" && elem.max > 0) {
+                    if (effectiveAxisType(this.data[index]) == "log" && elem.max > 0) {
                         minimumValue = elem.max / 10;
                         maximumValue = elem.max * 10;
                     } else {
