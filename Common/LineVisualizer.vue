@@ -867,6 +867,21 @@ export default {
                     sideToNewIndex[side] = newIndex
                     uniqueYAxis.push(options.yAxis[axisIndex])
                 })
+                // The compressed axis inherits its TYPE from the side's first series,
+                // but it has to carry every series on that side. A caller that demoted
+                // one series to linear did so because it has values a log axis cannot
+                // represent (<= 0) — e.g. an absolute tolerance band whose lower edge
+                // dips below zero. Rendering it on the first series' log axis clips
+                // exactly the region the demotion existed to preserve, and the band
+                // silently vanishes there. So one linear series demotes the shared
+                // axis for its whole side, mirroring how the limits are merged below.
+                Object.keys(sideToNewIndex).forEach((side) => {
+                    const needsLinear = this.data.some((datum, index) => {
+                        const datumSide = datum.position || (index === 0 ? 'left' : 'right')
+                        return datumSide === side && toAxisType(effectiveAxisType(datum)) !== 'log'
+                    })
+                    if (needsLinear) uniqueYAxis[sideToNewIndex[side]].type = 'value'
+                })
                 // Each compressed axis spans only ITS side's series. The shared
                 // limits above merged every series (a linear/negative right-side
                 // series would poison a log left axis into a collapsed range).
