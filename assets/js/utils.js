@@ -1380,13 +1380,14 @@ export function download(data, strFileName, strMimeType) {
                 saver(payload) ; // everyone else can save dataURLs un-processed
         }
         
-    }else{//not data url, is it a string with special needs?
-        if(/([\x80-\xff])/.test(payload)){            
-            var i=0, tempUiArr= new Uint8Array(payload.length), mx=tempUiArr.length;
-            for(i;i<mx;++i) tempUiArr[i]= payload.charCodeAt(i);
-            payload=new myBlob([tempUiArr], {type: mimeType});
-        }         
     }
+    // NOTE: upstream download.js had a branch here that, for any payload matching
+    // /[\x80-\xff]/, rebuilt the bytes with `tempUiArr[i] = payload.charCodeAt(i)`.
+    // That truncates each UTF-16 code unit to one byte, i.e. it writes LATIN-1.
+    // Every exported MAS containing a planar wire ("Planar 173.99 µm", U+00B5) came
+    // out with a bare 0xB5 instead of UTF-8's 0xC2 0xB5, so the file was not valid
+    // UTF-8 and strict JSON parsers refused it. Dropping the branch lets the Blob
+    // constructor below encode the string as UTF-8, which is what it does natively.
     blob = payload instanceof myBlob ?
         payload :
         new myBlob([payload], {type: mimeType}) ;
