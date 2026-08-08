@@ -1,7 +1,7 @@
 <script setup>
 import { toCamelCase, formatUnit, removeTrailingZeroes, getMultiplier, deepCopy } from '../assets/js/utils.js'
 import { use } from 'echarts/core'
-import { LineChart, ScatterChart, EffectScatterChart, CustomChart } from 'echarts/charts'
+import { LineChart, ScatterChart, EffectScatterChart, CustomChart, BarChart } from 'echarts/charts'
 import {
   TitleComponent,
   TooltipComponent,
@@ -28,6 +28,7 @@ use([
   LineChart,
   EffectScatterChart,
   CustomChart,
+  BarChart,
   CanvasRenderer,
   SVGRenderer
 ])
@@ -50,6 +51,15 @@ function toAxisType(scale) {
         return scale;
     }
     return 'value';
+}
+
+// The scale a series actually renders on, which is not always the one the caller
+// asked for: a bar is baselined at zero and a log axis cannot represent zero, so
+// bars are always linear. Single source of truth for that override — the axis
+// construction and the degenerate-range fallback must agree, or the axis is built
+// as one type and rescued as the other.
+function effectiveAxisType(datum) {
+    return datum.chartType === 'bar' ? 'linear' : datum.type;
 }
 
 function resolveCssColor(color) {
@@ -489,15 +499,20 @@ export default {
             limits.yAxis = []
             if (this.data && Array.isArray(this.data)) {
                 this.data.forEach((datum, index) => {
+                    // Number.MIN_VALUE is the smallest POSITIVE double (5e-324), not the
+                    // most negative one — seeding the max tracker with it means an
+                    // all-negative series never updates yMaximum, so the axis top lands
+                    // at ~0 and the data is squashed against it. -Number.MAX_VALUE is the
+                    // real lower bound.
                     let yMinimum = Number.MAX_VALUE;
-                    let yMaximum = Number.MIN_VALUE;
+                    let yMaximum = -Number.MAX_VALUE;
 
                     const updateWithValue = (elem) => {
                         if (elem !== undefined && elem !== null && Number.isFinite(elem)) {
                             yMaximum = Math.max(yMaximum, elem);
-                            if (datum.type == "log" && elem > Number.MIN_VALUE) {
+                            if (effectiveAxisType(datum) == "log" && elem > Number.MIN_VALUE) {
                                 yMinimum = Math.min(yMinimum, elem);
-                            } else if (datum.type != "log") {
+                            } else if (effectiveAxisType(datum) != "log") {
                                 yMinimum = Math.min(yMinimum, elem);
                             }
                         }
@@ -521,6 +536,18 @@ export default {
                                 yMinimum = Math.min(yMinimum, point.data.y);
                             }
                         })
+                    }
+
+                    // A bar encodes its magnitude as a length measured from zero, so its
+                    // axis MUST contain zero. Every other type wants the axis framed on
+                    // the data instead, which is why the bounds above are data-derived —
+                    // but applied to bars that makes the baseline the data minimum, so a
+                    // 1 Ω floor renders every bar as "value − 1 Ω" and a half-height bar
+                    // means nothing. Explicit forceAxisMin/Max still win: a caller that
+                    // states its bounds has already decided.
+                    if (datum.chartType === 'bar') {
+                        yMinimum = Math.min(yMinimum, 0);
+                        yMaximum = Math.max(yMaximum, 0);
                     }
 
                     limits.yAxis.push({
@@ -554,7 +581,10 @@ export default {
                 const axisColor = resolveCssColor(datum.colorLabel || this.lineColor)
                 const labelColor = this.yAxisLabelColor ? resolveCssColor(this.yAxisLabelColor) : axisColor
                 options.yAxis.push({
-                    type: toAxisType(datum.type),
+                    // Bars are baselined at zero (see processLimits), and a log axis
+                    // cannot represent zero at all — so a bar series forces its axis
+                    // linear regardless of the type the caller asked for.
+                    type: toAxisType(effectiveAxisType(datum)),
                     name: this.showYAxisName ? (datum.unit || '') : '',
                     nameLocation: 'middle',
                     nameGap: 25,
@@ -618,27 +648,37 @@ export default {
                 }
 
                 const seriesColor = axisColor;
+                // Per-series chart type. Defaults to 'line', so every existing consumer
+                // and every series that does not ask for a type behaves exactly as
+                // before. 'scatter' plots the points without joining them (measured
+                // samples that should not imply interpolation between them) and 'bar'
+                // compares discrete values. Only the properties that differ per type are
+                // varied; axes, tolerance bands, zoom and the dual-axis logic are shared.
+                const chartType = datum.chartType ?? 'line';
+                const isLine = chartType === 'line';
+                const isScatter = chartType === 'scatter';
                 options.series.push(
                     {
                         data: this.processData(index),
-                        type: 'line',
-                        smooth: datum.smooth ?? 0.15,
+                        type: chartType,
+                        smooth: isLine ? (datum.smooth ?? 0.15) : undefined,
                         name: this.legendLabels && this.legendLabels[index] ? this.legendLabels[index] : datum.label,
                         color: seriesColor,
-                        showSymbol: showPoints,
+                        showSymbol: isLine ? showPoints : undefined,
                         symbol: 'circle',
-                        symbolSize: 6,
-                        sampling: 'lttb',
+                        symbolSize: isScatter ? 8 : 6,
+                        sampling: isLine ? 'lttb' : undefined,
                         yAxisIndex: this.forceAxisUniquePerSide ? firstIndexPerSide[side] : index,
-                        lineStyle: {
+                        lineStyle: isLine ? {
                             type: datum.lineStyle ?? 'solid',
                             width: 1.5,
-                        },
+                        } : undefined,
+                        itemStyle: isLine ? undefined : { color: seriesColor },
                         emphasis: {
                             focus: 'series',
                             lineStyle: { width: 2 },
                         },
-                        areaStyle: this.showArea ? {
+                        areaStyle: this.showArea && isLine ? {
                             color: {
                                 type: 'linear',
                                 x: 0, y: 0, x2: 0, y2: 1,
@@ -788,7 +828,7 @@ export default {
                 // render that at all; a linear one draws a zero-height band. Expand around
                 // the value so a flat line still draws.
                 if (maximumValue <= minimumValue) {
-                    if (this.data[index].type == "log" && elem.max > 0) {
+                    if (effectiveAxisType(this.data[index]) == "log" && elem.max > 0) {
                         minimumValue = elem.max / 10;
                         maximumValue = elem.max * 10;
                     } else {
@@ -826,6 +866,21 @@ export default {
                 Object.entries(firstIndexPerSide).forEach(([side, axisIndex], newIndex) => {
                     sideToNewIndex[side] = newIndex
                     uniqueYAxis.push(options.yAxis[axisIndex])
+                })
+                // The compressed axis inherits its TYPE from the side's first series,
+                // but it has to carry every series on that side. A caller that demoted
+                // one series to linear did so because it has values a log axis cannot
+                // represent (<= 0) — e.g. an absolute tolerance band whose lower edge
+                // dips below zero. Rendering it on the first series' log axis clips
+                // exactly the region the demotion existed to preserve, and the band
+                // silently vanishes there. So one linear series demotes the shared
+                // axis for its whole side, mirroring how the limits are merged below.
+                Object.keys(sideToNewIndex).forEach((side) => {
+                    const needsLinear = this.data.some((datum, index) => {
+                        const datumSide = datum.position || (index === 0 ? 'left' : 'right')
+                        return datumSide === side && toAxisType(effectiveAxisType(datum)) !== 'log'
+                    })
+                    if (needsLinear) uniqueYAxis[sideToNewIndex[side]].type = 'value'
                 })
                 // Each compressed axis spans only ITS side's series. The shared
                 // limits above merged every series (a linear/negative right-side
