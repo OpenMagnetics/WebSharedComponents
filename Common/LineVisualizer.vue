@@ -181,6 +181,26 @@ export default {
             type: Array,
             default: null
         },
+        // X-axis counterparts of forceAxisMin/forceAxisMax (which are y-only). Null
+        // keeps the data-derived, padded bounds.
+        forceXAxisMin:{
+            type: Number,
+            default: null
+        },
+        forceXAxisMax:{
+            type: Number,
+            default: null
+        },
+        // Explicit tick step. Null lets ECharts choose. Ignored on log axes, where a
+        // linear step is meaningless — decades are the only sensible tick there.
+        xAxisInterval:{
+            type: Number,
+            default: null
+        },
+        yAxisInterval:{
+            type: Number,
+            default: null
+        },
         forceAxisUniquePerSide:{
             type: Boolean,
             default: false
@@ -775,6 +795,14 @@ export default {
             options.xAxis.min = limits.xAxis.min * (limits.xAxis.min < 0? this.linePaddings.left : 1.0 / this.linePaddings.left);
             options.xAxis.max = limits.xAxis.max * this.linePaddings.right;
             options.xAxis.type = toAxisType(this.xAxisOptions.type);
+            // An explicit range replaces the padded, data-derived one outright: the
+            // caller asked for these bounds, so padding them would silently show a
+            // different window than the one requested.
+            if (this.forceXAxisMin !== null && this.forceXAxisMin !== undefined) options.xAxis.min = this.forceXAxisMin;
+            if (this.forceXAxisMax !== null && this.forceXAxisMax !== undefined) options.xAxis.max = this.forceXAxisMax;
+            if (this.xAxisInterval !== null && this.xAxisInterval !== undefined && options.xAxis.type !== 'log') {
+                options.xAxis.interval = this.xAxisInterval;
+            }
 
             // Store individual axis limits
             const individualAxisLimits = [];
@@ -908,6 +936,15 @@ export default {
                     if (series.yAxisIndex === undefined) return
                     const side = Object.keys(firstIndexPerSide).find((key) => firstIndexPerSide[key] === series.yAxisIndex)
                     if (side !== undefined) series.yAxisIndex = sideToNewIndex[side]
+                })
+            }
+
+            // Applied last, so it covers the compressed per-side axes as well as the
+            // per-series ones. Log axes are skipped: a linear tick step there produces
+            // either two ticks or thousands.
+            if (this.yAxisInterval !== null && this.yAxisInterval !== undefined) {
+                options.yAxis.forEach((axis) => {
+                    if (axis.type !== 'log') axis.interval = this.yAxisInterval;
                 })
             }
         },
