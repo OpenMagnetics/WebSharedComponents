@@ -291,6 +291,13 @@ Comlink.expose({
             JSON.stringify(magnetic), '3D', 'XY', 0.0, 'stl',
             d.scale, d.wireSeg, sym, side,
             true,  // paintCoating: draw turns at OUTER (insulation) diameter (ABT #7)
+            // Real winding: ONE continuous copper body per (winding, parallel) with the
+            // real leads, pitch and dragbacks, instead of one closed loop per turn. Same
+            // conductors the whole-magnetic export builds — drawTurns and drawMagnetic go
+            // through one implementation in MagneticBuilder, so the viewer and the STEP
+            // cannot show different copper. Much slower; opt-in.
+            opts.useRealWindingGeometry ?? undefined,
+            opts.femReady ?? undefined,
         ]);
     }),
 

@@ -118,6 +118,15 @@ export default {
       type: Boolean,
       default: true,
     },
+    // Real winding: draw ONE continuous copper body per (winding, parallel) — the real
+    // leads, pitch and dragbacks — instead of one idealised closed loop per turn. A USER
+    // setting, not a product decision, so it is exposed as a toggle next to the component
+    // visibility buttons. Off by default because it is much slower to build: MKF has to
+    // re-wind and the conductor is swept, not instanced.
+    realWinding: {
+      type: Boolean,
+      default: false,
+    },
     coreColor: {
       type: String,
       default: COMPONENT_COLORS.ferrite,
@@ -179,10 +188,15 @@ export default {
       // misleading bobbin-only "teal blob" render.
       coreBuildFailed: false,
       coreBuildRetried: false,
+      // Same idea for the winding: a turns build that fails must SAY so, not quietly
+      // leave a core-and-bobbin picture that reads as a design with no copper.
+      turnsBuildFailed: false,
+      turnsBuildError: '',
       // Internal visibility state (can be toggled by UI)
       internalShowCore: this.showCore,
       internalShowBobbin: this.showBobbin,
       internalShowTurns: this.showTurns,
+      internalRealWinding: this.realWinding,
     };
   },
   watch: {
@@ -209,6 +223,14 @@ export default {
     },
     showTurns(newVal) {
       this.internalShowTurns = newVal;
+    },
+    realWinding(newVal) {
+      this.internalRealWinding = newVal;
+    },
+    // Real winding changes the GEOMETRY, not just visibility: the conductors have to be
+    // rebuilt, so this is a full update rather than a `mesh.visible` flip.
+    internalRealWinding() {
+      this.triggerUpdate();
     },
     // React to internal state changes
     internalShowCore(newVal) {
@@ -487,12 +509,28 @@ export default {
 
         if (this.showTurns && hasTurnsData && !hasDummyWires) {
           try {
-            const buf = await buildTurnsSTL(mag);
+            // Real winding draws the conductor as MKF actually routes it — continuous
+            // copper per (winding, parallel), with leads, pitch and dragbacks — rather
+            // than one idealised closed loop per turn. Same builder the whole-magnetic
+            // STEP export uses, so the picture and the CAD file agree.
+            const buf = await buildTurnsSTL(mag, { useRealWindingGeometry: this.internalRealWinding });
             if (buf) {
               const m = this.addMeshFromSTL(buf, this.turnsColor, { metalness: 0.2, roughness: 0.6 });
               if (m) { m.visible = this.internalShowTurns; group.add(m); this.turnsMeshes.push(m); }
             }
-          } catch (err) { console.warn('Could not build turns:', err.message); }
+            this.turnsBuildFailed = false;
+            this.turnsBuildError = '';
+          } catch (err) {
+            // Do NOT let the copper just disappear. A swallowed failure here renders as a
+            // core-and-bobbin-only picture that looks like a design with no winding —
+            // indistinguishable from success unless you happen to have the console open.
+            // Real winding in particular refuses to route a conductor it cannot fit
+            // (ConductorBuilder collision), and the user needs to be told that rather
+            // than shown a magnetic with no turns.
+            console.warn('Could not build turns:', err.message);
+            this.turnsBuildFailed = true;
+            this.turnsBuildError = String(err.message ?? err);
+          }
         } else if (this.showTurns && hasTurnsData && hasDummyWires) {
           console.warn('Skipping turn STL build: one or more windings reference the "Dummy" wire sentinel. Pick a real wire in the coil builder before rendering 3D turns.');
         }
@@ -596,6 +634,16 @@ export default {
     >
       3D core preview unavailable for this configuration
     </label>
+    <label
+      v-if="turnsBuildFailed && !updating && internalShowTurns"
+      :data-cy="`${dataTestLabel}-turns-build-failed`"
+      class="core-build-failed-overlay"
+      :title="turnsBuildError"
+    >
+      {{ internalRealWinding
+          ? 'The real winding could not be routed for this design — showing no turns'
+          : '3D winding preview unavailable for this configuration' }}
+    </label>
     <Renderer 
       :data-cy="`${dataTestLabel}-canvas`" 
       ref="renderer" 
@@ -638,6 +686,19 @@ export default {
         title="Toggle Turns visibility"
       >
         <i :class="['bi', internalShowTurns ? 'bi-eye' : 'bi-eye-slash']"></i> Turns
+      </button>
+      <!-- Not a visibility toggle: this REBUILDS the conductors as MKF actually routes
+           them (continuous copper per winding+parallel, with leads, pitch and dragbacks)
+           instead of one idealised closed loop per turn. Slow, hence opt-in. -->
+      <button
+        v-if="internalShowTurns"
+        :data-cy="`${dataTestLabel}-real-winding-toggle`"
+        :class="['p-button p-button-sm visibility-btn', internalRealWinding ? 'active' : '']"
+        :style="{ color: buttonColor, borderColor: buttonColor }"
+        @click="internalRealWinding = !internalRealWinding"
+        title="Draw the real winding: continuous conductor with leads, pitch and dragbacks (slower)"
+      >
+        <i :class="['bi', internalRealWinding ? 'bi-bezier2' : 'bi-circle']"></i> Real winding
       </button>
     </div>
   </div>
