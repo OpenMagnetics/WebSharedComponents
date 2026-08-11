@@ -164,7 +164,24 @@ function timed(name, fn) {
 Comlink.expose({
     waitReady: () => init(),
 
-    // Whole magnetic in one call
+    // Whole magnetic in one call.
+    //
+    // drawMagnetic takes TWELVE arguments — the two trailing ones are the real-winding
+    // pair, and embind enforces exact arity, so they must be PASSED even to select the
+    // default (`undefined` does that). Sending ten throws
+    //   "function drawMagnetic called with 10 arguments, expected 12"
+    // which is what happened the moment the engine was brought current: this is the
+    // only worker call whose arity the newer mvbpp changed.
+    //
+    //   useRealWindingGeometry  false/undefined -> idealised per-turn closed loops (fast, the
+    //                           default the frontend has always drawn)
+    //                           true -> ONE continuous copper body per (winding, parallel):
+    //                           real leads, pitch and dragbacks
+    //   femReady                only meaningful with useRealWindingGeometry=true. false ->
+    //                           fast drawing compound; true -> slow one-piece conformal body
+    //                           for meshing.
+    // Both are drawMagnetic-only: drawTurns has no real-winding form, so the interactive
+    // 3D viewer (which builds core + turns separately) cannot show it yet.
     buildMagneticSTL: timed('buildMagneticSTL', async (magnetic, opts = {}) => {
         await init();
         const d = o(opts);
@@ -174,6 +191,8 @@ Comlink.expose({
             JSON.stringify(magnetic), '3D', 'XY', 0.0, 'stl',
             d.scale, d.coreSeg, sym, side,
             true,  // paintCoating: draw turns at OUTER (insulation) diameter (ABT #7)
+            opts.useRealWindingGeometry ?? undefined,
+            opts.femReady ?? undefined,
         ]);
     }),
 
@@ -186,6 +205,8 @@ Comlink.expose({
             JSON.stringify(magnetic), '3D', 'XY', 0.0, 'step',
             d.scale, d.coreSeg, sym, side,
             true,  // paintCoating: draw turns at OUTER (insulation) diameter (ABT #7)
+            opts.useRealWindingGeometry ?? undefined,
+            opts.femReady ?? undefined,
         ]);
     },
 
