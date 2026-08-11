@@ -2113,8 +2113,17 @@ export interface CoreFunctionalDescription {
     /**
      * The lists of gaps in the magnetic core
      */
-    gapping:  CoreGap[];
-    material: CoreMaterial | string;
+    gapping: CoreGap[];
+    /**
+     * The material(s) the core is made of. A single material (by record or by name) for the
+     * overwhelming majority of cores. A LIST when the assembly genuinely comprises pieces of
+     * different grades that the analytical models must treat separately — e.g. a shielded drum
+     * whose closing ring is a different ferrite from the drum (ABT #576). Order is significant:
+     * the FIRST entry is the primary piece (the drum / the wound piece), subsequent entries are
+     * the closing pieces in the order the magnetic circuit crosses them. A one-element list
+     * means the same thing as the bare form.
+     */
+    material: Array<CoreMaterial | string> | CoreMaterial | string;
     /**
      * The number of stacked cores
      */
@@ -5152,7 +5161,7 @@ const typeMap: any = {
     "CoreFunctionalDescription": o([
         { json: "coating", js: "coating", typ: u(undefined, u(r("CoreCoating"), "")) },
         { json: "gapping", js: "gapping", typ: a(r("CoreGap")) },
-        { json: "material", js: "material", typ: u(r("CoreMaterial"), "") },
+        { json: "material", js: "material", typ: u(a(u(r("CoreMaterial"), "")), r("CoreMaterial"), "") },
         { json: "numberStacks", js: "numberStacks", typ: u(undefined, 0) },
         { json: "shape", js: "shape", typ: u(r("CoreShape"), "") },
         { json: "type", js: "type", typ: r("CoreType") },
