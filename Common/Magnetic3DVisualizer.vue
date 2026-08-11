@@ -118,15 +118,6 @@ export default {
       type: Boolean,
       default: true,
     },
-    // Real winding: draw ONE continuous copper body per (winding, parallel) — the real
-    // leads, pitch and dragbacks — instead of one idealised closed loop per turn. A USER
-    // setting, not a product decision, so it is exposed as a toggle next to the component
-    // visibility buttons. Off by default because it is much slower to build: MKF has to
-    // re-wind and the conductor is swept, not instanced.
-    realWinding: {
-      type: Boolean,
-      default: false,
-    },
     coreColor: {
       type: String,
       default: COMPONENT_COLORS.ferrite,
@@ -196,7 +187,6 @@ export default {
       internalShowCore: this.showCore,
       internalShowBobbin: this.showBobbin,
       internalShowTurns: this.showTurns,
-      internalRealWinding: this.realWinding,
     };
   },
   watch: {
@@ -224,12 +214,9 @@ export default {
     showTurns(newVal) {
       this.internalShowTurns = newVal;
     },
-    realWinding(newVal) {
-      this.internalRealWinding = newVal;
-    },
     // Real winding changes the GEOMETRY, not just visibility: the conductors have to be
     // rebuilt, so this is a full update rather than a `mesh.visible` flip.
-    internalRealWinding() {
+    realWinding() {
       this.triggerUpdate();
     },
     // React to internal state changes
@@ -250,6 +237,14 @@ export default {
     },
   },
   computed: {
+    // Real winding: draw ONE continuous copper body per (winding, parallel) — the real
+    // leads, pitch and dragbacks — instead of one idealised closed loop per turn. Owned by
+    // the "Real winding" switch in Tool menu > Settings > Display; read from the global
+    // settings store rather than taken as a prop so every 2D and 3D view in the app draws
+    // the same thing without nine call sites having to remember to pass it.
+    realWinding() {
+      return this.$settingsStore?.magneticBuilderSettings?.useRealWindingGeometry ?? false;
+    },
     hasMagneticLoaded() {
       // Check if there's a valid magnetic with core data
       const core = this.magnetic?.core;
@@ -513,7 +508,7 @@ export default {
             // copper per (winding, parallel), with leads, pitch and dragbacks — rather
             // than one idealised closed loop per turn. Same builder the whole-magnetic
             // STEP export uses, so the picture and the CAD file agree.
-            const buf = await buildTurnsSTL(mag, { useRealWindingGeometry: this.internalRealWinding });
+            const buf = await buildTurnsSTL(mag, { useRealWindingGeometry: this.realWinding });
             if (buf) {
               const m = this.addMeshFromSTL(buf, this.turnsColor, { metalness: 0.2, roughness: 0.6 });
               if (m) { m.visible = this.internalShowTurns; group.add(m); this.turnsMeshes.push(m); }
@@ -640,7 +635,7 @@ export default {
       class="core-build-failed-overlay"
       :title="turnsBuildError"
     >
-      {{ internalRealWinding
+      {{ realWinding
           ? 'The real winding could not be routed for this design — showing no turns'
           : '3D winding preview unavailable for this configuration' }}
     </label>
@@ -686,19 +681,6 @@ export default {
         title="Toggle Turns visibility"
       >
         <i :class="['bi', internalShowTurns ? 'bi-eye' : 'bi-eye-slash']"></i> Turns
-      </button>
-      <!-- Not a visibility toggle: this REBUILDS the conductors as MKF actually routes
-           them (continuous copper per winding+parallel, with leads, pitch and dragbacks)
-           instead of one idealised closed loop per turn. Slow, hence opt-in. -->
-      <button
-        v-if="internalShowTurns"
-        :data-cy="`${dataTestLabel}-real-winding-toggle`"
-        :class="['p-button p-button-sm visibility-btn', internalRealWinding ? 'active' : '']"
-        :style="{ color: buttonColor, borderColor: buttonColor }"
-        @click="internalRealWinding = !internalRealWinding"
-        title="Draw the real winding: continuous conductor with leads, pitch and dragbacks (slower)"
-      >
-        <i :class="['bi', internalRealWinding ? 'bi-bezier2' : 'bi-circle']"></i> Real winding
       </button>
     </div>
   </div>
