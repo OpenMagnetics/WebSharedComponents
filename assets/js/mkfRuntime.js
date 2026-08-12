@@ -110,54 +110,6 @@ export async function enrichMagnetic(magnetic) {
     return parsed?.magnetic ?? parsed;
 }
 
-/**
- * Re-wind a design with a given U/Z winding order.
- *
- * windingOrder is DESIGN data, not an engine setting: MKF resolves it per section as
- * the section's own windingOrder, else the bobbin winding window's, else 'Z'. So
- * swapping it means stamping the bobbin's windows and winding again — 'U' alternates
- * the direction every layer (back-and-forth), 'Z' winds every layer the same way with
- * a return, which moves the turns themselves, not just the connections.
- *
- * The wound descriptions are dropped so the winder actually re-runs; keeping them
- * would hand the new order to a coil that is already laid out and change nothing.
- * groupsDescription is deliberately left alone (planar/printed geometry).
- *
- * @param {Object} mas - full MAS object (mutated copy is returned, input untouched)
- * @param {'U'|'Z'} windingOrder
- * @returns {Promise<Object>} the re-wound MAS
- */
-export async function applyWindingOrder(mas, windingOrder) {
-    if (windingOrder !== 'U' && windingOrder !== 'Z') {
-        throw new Error(`Winding order must be 'U' or 'Z', got '${windingOrder}'`);
-    }
-    const next = JSON.parse(JSON.stringify(mas));
-    const coil = next?.magnetic?.coil;
-    const windingWindows = coil?.bobbin?.processedDescription?.windingWindows;
-    if (!windingWindows?.length) {
-        // Before autocomplete the bobbin is still a name ("basic"/"Dummy") with no
-        // processed description, so there is nothing to stamp and nothing to re-wind.
-        throw new Error('The design has no processed bobbin yet — build the magnetic before changing the winding order');
-    }
-    for (const windingWindow of windingWindows) {
-        windingWindow.windingOrder = windingOrder;
-    }
-    coil.sectionsDescription = null;
-    coil.layersDescription = null;
-    coil.turnsDescription = null;
-
-    const m = await waitForMkf();
-    const resultRaw = await m.mas_autocomplete(JSON.stringify(next), false, '{}');
-    if (typeof resultRaw === 'string' && resultRaw.startsWith('Exception')) {
-        throw new Error(`mas_autocomplete: ${resultRaw}`);
-    }
-    const result = JSON.parse(resultRaw);
-    if (result?.magnetic?.coil?.turnsDescription == null) {
-        throw new Error(`The winder produced no turns for winding order '${windingOrder}'`);
-    }
-    return result;
-}
-
 export function terminateWorker() {
     if (worker) {
         worker.terminate();
