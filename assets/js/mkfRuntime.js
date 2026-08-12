@@ -110,6 +110,28 @@ export async function enrichMagnetic(magnetic) {
     return parsed?.magnetic ?? parsed;
 }
 
+/**
+ * Push the real-winding flag into the engine's (global, sticky) settings.
+ *
+ * This has to happen BEFORE anything winds, not before anything paints: the
+ * painter draws the turnsDescription it is handed and never re-winds, so a coil
+ * wound while the flag was still off is painted as idealised rings no matter
+ * what the flag says by the time the plot is requested. That is why the setting
+ * is applied at engine init from the persisted store — once it is on, every wind
+ * of the session is a real one, with no intermediate ideal pass to be painted.
+ *
+ * Every other settings writer in the app seeds its object from get_settings(),
+ * so this value then survives all of them.
+ *
+ * @param {Object} mkf - the MKF instance/proxy
+ * @param {boolean} useRealWindingGeometry
+ */
+export async function applyRealWindingGeometrySetting(mkf, useRealWindingGeometry) {
+    const settings = JSON.parse(await mkf.get_settings());
+    settings.coilUseRealWindingGeometry = !!useRealWindingGeometry;
+    await mkf.set_settings(JSON.stringify(settings));
+}
+
 export function terminateWorker() {
     if (worker) {
         worker.terminate();
