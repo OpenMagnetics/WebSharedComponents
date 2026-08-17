@@ -1543,3 +1543,51 @@ export function base64ToArrayBuffer(base64) {
     }
     return bytes.buffer;
 }
+
+// Rename a winding and keep every name-based reference to it valid. MAS references
+// windings by name (construction partialWindings, turns, bobbin connections), so a
+// rename must be propagated instead of leaving dangling references behind.
+export function renameWinding(mas, windingIndex, newName) {
+    const functionalDescription = mas?.magnetic?.coil?.functionalDescription || [];
+    if (windingIndex < 0 || windingIndex >= functionalDescription.length || newName == null || newName === '') {
+        return;
+    }
+    const oldName = functionalDescription[windingIndex].name;
+    functionalDescription[windingIndex].name = newName;
+    if (oldName === newName) {
+        return;
+    }
+    const coil = mas.magnetic.coil;
+    // For a single-winding coil every reference belongs to that winding, so resync
+    // them all — this also repairs a coil whose construction was desynced by a
+    // rename made before this helper existed. For a multi-winding coil, match the
+    // old name so other windings are untouched.
+    const single = functionalDescription.length === 1;
+    const shouldRename = (refName) => single || (oldName != null && oldName !== '' && refName === oldName);
+    ['groupsDescription', 'sectionsDescription', 'layersDescription'].forEach((key) => {
+        if (Array.isArray(coil[key])) {
+            coil[key].forEach((container) => {
+                (container.partialWindings || []).forEach((partialWinding) => {
+                    if (shouldRename(partialWinding.winding)) {
+                        partialWinding.winding = newName;
+                    }
+                });
+            });
+        }
+    });
+    if (Array.isArray(coil.turnsDescription)) {
+        coil.turnsDescription.forEach((turn) => {
+            if (shouldRename(turn.winding)) {
+                turn.winding = newName;
+            }
+        });
+    }
+    const bobbin = coil.bobbin;
+    if (bobbin != null && bobbin.functionalDescription != null && Array.isArray(bobbin.functionalDescription.connections)) {
+        bobbin.functionalDescription.connections.forEach((connection) => {
+            if (shouldRename(connection.winding)) {
+                connection.winding = newName;
+            }
+        });
+    }
+}
