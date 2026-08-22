@@ -267,6 +267,20 @@ function buildKhConverterSpec(topology, params) {
     // moment KH's design_pfc reads them (KH ABT #11); harmless keys until then.
     if (params.topologyVariant != null) config.topologyVariant = params.topologyVariant;
     if (params.numberOfPhases != null) config.numberOfPhases = params.numberOfPhases;
+    // Vienna: KH reads these from `config` (Vienna.cpp cfg::get*(d.config, ...)). They were never
+    // forwarded, so the wizard's samplingStrategy was silently dropped and KH fell back to its own
+    // default of "fullLineCycle" -- which returns the boost-inductor excitation stamped at the LINE
+    // frequency (50 Hz) instead of peak-of-line at the switching frequency. The core adviser then
+    // sizes for 50 Hz and finds NOTHING: two users reported "no solution for simple PFC stage" on
+    // the same day (web bug reports #173 and #174). Measured on #174's own inputs: 0 cores at the
+    // 50 Hz it was handed, 5 cores at 20 kHz. The wizard's default was already 'peakOfLineOnly';
+    // it just never reached the engine.
+    if (topology === 'vienna') {
+        if (params.samplingStrategy != null) config.samplingStrategy = params.samplingStrategy;
+        if (params.phaseCount != null) config.phaseCount = params.phaseCount;
+        if (params.senseResistance != null) config.senseResistance = params.senseResistance;
+        if (params.busCapacitance != null) config.busCapacitance = params.busCapacitance;
+    }
     // DAB: KH is SPS-only; `config.dabPhaseShiftDeg` is the outer inter-bridge shift D3 IN DEGREES,
     // valid (0, 180) (SPEC §5 "DAB modulation") — the wizard's innerPhaseShift3 field is already in
     // degrees, so it passes through directly. D1/D2 (EPS/DPS/TPS) stay unexposed engine-side; an

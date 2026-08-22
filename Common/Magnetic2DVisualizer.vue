@@ -662,7 +662,14 @@ export default {
             // Validate wire data before calling temperature plot
             const validation = this.validateWiresForTemperaturePlot();
             if (!validation.valid) {
+                // Web bug reports #165 and #167: two users independently reported that
+                // temperature estimation "does not work" / "is lagy". It was neither. The
+                // reason was computed correctly right here and then thrown away -- the
+                // parents re-emit errorInImage with no payload and the builder answers a
+                // deterministic failure with a 1 s retry timer, which is what reads as lag.
+                // The component already renders this.errorMessage; it was simply never set.
                 console.error('[Temperature Plot] Validation failed:', validation.error);
+                this.errorMessage = validation.error;
                 this.$emit('errorInImage', `Temperature plot error: ${validation.error}`);
                 this.posting = false;
                 this.tryingToPlot = false;
@@ -692,7 +699,11 @@ export default {
                 );
                 // Check if result is an error message (doesn't start with <svg)
                 if (!result?.startsWith('<svg')) {
+                    // Same swallow as the validation path above: the engine says exactly
+                    // what is wrong (e.g. "[INVALID_WIRE_DATA] Coating is missing material
+                    // information" for a served litz bundle) and the user was shown nothing.
                     console.error('[Temperature Plot] ERROR - Result is not an SVG:', result);
+                    this.errorMessage = String(result);
                     this.$emit('errorInImage', 'Temperature plot error: ' + result);
                     this.posting = false;
                     this.tryingToPlot = false;
@@ -701,6 +712,8 @@ export default {
                 this.processSvgResult(result);
             } catch (error) {
                 console.error('[Temperature Plot] Error:', error);
+                this.errorMessage = String(error?.message ?? error);
+                this.$emit('errorInImage', 'Temperature plot error: ' + this.errorMessage);
                 this.posting = false;
                 this.tryingToPlot = false;
             }
