@@ -81,7 +81,20 @@ function decodeWasmException(mod, e) {
 
 const DEFAULTS = {
     scale:   1.0,
-    wireSeg: 16,
+    // ABT #211 / #860: 0 means "analytic profile" -- MVB++ sweeps the conductor as a
+    // cylinder/torus and lets OCC tessellate from deflection, instead of building a
+    // wireSeg-gon profile with one BSpline face per side and a pole per spine sample.
+    // That polygon profile costs 120-280 MB PER TURN natively; on a 193-turn design it
+    // takes the browser past its memory cap and drawTurns dies with "memory access out
+    // of bounds" while drawMagnetic dies with bad_alloc -- core and bobbin render, turns
+    // vanish, no console error. That is bug_reports row 145, "3d visualization of
+    // transformer is not working".
+    //
+    // MVB++ made analytic its own default in e595e8d; this worker was still passing 16
+    // explicitly, so no browser ever got it. Measured on row 145's design with the
+    // current engine: at 16 both calls die; at 0 drawTurns returns a 36.6 MB STL in
+    // 5.4 s and full real-winding drawMagnetic returns 38.3 MB in 11.6 s.
+    wireSeg: 0,
     coreSeg: 32,
     binary:  true,            // STL only — kept for API compatibility
 };
@@ -187,9 +200,11 @@ Comlink.expose({
         const d = o(opts);
         const sym = symmetryToken(opts.symmetryPlanes);
         const side = opts.side ?? '';
+        // wireSeg, not coreSeg: drawMagnetic includes the TURNS, and its single
+        // polygonSegments argument governs the conductor profile (ABT #211).
         return callDraw('drawMagnetic[stl]', _mvbpp.drawMagnetic, [
             JSON.stringify(magnetic), '3D', 'XY', 0.0, 'stl',
-            d.scale, d.coreSeg, sym, side,
+            d.scale, d.wireSeg, sym, side,
             true,  // paintCoating: draw turns at OUTER (insulation) diameter (ABT #7)
             opts.useRealWindingGeometry ?? undefined,
             opts.femReady ?? undefined,
@@ -203,7 +218,7 @@ Comlink.expose({
         const side = opts.side ?? '';
         return callDraw('drawMagnetic[step]', _mvbpp.drawMagnetic, [
             JSON.stringify(magnetic), '3D', 'XY', 0.0, 'step',
-            d.scale, d.coreSeg, sym, side,
+            d.scale, d.wireSeg, sym, side,
             true,  // paintCoating: draw turns at OUTER (insulation) diameter (ABT #7)
             opts.useRealWindingGeometry ?? undefined,
             opts.femReady ?? undefined,
