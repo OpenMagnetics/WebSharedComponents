@@ -325,6 +325,13 @@ export default {
 .dim-container:not([class*="col-"]) { width: 100%; }
 
 /* ── outer row: label + value area ──────────────────────────────── */
+.dim-container {
+    /* Lets the rules below react to how much room this field actually has,
+       rather than to the viewport. The operating-point panel is ~204px wide on
+       a 1680px screen, so a viewport media query would have called it "wide". */
+    container-type: inline-size;
+}
+
 .dim-row {
     display: flex;
     align-items: center;
@@ -339,6 +346,14 @@ export default {
     text-overflow: ellipsis;
     white-space: nowrap;
     flex: 0 1 9rem;
+    /* The label used to take its full 9rem basis before the value got anything,
+       because .dim-value-row's basis was 0: with 144px + 0px under a 204px row
+       there is nothing to shrink, so the label kept 144px and the value was left
+       with 56px -- of which the unit select took 43, leaving a 13px number box.
+       That is the squeezed Temp field users reported in the operating-point panel.
+       Cap the label so the value always keeps its half of a narrow row; on a wide
+       row the 9rem basis still wins and nothing changes. */
+    max-width: 55%;
     min-width: 0;
     padding: 0;
 }
@@ -351,7 +366,11 @@ export default {
     display: flex;
     align-items: stretch;
     gap: 0;
-    flex: 1 1 0;
+    /* Basis 8rem rather than 0 so that when the row is too narrow for both, the
+       shrink is shared with the label instead of falling entirely on the value.
+       Flex distributes shrink in proportion to basis, so a 0-basis value row can
+       never take any of it back from the label. */
+    flex: 1 1 8rem;
     min-width: 0;
     padding: 0 !important;
     overflow: hidden;
@@ -364,6 +383,17 @@ export default {
 .dim-value-row-has-unit .dim-input          { flex: 4 1 0; }
 .dim-value-row-has-unit .dim-unit,
 .dim-value-row-has-unit .dim-alt-unit       { flex: 1 0 2.5rem; min-width: 2.5rem; }
+
+/* In a narrow field (side panels: operating-point conditions, the builder's
+   config cards) the 9rem label basis is most of the row, so let the label size
+   to its text instead and give the number the space. Wide fields keep the 9rem
+   basis, which is what aligns the value column across stacked rows. */
+@container (max-width: 280px) {
+    .dim-label {
+        flex: 0 1 auto;
+        max-width: 45%;
+    }
+}
 
 /* ── input wrapper ───────────────────────────────────────────────── */
 /* overflow:hidden forces the PrimeVue span to stay within its flex  */
