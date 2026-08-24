@@ -1048,6 +1048,20 @@ export function processCoreMaterialTexts(data) {
     return localTexts;
 }
 
+// ABT #819: strips values that carry no information — null, the string "null",
+// undefined, and empty OBJECTS. It deliberately does NOT strip empty ARRAYS.
+//
+// An empty array is data. In MAS, [] means "none" while absent means "unknown",
+// and the engine relies on that distinction: for an INDUCTOR,
+// inputs.designRequirements.turnsRatios is [] precisely because there is no
+// secondary. Deleting it made "Download MAS file with excitations" ship a file
+// the engine then refused to load with
+//     [json.exception.out_of_range.403] key 'turnsRatios' not found
+// so the export could not be round-tripped through the tool that produced it.
+//
+// Keeping empty arrays costs 39 characters in a 130,640-character MAS — 0.04%.
+// The null-stripping half of this function is worth about 22% and is genuinely
+// information-free; the empty-array half bought nothing and broke the file.
 export function clean(object) {
     Object
         .entries(object)
@@ -1055,7 +1069,8 @@ export function clean(object) {
             if (v && typeof v === 'object') {
                 clean(v);
             }
-            if (v && typeof v === 'object' && !Object.keys(v).length || v === null || v === "null" || v === undefined) {
+            const isEmptyObject = v && typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length;
+            if (isEmptyObject || v === null || v === "null" || v === undefined) {
                 if (Array.isArray(object)) {
                     object.splice(k, 1);
                 } else {
