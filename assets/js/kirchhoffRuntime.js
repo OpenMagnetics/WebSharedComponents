@@ -169,11 +169,12 @@ const KH_TURNS_RATIO_AT_INDEX_1 = new Set(['forward', 'single_switch_forward', '
 
 // Topologies whose engine understands a PER-RAIL sign on designRequirements.outputs[i].voltage
 // (Kirchhoff ABT #904). For these the rail's sign is forwarded verbatim: KH designs from |Vout| and
-// mirrors only the output-side wiring, so a -12 V rail simulates at -12 V. Everything else keeps the
-// historical magnitude-only contract — notably cuk / isolated_buck_boost, which are INHERENTLY
-// inverting and flip the sign engine-side themselves (SPEC: "send positive magnitude"); forwarding a
-// negative there would double-negate.
-const KH_SIGNED_OUTPUT_TOPOLOGIES = new Set(['flyback']);
+// only relabels which rectifier terminal is the rail, so a -12 V rail simulates at -12 V and a mixed
+// +5 / +12 / -12 design is one converter. Everything else keeps the historical magnitude-only
+// contract — notably cuk / isolated_buck_boost, which are INHERENTLY inverting and flip the sign
+// engine-side themselves (SPEC: "send positive magnitude"); forwarding a negative there would
+// double-negate.
+const KH_SIGNED_OUTPUT_TOPOLOGIES = new Set(['flyback', 'forward', 'two_switch_forward', 'push_pull']);
 
 const KH_RECTIFIER_TYPES = {
     'fullBridge': 'fullBridge', 'Full Bridge': 'fullBridge',
