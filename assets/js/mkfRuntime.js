@@ -13,6 +13,51 @@ let ready = new Promise((resolve) => { resolveReady = resolve; });
 // Configuration
 let useWorker = true; // Worker mode enabled - WASM runs in background thread
 
+// Watchdog for worker calls. An Embind call is SYNCHRONOUS inside the worker, so one that never
+// returns blocks the worker for every later call — and, because nothing rejects, the caller's
+// promise simply never settles. That is silent: no error, no console message, no timeout. The UI
+// just shows nothing forever, which is what users report as "the loss / current density details
+// never appeared" (ABT #913). kirchhoffRuntime already guards its ngspice calls this way; the MKF
+// worker had no equivalent, so a single hung call was unrecoverable AND invisible.
+//
+// Generous by design: it is a stuck-detector, not a performance budget. The slowest legitimate calls
+// here are the catalogue loads (~0.5 s) and the adviser sweeps, which run in their own stores.
+const MKF_CALL_WATCHDOG_MS = 120_000;
+// Calls that are legitimately long-running and must NOT be interrupted.
+const MKF_WATCHDOG_EXEMPT = new Set(['load_core_materials', 'load_core_shapes', 'load_wires', 'load_cores']);
+
+let wasmJsUrlForRestart = null;
+
+/**
+ * Run a worker call under the watchdog. On timeout: tear the worker down (killing the hung Embind
+ * call), re-init a fresh one so the app keeps working, and reject LOUDLY. Never resolves with a
+ * fabricated result.
+ */
+async function withWatchdog(methodName, invoke) {
+    if (MKF_WATCHDOG_EXEMPT.has(methodName)) return invoke();
+
+    let timer;
+    const timeout = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(
+            `MKF call '${methodName}' did not return within ` +
+            `${Math.round(MKF_CALL_WATCHDOG_MS / 1000)}s and was aborted. The engine worker has been ` +
+            `restarted; retry the action.`)), MKF_CALL_WATCHDOG_MS);
+    });
+    try {
+        return await Promise.race([invoke(), timeout]);
+    } catch (error) {
+        if (String(error?.message || '').includes('did not return within')) {
+            console.error('[MKF] worker call stuck — restarting the engine worker:', methodName);
+            const url = wasmJsUrlForRestart;
+            terminateWorker();
+            if (url) initWorker(url).catch((e) => console.error('[MKF] worker restart failed:', e));
+        }
+        throw error;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
 /**
  * Enable or disable worker mode. Must be called before initialization.
  * @param {boolean} enable - Whether to use Web Worker for WASM calls
@@ -37,6 +82,8 @@ export function isWorkerMode() {
  * @returns {Promise} Resolves when worker is ready
  */
 export async function initWorker(wasmJsUrl) {
+    // Remembered so the watchdog can rebuild the worker after killing a stuck call.
+    wasmJsUrlForRestart = wasmJsUrl;
     // Return the existing MKF proxy if already initialized
     if (mkf) {
         return mkf;
@@ -183,10 +230,10 @@ function createMkfProxy(workerProxy) {
             return async (...args) => {
                 // Use explicit worker method if defined, otherwise use generic callMethod
                 if (workerExplicitMethods.has(prop)) {
-                    return await workerProxy[prop](...args);
+                    return await withWatchdog(String(prop), () => workerProxy[prop](...args));
                 }
                 // callMethod handles any MKF method with automatic type conversion
-                return await workerProxy.callMethod(prop, ...args);
+                return await withWatchdog(String(prop), () => workerProxy.callMethod(prop, ...args));
             };
         }
     });
