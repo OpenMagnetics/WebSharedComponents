@@ -25,6 +25,17 @@ let useWorker = true; // Worker mode enabled - WASM runs in background thread
 const MKF_CALL_WATCHDOG_MS = 120_000;
 // Calls that are legitimately long-running and must NOT be interrupted.
 const MKF_WATCHDOG_EXEMPT = new Set(['load_core_materials', 'load_core_shapes', 'load_wires', 'load_cores']);
+// ABT #929: the ABT #913 watchdog guards worker CALLS, which are made through the proxy created at
+// the END of initWorker — so the init handshake itself was never covered. A wasm fetch that stalls
+// inside the worker (seen in the wild as "wasm streaming compile failed: Response body loading was
+// aborted", then a fallback that never completes) left `await mkfProxy.init()` pending forever. It
+// never resolved and never threw, so main.js's engine-init catch could not fire either: the app sat
+// on /engine_loader showing "it will take just a few seconds" until the tab was closed, and the
+// diagnosis read exactly `engineReady:false, engineLoadError:null`.
+//
+// Generous, like the call watchdog: a cold compile of the 32 MB engine on a slow machine is
+// legitimately tens of seconds. This is a stuck-detector, not a performance budget.
+const MKF_INIT_WATCHDOG_MS = 180_000;
 
 let wasmJsUrlForRestart = null;
 
@@ -100,9 +111,36 @@ export async function initWorker(wasmJsUrl) {
     // Wrap with Comlink
     mkfProxy = Comlink.wrap(worker);
 
-    // Initialize the WASM module in the worker
-    await mkfProxy.init(wasmJsUrl);
-    await mkfProxy.waitReady();
+    // Initialize the WASM module in the worker, under the init watchdog (ABT #929). On timeout the
+    // worker is torn down and we reject LOUDLY, so the caller can retry or tell the user, instead
+    // of the whole app hanging on a promise that will never settle.
+    let initTimer;
+    const initTimeout = new Promise((_, reject) => {
+        initTimer = setTimeout(() => reject(new Error(
+            `The magnetic engine did not finish loading within ` +
+            `${Math.round(MKF_INIT_WATCHDOG_MS / 1000)}s. This is usually a network problem while ` +
+            `fetching the engine; reloading the page normally clears it.`)), MKF_INIT_WATCHDOG_MS);
+    });
+    try {
+        await Promise.race([
+            (async () => {
+                await mkfProxy.init(wasmJsUrl);
+                await mkfProxy.waitReady();
+            })(),
+            initTimeout,
+        ]);
+    }
+    catch (error) {
+        // Leave nothing half-alive: a stuck worker holds the hung fetch and its 32 MB of memory,
+        // and a later initWorker() would return the same broken proxy through the `if (mkf)` guard
+        // at the top of this function.
+        console.error('[MKF] engine initialization failed — tearing the worker down:', error);
+        terminateWorker();
+        throw error;
+    }
+    finally {
+        clearTimeout(initTimer);
+    }
 
     // Create a proxy object that mimics the original MKF API
     mkf = createMkfProxy(mkfProxy);
