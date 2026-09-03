@@ -4,7 +4,7 @@ import { MeshPhysicalMaterial, Object3D, Group, Mesh, Box3, Vector3 } from 'thre
 import { Camera, Renderer, SpotLight, Scene, AmbientLight } from 'troisjs';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 import { deepCopy, hexToRgb } from '../assets/js/utils.js';
-import { initMvbWorker, buildCoreSTL, buildSpacersSTL, buildBobbinSTL, buildTurnsSTL, buildFR4BoardSTL, terminateWorker } from '../assets/js/mvbRuntime.js';
+import { initMvbWorker, buildCoreSTL, buildCoreShellSTL, buildSpacersSTL, buildBobbinSTL, buildTurnsSTL, buildFR4BoardSTL, terminateWorker } from '../assets/js/mvbRuntime.js';
 import { enrichMagnetic } from '../assets/js/mkfRuntime.js';
 </script>
 
@@ -414,14 +414,35 @@ export default {
         const shapeFamily = mag.core?.functionalDescription?.shape?.family?.toLowerCase() ?? '';
         const isToroidal = shapeFamily === 't' || shapeFamily === 'toroidal';
 
+        // A MOULDED body is opaque composite with the winding buried inside it, so an opaque
+        // render shows a featureless block and nothing of the construction. Draw it
+        // translucent — the winding is the only thing there is to see.
+        const isMolded = shapeFamily === 'molded';
+
         if (this.showCore) {
           try {
             const buf = await buildCoreSTL(mag);
             if (buf) {
-              this.coreMesh = this.addMeshFromSTL(buf, this.coreColor, { metalness: 0.1, roughness: 0.9 });
+              this.coreMesh = this.addMeshFromSTL(buf, this.coreColor, isMolded
+                ? { metalness: 0.0, roughness: 0.85, transparent: true, opacity: 0.35 }
+                : { metalness: 0.1, roughness: 0.9 });
               if (this.coreMesh) { this.coreMesh.visible = this.internalShowCore; group.add(this.coreMesh); }
             }
           } catch (err) { console.warn('Could not build core:', err.message); }
+
+          // The semi-shielded drum's magnetic-epoxy shell is a COATING, not a core piece, so
+          // the engine delivers it separately and it is drawn translucent over the opaque
+          // drum. Fused they would hide the winding permanently, which is the one thing a
+          // semi-shielded part exists to enclose. Null for every other family, and null on an
+          // older engine that has no drawCoreShell, so this degrades to the drum alone.
+          try {
+            const shellBuf = await buildCoreShellSTL(mag);
+            if (shellBuf) {
+              const shell = this.addMeshFromSTL(shellBuf, this.coreColor,
+                { metalness: 0.0, roughness: 0.85, transparent: true, opacity: 0.3 });
+              if (shell) { shell.visible = this.internalShowCore; group.add(shell); this.shellMesh = shell; }
+            }
+          } catch (err) { console.warn('Could not build the shield shell:', err.message); }
 
           try {
             const buf = await buildSpacersSTL(mag);
@@ -437,7 +458,21 @@ export default {
         const hasBobbinData = coil.bobbin?.processedDescription &&
           Object.keys(coil.bobbin.processedDescription).length > 0;
 
-        if (this.showBobbin && !isToroidal && !isDummyBobbin && hasBobbinData) {
+        // A bobbin with NO WALL and NO COLUMN is not a physical part. MKF synthesises one to
+        // carry the winding window when the wire goes straight onto the core — every drum,
+        // drumRing and semi-shielded part is wound in the core's own groove, and moulded
+        // parts have no bobbin at all. Drawn anyway it becomes a solid cylinder sitting where
+        // the core's post is: WE 74402500030 showed a bare cylinder labelled "Bobbin" around
+        // a drum that has none.
+        //
+        // Thickness, not family, is the test: it is the property that says whether the bobbin
+        // encloses any material, and it stays true for any family that later gets a
+        // zero-thickness placeholder.
+        const bobbinProcessed = coil.bobbin?.processedDescription;
+        const isMasslessBobbin = bobbinProcessed != null &&
+          !(bobbinProcessed.wallThickness > 0) && !(bobbinProcessed.columnThickness > 0);
+
+        if (this.showBobbin && !isToroidal && !isDummyBobbin && hasBobbinData && !isMasslessBobbin) {
           try {
             const buf = await buildBobbinSTL(mag);
             if (buf) {

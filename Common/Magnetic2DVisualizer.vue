@@ -357,6 +357,11 @@ export default {
                             vbH = (maxY - minY) + padY * 2;
                         }
                         svgEl.setAttribute('viewBox', `${vbX} ${vbY} ${vbW} ${vbH}`);
+                        // Aspect-preserving fit is the viewBox's job, so say so explicitly
+                        // rather than relying on the default: the drawing then scales UP to
+                        // fill the panel instead of sitting at its intrinsic pixel size (a
+                        // drum core rendered 50 x 83 in a 524 x 260 box).
+                        svgEl.setAttribute('preserveAspectRatio', 'xMidYMid meet');
                         // Update the intrinsic width/height attributes so the
                         // downstream `extractSvgDimension` + scaling math sees
                         // the corrected aspect ratio. Keep them as numeric
@@ -381,6 +386,25 @@ export default {
             this.width = this.calculateSvgWidth(originalWidth, originalHeight, clientWidth, clientHeight);
             this.$refs.plotView.innerHTML = this.$refs.plotView.innerHTML.replace('width=', 'class="scaling-svg" width=');
 
+            // Apply the fitted size to the svg ELEMENT, in pixels.
+            //
+            // Percentages were the problem, not the solution: `width:100%;height:100%` has to
+            // resolve through .scaling-svg-container and .Magnetic2DVisualizer, and any
+            // auto-height link in that chain makes the height fall back to intrinsic — which
+            // let the drawing grow to 524 x 870 inside a 260-tall panel. The container is
+            // already measured here, so scale against those numbers directly and there is
+            // nothing left to resolve.
+            const fittedSvg = this.$refs.plotView.querySelector('svg');
+            if (fittedSvg && originalWidth > 0 && originalHeight > 0 && clientWidth > 0 && clientHeight > 0) {
+                const proportion = Math.min(clientWidth / originalWidth, clientHeight / originalHeight);
+                if (isFinite(proportion) && proportion > 0) {
+                    fittedSvg.setAttribute('width', `${(originalWidth * proportion).toFixed(1)}`);
+                    fittedSvg.setAttribute('height', `${(originalHeight * proportion).toFixed(1)}`);
+                    fittedSvg.style.width = `${(originalWidth * proportion).toFixed(1)}px`;
+                    fittedSvg.style.height = `${(originalHeight * proportion).toFixed(1)}px`;
+                }
+            }
+
             this.errorMessage = "";
             this.posting = false;
         },
@@ -388,8 +412,26 @@ export default {
             if (originalWidth > originalHeight * ASPECT_RATIO_THRESHOLD) {
                 return "100%";
             }
-            const heightProportion = clientHeight / originalHeight;
-            return `${originalWidth * heightProportion}px`;
+            // Fit to whichever dimension binds FIRST, not to height alone.
+            //
+            // Height-only scaling assumes the container has a height worth filling. It does
+            // not always: the container is height:100% inside a content-sized parent, so for a
+            // portrait drawing it collapses to roughly the image's own height and the image is
+            // then "scaled" to the size it already was. Measured on a drum core: a 50 x 83 SVG
+            // in a 524 x 91 box, rendered at 50 x 83 — unscaled, and tiny beside the panel it
+            // sits in. Landscape cores never showed it because they take the 100% branch above.
+            //
+            // Taking the smaller of the two ratios keeps the aspect and guarantees the drawing
+            // fits both ways, so a portrait core fills the space a landscape one already does.
+            // A non-positive or unknown client dimension falls back to the other one rather
+            // than producing a zero or NaN width.
+            const heightProportion = clientHeight > 0 ? clientHeight / originalHeight : Infinity;
+            const widthProportion = clientWidth > 0 ? clientWidth / originalWidth : Infinity;
+            const proportion = Math.min(heightProportion, widthProportion);
+            if (!isFinite(proportion) || proportion <= 0) {
+                return "100%";
+            }
+            return `${originalWidth * proportion}px`;
         },
         handlePlotError() {
             this.posting = false;
@@ -912,13 +954,19 @@ export default {
         height: auto;
     }
 
+/* Fill the box, preserving aspect — do not merely CAP the drawing at its intrinsic size.
+   width/height:auto plus max-width/max-height can only ever shrink an SVG, so a small
+   drawing rendered at its intrinsic pixel size no matter how much room it had: a drum core
+   came out 50 x 83 in a 524 x 260 panel. Every plot MKF emits carries a viewBox, so
+   width/height 100% with the default preserveAspectRatio (xMidYMid meet) scales it to fit
+   and centres it, which is what the old rule was reaching for with object-fit — a property
+   that does nothing for an INLINE svg, only for replaced elements like <img>. */
+/* The pixel size is set on the element in processSvgResult, from the measured container;
+   these are only guard rails so a drawing can never overflow its panel. */
 .scaling-svg {
-    object-fit: contain;
-    height: auto;
-    max-height: 50vh;
-    width: auto;
     max-width: 100%;
-    left: 0; 
+    max-height: 100%;
+    left: 0;
     top: 0;
 }
 
@@ -926,6 +974,9 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
+    /* A definite height for .scaling-svg's percentage to resolve against; without it the
+       container is content-sized and 100% falls back to auto. */
+    height: 100%;
     max-height: 50vh;
 }
 
