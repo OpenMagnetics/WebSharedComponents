@@ -2,7 +2,7 @@ import * as Defaults from './defaults.js'
 import axios from "axios"
 import { recordExport } from './telemetry.js'
 import * as MAS from '/WebSharedComponents/assets/ts/MAS.ts'
-const { ConnectionType, CoreType, MagneticCircuit, WiringTechnology } = MAS;
+const { ConnectionType, CoreType, WiringTechnology } = MAS;
 
 // ───────────────────────────────────────────────────────────────────────
 // Legacy MAS case-normalisation
@@ -1061,14 +1061,23 @@ export async function checkAndFixMas(mas, mkf=null) {
 
     if (mas.magnetic.core != null) {
         if (mas.magnetic.core.functionalDescription.shape != null && typeof(mas.magnetic.core.functionalDescription.shape) !== "string") {
+            // NB: magneticCircuit is deliberately NOT set here. MAS defines it on the
+            // SHAPE (CoreShape.magneticCircuit), and coreFunctionalDescription is
+            // additionalProperties:false over {coating, gapping, material,
+            // numberStacks, shape, type} — so writing it here produced a payload the
+            // MAS sentry rejects outright ("Invalid value for key core on Magnetic").
+            //
+            // Setting it was also wrong on the merits: this is a toroid/not-toroid
+            // guess, while MKF already sets shape.magneticCircuit per FAMILY in
+            // Utils.cpp. A drumRing is a closed circuit but not a toroid, so this
+            // wrote "open" onto a core MKF had correctly marked "closed" — two
+            // contradictory values in one payload.
             if (mas.magnetic.core.functionalDescription.shape.family == 't') {
                 mas.magnetic.core.functionalDescription.type = CoreType.Toroidal;
-                mas.magnetic.core.functionalDescription.magneticCircuit = MagneticCircuit.Closed;
                 mas.magnetic.core.functionalDescription.gapping = [];
             }
             else {
                 mas.magnetic.core.functionalDescription.type = CoreType.TwoPieceSet;
-                mas.magnetic.core.functionalDescription.magneticCircuit = MagneticCircuit.Open;
             }
         }
     }
