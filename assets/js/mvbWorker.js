@@ -170,9 +170,17 @@ Comlink.expose({
         const d = o(opts);
         const sym = symmetryToken(opts.symmetryPlanes);
         const side = opts.side ?? '';
+        // drawMagnetic/drawTurns take three TRAILING options the other draw entry points do
+        // not: paintCoating, useRealWindingGeometry, femReady. embind checks arity exactly, so
+        // omitting them is not "using the defaults" — it throws
+        //   BindingError: function drawTurns called with 9 arguments, expected 12
+        // and the 3D render silently loses its turns. They are passed explicitly here;
+        // undefined selects the documented legacy behaviour (coating painted, per-turn-loop
+        // geometry, fast non-meshable compound), so this changes nothing about what is drawn.
         return callDraw('drawMagnetic[stl]', _mvbpp.drawMagnetic, [
             JSON.stringify(magnetic), '3D', 'XY', 0.0, 'stl',
             d.scale, d.coreSeg, sym, side,
+            opts.paintCoating, opts.useRealWindingGeometry, opts.femReady
         ]);
     }),
 
@@ -181,9 +189,17 @@ Comlink.expose({
         const d = o(opts);
         const sym = symmetryToken(opts.symmetryPlanes);
         const side = opts.side ?? '';
+        // drawMagnetic/drawTurns take three TRAILING options the other draw entry points do
+        // not: paintCoating, useRealWindingGeometry, femReady. embind checks arity exactly, so
+        // omitting them is not "using the defaults" — it throws
+        //   BindingError: function drawTurns called with 9 arguments, expected 12
+        // and the 3D render silently loses its turns. They are passed explicitly here;
+        // undefined selects the documented legacy behaviour (coating painted, per-turn-loop
+        // geometry, fast non-meshable compound), so this changes nothing about what is drawn.
         return callDraw('drawMagnetic[step]', _mvbpp.drawMagnetic, [
             JSON.stringify(magnetic), '3D', 'XY', 0.0, 'step',
             d.scale, d.coreSeg, sym, side,
+            opts.paintCoating, opts.useRealWindingGeometry, opts.femReady
         ]);
     },
 
@@ -264,9 +280,17 @@ Comlink.expose({
         const turns = magnetic?.coil?.turnsDescription
                    ?? magnetic?.coil?.turns_description;
         if (!turns || !turns.length) return null;
+        // drawMagnetic/drawTurns take three TRAILING options the other draw entry points do
+        // not: paintCoating, useRealWindingGeometry, femReady. embind checks arity exactly, so
+        // omitting them is not "using the defaults" — it throws
+        //   BindingError: function drawTurns called with 9 arguments, expected 12
+        // and the 3D render silently loses its turns. They are passed explicitly here;
+        // undefined selects the documented legacy behaviour (coating painted, per-turn-loop
+        // geometry, fast non-meshable compound), so this changes nothing about what is drawn.
         return callDraw('drawTurns[stl]', _mvbpp.drawTurns, [
             JSON.stringify(magnetic), '3D', 'XY', 0.0, 'stl',
             d.scale, d.wireSeg, sym, side,
+            opts.paintCoating, opts.useRealWindingGeometry, opts.femReady
         ]);
     }),
 
