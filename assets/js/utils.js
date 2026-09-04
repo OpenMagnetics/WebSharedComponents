@@ -23,11 +23,11 @@ const { ConnectionType, CoreType, WiringTechnology } = MAS;
 // is the same string anyway).
 const ENUM_KEYS_TO_ENUMS = {
     ancillaryLabel:      [MAS.WaveformLabel],
-    application:         [MAS.Application],
+    application:         [MAS.MagneticApplication],
     bridgeType:          [MAS.LlcBridgeType, MAS.SrcBridgeType],
     bridgeTypePrimary:   [MAS.LlcBridgeType],
     bridgeTypeSecondary: [MAS.LlcBridgeType],
-    coating:             [MAS.Coating],
+    coating:             [MAS.CoatingType],
     columnShape:         [MAS.ColumnShape],
     configuration:       [MAS.Configuration],
     controlMode:         [MAS.ControlMode],
@@ -62,8 +62,8 @@ const ENUM_KEYS_TO_ENUMS = {
     outputVoltagesType:  [MAS.OutputSType],
     overvoltageCategory: [MAS.OvervoltageCategory],
     pollutionDegree:     [MAS.PollutionDegree],
-    powerFlow:           [MAS.CllcPowerFlow],
-    powerFlowDirection:  [MAS.CllcPowerFlow],
+    powerFlow:           [MAS.PowerFlowDirection],
+    powerFlowDirection:  [MAS.PowerFlowDirection],
     rectifierType:       [MAS.AhbRectifierType, MAS.BRectifierType, MAS.SrcRectifierType],
     samplingStrategy:    [MAS.ViennaSamplingStrategy],
     sectionsAlignment:   [MAS.CoilAlignment],
@@ -74,7 +74,10 @@ const ENUM_KEYS_TO_ENUMS = {
     standard:            [MAS.WireStandard],
     standards:           [MAS.InsulationStandards],
     status:              [MAS.Status],
-    subApplication:      [MAS.SubApplication],
+    // `subApplication` is a free-form string in the current MAS designRequirements
+    // (PEAS makes it overridable per family; MAS does not constrain it to an enum),
+    // so there is no MAS.ts enum to normalise against — values pass through as-is.
+    subApplication:      [],
     switchType:          [MAS.ViennaSwitchType],
     temperatureClass:    [MAS.TemperatureClassEnum],
     terminalType:        [MAS.ConnectionType],
@@ -900,6 +903,75 @@ export function processCoreTexts(data) {
     return localTexts;
 }
 
+// Format the processCoreTexts() output (the {text,value} rows that drive the
+// HTML core report) into a LaTeX body for the /process_latex PDF endpoint.
+// Shared by the Core Adviser summary and the Core Cross-Referencer PDF buttons
+// (both lost their computeLatex() in the 2023 tool-unification refactor, so the
+// PDF buttons threw). Escapes LaTeX specials and converts the unicode units the
+// display strings carry (mm², cm³, Ω, °, ·, µ, ×) so pdflatex does not choke.
+export function coreTextsToLatex(localTexts, reference) {
+    const lt = localTexts || {};
+    const ref = reference || 'Core';
+    const esc = (raw) => {
+        let s = String(raw == null ? '' : raw);
+        // LaTeX specials first (order matters: backslash before the rest).
+        s = s.replace(/\\/g, '\\textbackslash{}')
+             .replace(/([&%$#_{}])/g, '\\$1')
+             .replace(/\^/g, '\\textasciicircum{}')
+             .replace(/~/g, '\\textasciitilde{}');
+        // Then the unicode the value strings carry.
+        s = s.replace(/[μµ]/g, '$\\mu$')
+             .replace(/²/g, '\\textsuperscript{2}')
+             .replace(/³/g, '\\textsuperscript{3}')
+             .replace(/·/g, '\\textperiodcentered{}')
+             .replace(/°/g, '\\textdegree{}')
+             .replace(/Ω/g, '$\\Omega$')
+             .replace(/±/g, '$\\pm$')
+             .replace(/×/g, '$\\times$')
+             .replace(/[–—]/g, '--');
+        return s;
+    };
+    const rows = [];
+    const pair = (entry) => { if (entry && entry.text != null) rows.push(`${esc(entry.text)} & ${esc(entry.value)} \\\\ \\hline`); };
+    if (lt.effectiveParametersTable) {
+        const t = lt.effectiveParametersTable;
+        pair(t.effectiveLength); pair(t.effectiveArea); pair(t.minimumArea); pair(t.effectiveVolume);
+    }
+    pair(lt.coreMaterialInitialPermeabilityTable);
+    pair(lt.coreMaterialEffectivePermeabilityTable);
+    pair(lt.coreMaterialPermeanceTable);
+    pair(lt.coreMaterialResistivityTable);
+    pair(lt.coreMaterialDensityTable);
+    pair(lt.coreMaterialCurieTemperatureTable);
+    pair(lt.coreMaterialManufacturerNameTable);
+    pair(lt.coreMaterialManufacturerReferenceTable);
+    pair(lt.magneticFluxDensitySaturationTable);
+
+    let text = `\\fancyhf{}
+\\fancyhf[EHL]{${esc(ref)}}\\fancyhf[OHL]{${esc(ref)}}
+\\fancyhf[EHR]{\\today}\\fancyhf[OHR]{\\today}
+\\fancyhf[EFL]{Done automatically with OpenMagnetics}\\fancyhf[OFL]{Done automatically with OpenMagnetics}
+\\fancyhf[EFR]{\\thepage}\\fancyhf[OFR]{\\thepage}
+\\title{${esc(ref)}}
+\\date{\\today}
+\\maketitle
+\\section*{Core}
+`;
+    if (lt.coreDescription) text += `${esc(lt.coreDescription)}\n\n`;
+    if (lt.numberTurns != null) text += `\\noindent\\textbf{Turns}: ${esc(lt.numberTurns)}\n\n`;
+    if (rows.length) {
+        text += `\\begin{center}
+\\begin{tabular}{ |l|r| }
+\\hline
+\\multicolumn{2}{|Sc|}{\\larger[1]{Core Parameters}} \\\\ \\hline
+${rows.join('\n')}
+\\end{tabular}
+\\end{center}
+`;
+    }
+    return text;
+}
+
 export function processCoreMaterialTexts(data) {
     const localTexts = {
 
@@ -976,6 +1048,20 @@ export function processCoreMaterialTexts(data) {
     return localTexts;
 }
 
+// ABT #819: strips values that carry no information — null, the string "null",
+// undefined, and empty OBJECTS. It deliberately does NOT strip empty ARRAYS.
+//
+// An empty array is data. In MAS, [] means "none" while absent means "unknown",
+// and the engine relies on that distinction: for an INDUCTOR,
+// inputs.designRequirements.turnsRatios is [] precisely because there is no
+// secondary. Deleting it made "Download MAS file with excitations" ship a file
+// the engine then refused to load with
+//     [json.exception.out_of_range.403] key 'turnsRatios' not found
+// so the export could not be round-tripped through the tool that produced it.
+//
+// Keeping empty arrays costs 39 characters in a 130,640-character MAS — 0.04%.
+// The null-stripping half of this function is worth about 22% and is genuinely
+// information-free; the empty-array half bought nothing and broke the file.
 export function clean(object) {
     Object
         .entries(object)
@@ -983,7 +1069,8 @@ export function clean(object) {
             if (v && typeof v === 'object') {
                 clean(v);
             }
-            if (v && typeof v === 'object' && !Object.keys(v).length || v === null || v === "null" || v === undefined) {
+            const isEmptyObject = v && typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length;
+            if (isEmptyObject || v === null || v === "null" || v === undefined) {
                 if (Array.isArray(object)) {
                     object.splice(k, 1);
                 } else {
@@ -992,6 +1079,34 @@ export function clean(object) {
             }
         });
     return object;
+}
+
+// MAS coil.bobbin ARRAY form: per-column bobbins (element 0 = the centre/main
+// column part, later elements ad-hoc lateral parts — separate BOM items).
+// Returns the merged effective bobbin geometry consumers should read: element 0
+// with every element's winding windows concatenated in array order (mirrors
+// OpenMagnetics::Coil::merge_per_column_bobbins in the engine). Scalar bobbins
+// (object or name string) pass through untouched. Elements given by NAME cannot
+// be resolved here — whoever builds the array must materialize full objects.
+export function effectiveBobbin(bobbin) {
+    if (!Array.isArray(bobbin)) {
+        return bobbin;
+    }
+    if (bobbin.length === 0) {
+        throw new Error('coil.bobbin is an empty array: the per-column form needs at least the centre-column bobbin (element 0)');
+    }
+    bobbin.forEach((part, index) => {
+        if (typeof part !== 'object' || part == null || part.processedDescription == null) {
+            throw new Error(`coil.bobbin[${index}] cannot be merged in the frontend: per-column bobbins must be full objects with a processedDescription (bobbin names are only resolvable in the engine)`);
+        }
+    });
+    return {
+        ...bobbin[0],
+        processedDescription: {
+            ...bobbin[0].processedDescription,
+            windingWindows: bobbin.flatMap((part) => part.processedDescription.windingWindows ?? []),
+        },
+    };
 }
 
 export function cleanCoil(coilToClean) {
@@ -1074,12 +1189,20 @@ export async function checkAndFixMas(mas, mkf=null) {
             // contradictory values in one payload.
             if (mas.magnetic.core.functionalDescription.shape.family == 't') {
                 mas.magnetic.core.functionalDescription.type = CoreType.Toroidal;
+                // magneticCircuit lives on the shape in current MAS (it was removed
+                // from coreFunctionalDescription, which is additionalProperties:false).
+                mas.magnetic.core.functionalDescription.shape.magneticCircuit = MagneticCircuit.Closed;
                 mas.magnetic.core.functionalDescription.gapping = [];
             }
             else {
                 mas.magnetic.core.functionalDescription.type = CoreType.TwoPieceSet;
+                mas.magnetic.core.functionalDescription.shape.magneticCircuit = MagneticCircuit.Open;
             }
         }
+        // Legacy migration: magneticCircuit moved from coreFunctionalDescription onto
+        // the shape. Drop any obsolete copy left in old localStorage / imported MAS /
+        // fixtures so the current (additionalProperties:false) schema still validates.
+        delete mas.magnetic.core.functionalDescription.magneticCircuit;
     }
 
     if (mas.magnetic.coil != null) {
@@ -1283,13 +1406,14 @@ export function download(data, strFileName, strMimeType) {
                 saver(payload) ; // everyone else can save dataURLs un-processed
         }
         
-    }else{//not data url, is it a string with special needs?
-        if(/([\x80-\xff])/.test(payload)){            
-            var i=0, tempUiArr= new Uint8Array(payload.length), mx=tempUiArr.length;
-            for(i;i<mx;++i) tempUiArr[i]= payload.charCodeAt(i);
-            payload=new myBlob([tempUiArr], {type: mimeType});
-        }         
     }
+    // NOTE: upstream download.js had a branch here that, for any payload matching
+    // /[\x80-\xff]/, rebuilt the bytes with `tempUiArr[i] = payload.charCodeAt(i)`.
+    // That truncates each UTF-16 code unit to one byte, i.e. it writes LATIN-1.
+    // Every exported MAS containing a planar wire ("Planar 173.99 µm", U+00B5) came
+    // out with a bare 0xB5 instead of UTF-8's 0xC2 0xB5, so the file was not valid
+    // UTF-8 and strict JSON parsers refused it. Dropping the branch lets the Blob
+    // constructor below encode the string as UTF-8, which is what it does natively.
     blob = payload instanceof myBlob ?
         payload :
         new myBlob([payload], {type: mimeType}) ;

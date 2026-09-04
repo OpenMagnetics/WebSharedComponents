@@ -18,6 +18,10 @@ export const PLOT_MODES = {
     COLORED_BY_WINDING: 'colored_by_winding', // Turns colored by same winding (TBD)
     COLORED_BY_PARALLEL: 'colored_by_parallel', // Turns colored by same parallel (TBD)
     COLORED_BY_TURN: 'colored_by_turn',     // Turns colored by same turn (TBD)
+    // Connection-face (YZ) projection: the view where the terminal leads are seen end-on,
+    // alongside the inter-layer links and dragbacks. Only meaningful with real winding on,
+    // so it is offered only then (see effectiveAvailablePlotModes).
+    CONNECTIONS_YZ: 'connections_yz',
 };
 
 // Human-readable labels for plot modes
@@ -30,6 +34,7 @@ const PLOT_MODE_LABELS = {
     [PLOT_MODES.COLORED_BY_WINDING]: 'By Winding',
     [PLOT_MODES.COLORED_BY_PARALLEL]: 'By Parallel',
     [PLOT_MODES.COLORED_BY_TURN]: 'By Turn',
+    [PLOT_MODES.CONNECTIONS_YZ]: 'Connections',
 };
 
 // Utility function to extract dimension from SVG string
@@ -179,6 +184,13 @@ export default {
         };
     },
     computed: {
+        // Real winding: the coil drawn as it is actually wound (leads, pitch, dragbacks)
+        // instead of idealised per-turn rings. Owned by the "Real winding" switch in
+        // Tool menu > Settings > Display, and read straight from the global settings store
+        // so this view and the 3D one always draw the same thing.
+        realWinding() {
+            return this.$settingsStore?.magneticBuilderSettings?.useRealWindingGeometry ?? false;
+        },
         showFringingOption() {
             return this.currentPlotMode === PLOT_MODES.MAGNETIC_FIELD && (this.enableOptions || this.enableFringingOption);
         },
@@ -186,13 +198,33 @@ export default {
             return PLOT_MODE_LABELS[this.currentPlotMode] || 'Basic';
         },
         effectiveAvailablePlotModes() {
-            if (this.enableTemperaturePlot) {
-                return this.availablePlotModes;
+            let modes = this.availablePlotModes;
+            if (!this.enableTemperaturePlot) {
+                modes = modes.filter(m => m !== PLOT_MODES.TEMPERATURE_FIELD);
             }
-            return this.availablePlotModes.filter(m => m !== PLOT_MODES.TEMPERATURE_FIELD);
+            // The connection face only exists as a view once the winding is drawn with its
+            // real connections; with real winding off there is nothing in it to see.
+            if (this.realWinding) {
+                if (!modes.includes(PLOT_MODES.CONNECTIONS_YZ)) {
+                    modes = [...modes, PLOT_MODES.CONNECTIONS_YZ];
+                }
+            }
+            else {
+                modes = modes.filter(m => m !== PLOT_MODES.CONNECTIONS_YZ);
+            }
+            return modes;
         },
     },
     watch: {
+        // Changing it changes the GEOMETRY MKF paints, so the plot has to be redrawn.
+        realWinding(newValue) {
+            // The connection view disappears with the setting; don't leave the component
+            // showing a mode it no longer offers.
+            if (!newValue && this.currentPlotMode === PLOT_MODES.CONNECTIONS_YZ) {
+                this.currentPlotMode = PLOT_MODES.BASIC;
+            }
+            this.handleModelChange(true);
+        },
         forceUpdate: {
             handler() {
                 this.handleModelChange(true);
@@ -478,11 +510,49 @@ export default {
                 settings.painterColorFerrite = this.ferriteColor;
                 settings.painterColorCopper = this.copperColor;
                 settings.painterDrawSpacer = this.drawSpacer;
+                // Real winding: MKF lays the turns out as they are actually wound
+                // (leads, pitch, dragbacks) rather than as idealised rings. One flag
+                // for the whole app, so the 2D and 3D views never disagree about what
+                // they are drawing. Tool menu > Settings > Display > Real winding.
+                settings.coilUseRealWindingGeometry = this.realWinding;
                 await mkf.set_settings(JSON.stringify(settings));
-                const result = await mkf.plot_turns(JSON.stringify(this.modelValue.magnetic));
+                // plot_turns draws core + bobbin + turns and stops there — it never draws how
+                // the turns are CONNECTED. With real winding on that is exactly what is being
+                // asked for, so paint the magnetic instead: the XY projection adds the
+                // inter-layer links, dragbacks and terminal leads on top of the same view.
+                const magneticJson = JSON.stringify(this.modelValue.magnetic);
+                const result = this.realWinding
+                    ? await mkf.plot_magnetic(magneticJson, 'XY')
+                    : await mkf.plot_turns(magneticJson);
                 this.processSvgResult(result);
             } catch (error) {
                 console.error('Error in calculateBasicPlot:', error);
+                this.posting = false;
+                this.tryingToPlot = false;
+            }
+        },
+        // Connection face (YZ): the projection where the terminal leads are seen end-on,
+        // together with the inter-layer links and dragbacks. Real winding only — see
+        // effectiveAvailablePlotModes, which is what puts this mode in the picker.
+        async calculateConnectionsPlot() {
+            if (this.modelValue.magnetic == null) {
+                return;
+            }
+            try {
+                const mkf = await waitForMkf();
+                const settings = JSON.parse(await mkf.get_settings());
+                settings.painterColorInsulation = this.insulationColor;
+                settings.painterColorMargin = this.marginColor;
+                settings.painterColorSpacer = this.spacerColor;
+                settings.painterColorFerrite = this.ferriteColor;
+                settings.painterColorCopper = this.copperColor;
+                settings.painterDrawSpacer = this.drawSpacer;
+                settings.coilUseRealWindingGeometry = this.realWinding;
+                await mkf.set_settings(JSON.stringify(settings));
+                const result = await mkf.plot_magnetic(JSON.stringify(this.modelValue.magnetic), 'YZ');
+                this.processSvgResult(result);
+            } catch (error) {
+                console.error('Error in calculateConnectionsPlot:', error);
                 this.posting = false;
                 this.tryingToPlot = false;
             }
@@ -511,6 +581,11 @@ export default {
                 settings.painterAdvancedLitz = false;
                 settings.painterColorFerrite = this.ferriteColor;
                 settings.painterIncludeFringing = this.includeFringing;
+                // Real winding: MKF lays the turns out as they are actually wound
+                // (leads, pitch, dragbacks) rather than as idealised rings. One flag
+                // for the whole app, so the 2D and 3D views never disagree about what
+                // they are drawing. Tool menu > Settings > Display > Real winding.
+                settings.coilUseRealWindingGeometry = this.realWinding;
                 await mkf.set_settings(JSON.stringify(settings));
 
                 const result = await mkf.plot_magnetic_field(
@@ -547,6 +622,11 @@ export default {
                 settings.painterSimpleLitz = true;
                 settings.painterAdvancedLitz = false;
                 settings.painterColorFerrite = this.ferriteColor;
+                // Real winding: MKF lays the turns out as they are actually wound
+                // (leads, pitch, dragbacks) rather than as idealised rings. One flag
+                // for the whole app, so the 2D and 3D views never disagree about what
+                // they are drawing. Tool menu > Settings > Display > Real winding.
+                settings.coilUseRealWindingGeometry = this.realWinding;
                 await mkf.set_settings(JSON.stringify(settings));
 
                 const result = await mkf.plot_electric_field(
@@ -624,7 +704,14 @@ export default {
             // Validate wire data before calling temperature plot
             const validation = this.validateWiresForTemperaturePlot();
             if (!validation.valid) {
+                // Web bug reports #165 and #167: two users independently reported that
+                // temperature estimation "does not work" / "is lagy". It was neither. The
+                // reason was computed correctly right here and then thrown away -- the
+                // parents re-emit errorInImage with no payload and the builder answers a
+                // deterministic failure with a 1 s retry timer, which is what reads as lag.
+                // The component already renders this.errorMessage; it was simply never set.
                 console.error('[Temperature Plot] Validation failed:', validation.error);
+                this.errorMessage = validation.error;
                 this.$emit('errorInImage', `Temperature plot error: ${validation.error}`);
                 this.posting = false;
                 this.tryingToPlot = false;
@@ -637,6 +724,11 @@ export default {
                 settings.painterSimpleLitz = true;
                 settings.painterAdvancedLitz = false;
                 settings.painterColorFerrite = this.ferriteColor;
+                // Real winding: MKF lays the turns out as they are actually wound
+                // (leads, pitch, dragbacks) rather than as idealised rings. One flag
+                // for the whole app, so the 2D and 3D views never disagree about what
+                // they are drawing. Tool menu > Settings > Display > Real winding.
+                settings.coilUseRealWindingGeometry = this.realWinding;
                 await mkf.set_settings(JSON.stringify(settings));
                 // Ensure color values are plain strings (not reactive objects)
                 const textColorStr = String(this.textColor || 'var(--p-white)');
@@ -649,7 +741,11 @@ export default {
                 );
                 // Check if result is an error message (doesn't start with <svg)
                 if (!result?.startsWith('<svg')) {
+                    // Same swallow as the validation path above: the engine says exactly
+                    // what is wrong (e.g. "[INVALID_WIRE_DATA] Coating is missing material
+                    // information" for a served litz bundle) and the user was shown nothing.
                     console.error('[Temperature Plot] ERROR - Result is not an SVG:', result);
+                    this.errorMessage = String(result);
                     this.$emit('errorInImage', 'Temperature plot error: ' + result);
                     this.posting = false;
                     this.tryingToPlot = false;
@@ -658,6 +754,8 @@ export default {
                 this.processSvgResult(result);
             } catch (error) {
                 console.error('[Temperature Plot] Error:', error);
+                this.errorMessage = String(error?.message ?? error);
+                this.$emit('errorInImage', 'Temperature plot error: ' + this.errorMessage);
                 this.posting = false;
                 this.tryingToPlot = false;
             }
@@ -686,6 +784,11 @@ export default {
                 settings.painterSimpleLitz = true;
                 settings.painterAdvancedLitz = false;
                 settings.painterColorFerrite = this.ferriteColor;
+                // Real winding: MKF lays the turns out as they are actually wound
+                // (leads, pitch, dragbacks) rather than as idealised rings. One flag
+                // for the whole app, so the 2D and 3D views never disagree about what
+                // they are drawing. Tool menu > Settings > Display > Real winding.
+                settings.coilUseRealWindingGeometry = this.realWinding;
                 await mkf.set_settings(JSON.stringify(settings));
 
                 const result = await mkf.plot_wire_losses(
@@ -836,6 +939,9 @@ export default {
                     break;
                 case PLOT_MODES.COLORED_BY_TURN:
                     this.calculateColoredByTurnPlot();
+                    break;
+                case PLOT_MODES.CONNECTIONS_YZ:
+                    this.calculateConnectionsPlot();
                     break;
                 case PLOT_MODES.BASIC:
                 default:

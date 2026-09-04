@@ -6,10 +6,68 @@ let mkf = null;
 let mkfProxy = null;
 let worker = null;
 let resolveReady;
-const ready = new Promise((resolve) => { resolveReady = resolve; });
+// `ready` is re-armed by terminateWorker() so a torn-down worker doesn't leave
+// waitForMkf() permanently resolved with a dead proxy (see terminateWorker).
+let ready = new Promise((resolve) => { resolveReady = resolve; });
 
 // Configuration
 let useWorker = true; // Worker mode enabled - WASM runs in background thread
+
+// Watchdog for worker calls. An Embind call is SYNCHRONOUS inside the worker, so one that never
+// returns blocks the worker for every later call — and, because nothing rejects, the caller's
+// promise simply never settles. That is silent: no error, no console message, no timeout. The UI
+// just shows nothing forever, which is what users report as "the loss / current density details
+// never appeared" (ABT #913). kirchhoffRuntime already guards its ngspice calls this way; the MKF
+// worker had no equivalent, so a single hung call was unrecoverable AND invisible.
+//
+// Generous by design: it is a stuck-detector, not a performance budget. The slowest legitimate calls
+// here are the catalogue loads (~0.5 s) and the adviser sweeps, which run in their own stores.
+const MKF_CALL_WATCHDOG_MS = 120_000;
+// Calls that are legitimately long-running and must NOT be interrupted.
+const MKF_WATCHDOG_EXEMPT = new Set(['load_core_materials', 'load_core_shapes', 'load_wires', 'load_cores']);
+// ABT #929: the ABT #913 watchdog guards worker CALLS, which are made through the proxy created at
+// the END of initWorker — so the init handshake itself was never covered. A wasm fetch that stalls
+// inside the worker (seen in the wild as "wasm streaming compile failed: Response body loading was
+// aborted", then a fallback that never completes) left `await mkfProxy.init()` pending forever. It
+// never resolved and never threw, so main.js's engine-init catch could not fire either: the app sat
+// on /engine_loader showing "it will take just a few seconds" until the tab was closed, and the
+// diagnosis read exactly `engineReady:false, engineLoadError:null`.
+//
+// Generous, like the call watchdog: a cold compile of the 32 MB engine on a slow machine is
+// legitimately tens of seconds. This is a stuck-detector, not a performance budget.
+const MKF_INIT_WATCHDOG_MS = 180_000;
+
+let wasmJsUrlForRestart = null;
+
+/**
+ * Run a worker call under the watchdog. On timeout: tear the worker down (killing the hung Embind
+ * call), re-init a fresh one so the app keeps working, and reject LOUDLY. Never resolves with a
+ * fabricated result.
+ */
+async function withWatchdog(methodName, invoke) {
+    if (MKF_WATCHDOG_EXEMPT.has(methodName)) return invoke();
+
+    let timer;
+    const timeout = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(
+            `MKF call '${methodName}' did not return within ` +
+            `${Math.round(MKF_CALL_WATCHDOG_MS / 1000)}s and was aborted. The engine worker has been ` +
+            `restarted; retry the action.`)), MKF_CALL_WATCHDOG_MS);
+    });
+    try {
+        return await Promise.race([invoke(), timeout]);
+    } catch (error) {
+        if (String(error?.message || '').includes('did not return within')) {
+            console.error('[MKF] worker call stuck — restarting the engine worker:', methodName);
+            const url = wasmJsUrlForRestart;
+            terminateWorker();
+            if (url) initWorker(url).catch((e) => console.error('[MKF] worker restart failed:', e));
+        }
+        throw error;
+    } finally {
+        clearTimeout(timer);
+    }
+}
 
 /**
  * Enable or disable worker mode. Must be called before initialization.
@@ -35,6 +93,8 @@ export function isWorkerMode() {
  * @returns {Promise} Resolves when worker is ready
  */
 export async function initWorker(wasmJsUrl) {
+    // Remembered so the watchdog can rebuild the worker after killing a stuck call.
+    wasmJsUrlForRestart = wasmJsUrl;
     // Return the existing MKF proxy if already initialized
     if (mkf) {
         return mkf;
@@ -51,9 +111,36 @@ export async function initWorker(wasmJsUrl) {
     // Wrap with Comlink
     mkfProxy = Comlink.wrap(worker);
 
-    // Initialize the WASM module in the worker
-    await mkfProxy.init(wasmJsUrl);
-    await mkfProxy.waitReady();
+    // Initialize the WASM module in the worker, under the init watchdog (ABT #929). On timeout the
+    // worker is torn down and we reject LOUDLY, so the caller can retry or tell the user, instead
+    // of the whole app hanging on a promise that will never settle.
+    let initTimer;
+    const initTimeout = new Promise((_, reject) => {
+        initTimer = setTimeout(() => reject(new Error(
+            `The magnetic engine did not finish loading within ` +
+            `${Math.round(MKF_INIT_WATCHDOG_MS / 1000)}s. This is usually a network problem while ` +
+            `fetching the engine; reloading the page normally clears it.`)), MKF_INIT_WATCHDOG_MS);
+    });
+    try {
+        await Promise.race([
+            (async () => {
+                await mkfProxy.init(wasmJsUrl);
+                await mkfProxy.waitReady();
+            })(),
+            initTimeout,
+        ]);
+    }
+    catch (error) {
+        // Leave nothing half-alive: a stuck worker holds the hung fetch and its 32 MB of memory,
+        // and a later initWorker() would return the same broken proxy through the `if (mkf)` guard
+        // at the top of this function.
+        console.error('[MKF] engine initialization failed — tearing the worker down:', error);
+        terminateWorker();
+        throw error;
+    }
+    finally {
+        clearTimeout(initTimer);
+    }
 
     // Create a proxy object that mimics the original MKF API
     mkf = createMkfProxy(mkfProxy);
@@ -108,12 +195,39 @@ export async function enrichMagnetic(magnetic) {
     return parsed?.magnetic ?? parsed;
 }
 
+/**
+ * Push the real-winding flag into the engine's (global, sticky) settings.
+ *
+ * This has to happen BEFORE anything winds, not before anything paints: the
+ * painter draws the turnsDescription it is handed and never re-winds, so a coil
+ * wound while the flag was still off is painted as idealised rings no matter
+ * what the flag says by the time the plot is requested. That is why the setting
+ * is applied at engine init from the persisted store — once it is on, every wind
+ * of the session is a real one, with no intermediate ideal pass to be painted.
+ *
+ * Every other settings writer in the app seeds its object from get_settings(),
+ * so this value then survives all of them.
+ *
+ * @param {Object} mkf - the MKF instance/proxy
+ * @param {boolean} useRealWindingGeometry
+ */
+export async function applyRealWindingGeometrySetting(mkf, useRealWindingGeometry) {
+    const settings = JSON.parse(await mkf.get_settings());
+    settings.coilUseRealWindingGeometry = !!useRealWindingGeometry;
+    await mkf.set_settings(JSON.stringify(settings));
+}
+
 export function terminateWorker() {
     if (worker) {
         worker.terminate();
         worker = null;
         mkfProxy = null;
         mkf = null;
+        // Re-arm `ready` so the NEXT initWorker() resolves a FRESH promise. Without
+        // this, `ready` stays resolved with the terminated worker's proxy, so every
+        // waitForMkf() consumer (LtSpice export, masAutocomplete) keeps calling the
+        // dead worker after a rebuild (e.g. an El Choker palette switch).
+        ready = new Promise((resolve) => { resolveReady = resolve; });
     }
 }
 
@@ -154,10 +268,10 @@ function createMkfProxy(workerProxy) {
             return async (...args) => {
                 // Use explicit worker method if defined, otherwise use generic callMethod
                 if (workerExplicitMethods.has(prop)) {
-                    return await workerProxy[prop](...args);
+                    return await withWatchdog(String(prop), () => workerProxy[prop](...args));
                 }
                 // callMethod handles any MKF method with automatic type conversion
-                return await workerProxy.callMethod(prop, ...args);
+                return await withWatchdog(String(prop), () => workerProxy.callMethod(prop, ...args));
             };
         }
     });

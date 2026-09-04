@@ -149,7 +149,7 @@ export default {
 .dim-ro-row {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.25rem;
     flex-wrap: nowrap;
     width: 100%;
     min-width: 0;
@@ -169,18 +169,24 @@ export default {
 .dim-ro-label {
     font-size: 0.875rem;
     overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
-    flex: 0 0 auto;
+    /* Same basis as the refactored Dimension's label so read-only rows and
+       editable rows align their value columns in mixed panels. */
+    flex: 0 1 9rem;
+    min-width: 0;
     padding: 0;
 }
 .dim-ro-value {
     text-align: right;
     font-variant-numeric: tabular-nums;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
 }
 .dim-ro-unit { flex: 0 0 auto; }
 .dim-ro-unit :deep(.p-select) {
     border: 0 !important;
     background: transparent !important;
 }
-.dim-ro-alt-unit { margin-left: 0.25rem; }
+.dim-ro-alt-unit { margin-left: 0.25rem; font-size: 0.875rem; }
 </style>

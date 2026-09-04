@@ -173,6 +173,16 @@ export default {
       mvbInitialized: false,
       theme: this.getTheme(),
       isMounted: false,
+      // Core-mesh failure tracking (ABT #147a): a build racing a coil
+      // mutation (Core Advise nulls turns before the auto re-wind lands) can
+      // fail buildCoreSTL transiently; the swallowed error used to leave a
+      // misleading bobbin-only "teal blob" render.
+      coreBuildFailed: false,
+      coreBuildRetried: false,
+      // Same idea for the winding: a turns build that fails must SAY so, not quietly
+      // leave a core-and-bobbin picture that reads as a design with no copper.
+      turnsBuildFailed: false,
+      turnsBuildError: '',
       // Internal visibility state (can be toggled by UI)
       internalShowCore: this.showCore,
       internalShowBobbin: this.showBobbin,
@@ -204,6 +214,11 @@ export default {
     showTurns(newVal) {
       this.internalShowTurns = newVal;
     },
+    // Real winding changes the GEOMETRY, not just visibility: the conductors have to be
+    // rebuilt, so this is a full update rather than a `mesh.visible` flip.
+    realWinding() {
+      this.triggerUpdate();
+    },
     // React to internal state changes
     internalShowCore(newVal) {
       if (this.coreMesh) {
@@ -222,6 +237,14 @@ export default {
     },
   },
   computed: {
+    // Real winding: draw ONE continuous copper body per (winding, parallel) — the real
+    // leads, pitch and dragbacks — instead of one idealised closed loop per turn. Owned by
+    // the "Real winding" switch in Tool menu > Settings > Display; read from the global
+    // settings store rather than taken as a prop so every 2D and 3D view in the app draws
+    // the same thing without nine call sites having to remember to pass it.
+    realWinding() {
+      return this.$settingsStore?.magneticBuilderSettings?.useRealWindingGeometry ?? false;
+    },
     hasMagneticLoaded() {
       // Check if there's a valid magnetic with core data
       const core = this.magnetic?.core;
@@ -428,7 +451,12 @@ export default {
                 : { metalness: 0.1, roughness: 0.9 });
               if (this.coreMesh) { this.coreMesh.visible = this.internalShowCore; group.add(this.coreMesh); }
             }
-          } catch (err) { console.warn('Could not build core:', err.message); }
+            this.coreBuildFailed = false;
+            this.coreBuildRetried = false;
+          } catch (err) {
+            console.warn('Could not build core:', err.message);
+            this.coreBuildFailed = true;
+          }
 
           // The semi-shielded drum's magnetic-epoxy shell is a COATING, not a core piece, so
           // the engine delivers it separately and it is drawn translucent over the opaque
@@ -511,12 +539,28 @@ export default {
 
         if (this.showTurns && hasTurnsData && !hasDummyWires) {
           try {
-            const buf = await buildTurnsSTL(mag);
+            // Real winding draws the conductor as MKF actually routes it — continuous
+            // copper per (winding, parallel), with leads, pitch and dragbacks — rather
+            // than one idealised closed loop per turn. Same builder the whole-magnetic
+            // STEP export uses, so the picture and the CAD file agree.
+            const buf = await buildTurnsSTL(mag, { useRealWindingGeometry: this.realWinding });
             if (buf) {
               const m = this.addMeshFromSTL(buf, this.turnsColor, { metalness: 0.2, roughness: 0.6 });
               if (m) { m.visible = this.internalShowTurns; group.add(m); this.turnsMeshes.push(m); }
             }
-          } catch (err) { console.warn('Could not build turns:', err.message); }
+            this.turnsBuildFailed = false;
+            this.turnsBuildError = '';
+          } catch (err) {
+            // Do NOT let the copper just disappear. A swallowed failure here renders as a
+            // core-and-bobbin-only picture that looks like a design with no winding —
+            // indistinguishable from success unless you happen to have the console open.
+            // Real winding in particular refuses to route a conductor it cannot fit
+            // (ConductorBuilder collision), and the user needs to be told that rather
+            // than shown a magnetic with no turns.
+            console.warn('Could not build turns:', err.message);
+            this.turnsBuildFailed = true;
+            this.turnsBuildError = String(err.message ?? err);
+          }
         } else if (this.showTurns && hasTurnsData && hasDummyWires) {
           console.warn('Skipping turn STL build: one or more windings reference the "Dummy" wire sentinel. Pick a real wire in the coil builder before rendering 3D turns.');
         }
@@ -543,6 +587,17 @@ export default {
           if (this.pendingBuild) {
             this.pendingBuild = false;
             this.tryToSend();
+          } else if (this.coreBuildFailed && !this.coreBuildRetried && this.showCore) {
+            // The core mesh failed and nothing newer is queued: retry ONCE
+            // after the coil settles (Core Advise nulls turns before the auto
+            // re-wind lands, so the first rebuild can race an incoherent
+            // magnetic). A second failure keeps coreBuildFailed set and the
+            // template shows the explicit overlay instead of the misleading
+            // bobbin-only render (ABT #147a).
+            this.coreBuildRetried = true;
+            setTimeout(() => {
+              if (this.isMounted && !this.building) this.buildMagnetic();
+            }, 1500);
           }
         }
       }
@@ -569,6 +624,7 @@ export default {
     },
 
     triggerUpdate() {
+      this.coreBuildRetried = false;
       this.updating = true;
       this.clearScene();
       this.currentMagnetic = deepCopy(this.magnetic);
@@ -601,6 +657,23 @@ export default {
       alt="loading" 
       :src="loadingGif"
     >
+    <label
+      v-if="coreBuildFailed && coreBuildRetried && !updating && internalShowCore"
+      :data-cy="`${dataTestLabel}-core-build-failed`"
+      class="core-build-failed-overlay"
+    >
+      3D core preview unavailable for this configuration
+    </label>
+    <label
+      v-if="turnsBuildFailed && !updating && internalShowTurns"
+      :data-cy="`${dataTestLabel}-turns-build-failed`"
+      class="core-build-failed-overlay"
+      :title="turnsBuildError"
+    >
+      {{ realWinding
+          ? 'The real winding could not be routed for this design — showing no turns'
+          : '3D winding preview unavailable for this configuration' }}
+    </label>
     <Renderer 
       :data-cy="`${dataTestLabel}-canvas`" 
       ref="renderer" 
@@ -663,6 +736,21 @@ export default {
   z-index: 10;
   height: auto;
   max-width: 100%;
+}
+
+.core-build-failed-overlay {
+  position: absolute;
+  top: 0.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  padding: 0.15rem 0.6rem;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #ffb04d;
+  font-size: 0.8rem;
+  font-weight: 600;
+  pointer-events: none;
 }
 
 .visibility-controls {
