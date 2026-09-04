@@ -204,6 +204,21 @@ Comlink.expose({
     },
 
     // Core only (drawCore now accepts a Magnetic JSON and enriches itself)
+    // The magnetic-epoxy shell of a semi-shielded drum, as its own product so it can be
+    // drawn translucent over the opaque drum. drawCoreShell returns null for every other
+    // family, so this may be called unconditionally.
+    buildCoreShellSTL: timed('buildCoreShellSTL', async (magnetic, opts = {}) => {
+        await init();
+        if (typeof _mvbpp.drawCoreShell !== 'function') return null;   // older engine
+        const d = o(opts);
+        const sym = symmetryToken(opts.symmetryPlanes);
+        const side = opts.side ?? '';
+        return callDraw('drawCoreShell[stl]', _mvbpp.drawCoreShell, [
+            JSON.stringify(magnetic), '3D', 'XY', 0.0, 'stl',
+            d.scale, d.coreSeg, sym, side,
+        ], { quiet: true });
+    }),
+
     buildCoreSTL: timed('buildCoreSTL', async (magnetic, opts = {}) => {
         await init();
         const d = o(opts);

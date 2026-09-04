@@ -58,6 +58,13 @@ export async function buildCoreSTL(magnetic, opts = {}) {
     return api.buildCoreSTL(magnetic, opts);
 }
 
+// The semi-shielded drum's magnetic-epoxy shell, as a separate product from the drum so a
+// viewer can render it translucent. Resolves to null for every other family.
+export async function buildCoreShellSTL(magnetic, opts = {}) {
+    const api = await waitForMvb();
+    return api.buildCoreShellSTL(magnetic, opts);
+}
+
 // Build one physical piece of the core from a CoreShape (with dimensions):
 // a single half-set for a two-piece concentric core, the whole ring for a toroid.
 export async function buildCorePieceSTL(shape, opts = {}) {
