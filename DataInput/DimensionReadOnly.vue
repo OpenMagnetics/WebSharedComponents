@@ -1,5 +1,6 @@
 <script setup>
 import { toTitleCase, getMultiplier, removeTrailingZeroes } from '../assets/js/utils.js'
+import { displayEntries, bestEntry, toDisplay, unitSystem } from '../assets/js/units.js'
 import DimensionUnit from './DimensionUnit.vue'
 </script>
 <script>
@@ -32,6 +33,13 @@ export default {
     },
     data() {
         const localData = { multiplier: null, scaledValue: null }
+        const entries = displayEntries(this.unit)
+        if (entries != null && this.value != null) {
+            const entry = bestEntry(Number(this.value), entries)
+            localData.multiplier = entry.value
+            localData.scaledValue = removeTrailingZeroes(toDisplay(Number(this.value), entry), this.numberDecimals)
+            return { localData, shortenedName: this.name }
+        }
         if (this.value != null) {
             let aux
             if (this.unit != null) {
@@ -60,12 +68,19 @@ export default {
         return { localData, shortenedName: this.name }
     },
     computed: {
+        activeUnitSystem() {
+            return unitSystem()
+        },
+        displayUnitEntries() {
+            return displayEntries(this.unit)
+        },
         visuallyScaledValue() {
             return removeTrailingZeroes(Number(this.localData.scaledValue * this.visualScale), this.numberDecimals)
         },
     },
     watch: {
         value(newValue) { if (newValue != null) this.update(newValue) },
+        activeUnitSystem() { if (this.value != null) this.update(this.value) },
     },
     mounted() { this.shortenedName = this.shortenName() },
     methods: {
@@ -82,6 +97,12 @@ export default {
             return base
         },
         update(actualValue) {
+            if (this.displayUnitEntries != null) {
+                const entry = bestEntry(Number(actualValue), this.displayUnitEntries)
+                this.localData.multiplier = entry.value
+                this.localData.scaledValue = removeTrailingZeroes(toDisplay(Number(actualValue), entry), this.numberDecimals)
+                return
+            }
             if (this.unit != null) {
                 const aux = getMultiplier(actualValue, 0.001, false, this.power)
                 let mult = aux.multiplier
@@ -129,6 +150,7 @@ export default {
                         :value-font-size="valueFontSize"
                         :text-color="textColor"
                         :unit="unit"
+                        :entries="displayUnitEntries"
                         class="dim-ro-unit"
                     />
                     <label

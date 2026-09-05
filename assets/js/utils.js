@@ -1,6 +1,7 @@
 import * as Defaults from './defaults.js'
 import axios from "axios"
 import { recordExport } from './telemetry.js'
+import { formatInUnitSystem } from './units.js'
 import * as MAS from '/WebSharedComponents/assets/ts/MAS.ts'
 const { ConnectionType, CoreType, MagneticCircuit, WiringTechnology } = MAS;
 
@@ -472,16 +473,19 @@ export function formatMagneticFieldStrength(magneticFieldStrength) {
     return formatUnit(magneticFieldStrength, "A/m")
 }
 
+// Length / area / volume / temperature read-only text follows the user's unit
+// system (ABT #1099): imperial readers get in / mil / ft, in², in³ and °F,
+// SI readers the prefixed SI unit as before.
 export function formatDimension(dimension) {
-    return formatUnit(dimension, "m")
+    return formatInUnitSystem(dimension, "m") ?? formatUnit(dimension, "m")
 }
 
 export function formatArea(dimension) {
-    return formatUnit(dimension, "m²")
+    return formatInUnitSystem(dimension, "m²") ?? formatUnit(dimension, "m²")
 }
 
 export function formatVolume(dimension) {
-    return formatUnit(dimension, "m³")
+    return formatInUnitSystem(dimension, "m³") ?? formatUnit(dimension, "m³")
 }
 
 export function formatCurrent(current) {
@@ -493,7 +497,7 @@ export function formatVoltage(voltage) {
 }
 
 export function formatTemperature(temperature) {
-    return formatUnit(temperature, "°C")
+    return formatInUnitSystem(temperature, "°C") ?? formatUnit(temperature, "°C")
 }
 
 export function formatResistance(resistance) {

@@ -1,5 +1,6 @@
 <script setup>
 import { toTitleCase, getMultiplier, removeTrailingZeroes } from '../assets/js/utils.js'
+import { displayEntries, bestEntry, entryByValue, toDisplay, fromDisplay, unitSystem } from '../assets/js/units.js'
 import DimensionUnit from './DimensionUnit.vue'
 import InputNumber from 'primevue/inputnumber'
 </script>
@@ -63,6 +64,21 @@ export default {
         const localData = { multiplier: null, scaledValue: null }
         const errorMessages = ''
         const initial = this.modelValue[this.name]
+        // Imperial mode (ABT #1099): the unit dropdown lists display units
+        // (in / mil / °F …) instead of SI prefixes; the stored value stays SI.
+        const entries = displayEntries(this.unit)
+        if (entries != null) {
+            const seed = initial != null ? initial : this.defaultValue
+            if (seed != null) {
+                const entry = bestEntry(seed, entries)
+                localData.multiplier = entry.value
+                localData.scaledValue = removeTrailingZeroes(toDisplay(seed, entry), this.numberDecimals)
+            }
+            else if (this.optional) {
+                localData.multiplier = entries[0].value
+            }
+            return { localData, errorMessages, shortenedName: this.name, inputKey: 0 }
+        }
         if (initial == null && this.defaultValue != null) {
             const aux = getMultiplier(this.defaultValue, 0.001)
             localData.scaledValue = removeTrailingZeroes(aux.scaledValue, this.numberDecimals)
@@ -113,8 +129,22 @@ export default {
         forceUpdate() {
             if (!isNaN(this.modelValue[this.name])) this.update(this.modelValue[this.name])
         },
+        // Switching the unit system re-reads the SI value in the new units.
+        activeUnitSystem() {
+            this.localData.multiplier = null
+            if (this.modelValue[this.name] != null && !isNaN(this.modelValue[this.name])) {
+                this.update(this.modelValue[this.name])
+            }
+            this.inputKey += 1
+        },
     },
     computed: {
+        activeUnitSystem() {
+            return unitSystem()
+        },
+        displayUnitEntries() {
+            return displayEntries(this.unit)
+        },
         displayValue() {
             if (this.localData.scaledValue == null) return null
             return Number(removeTrailingZeroes(this.localData.scaledValue * this.visualScale, this.numberDecimals))
@@ -188,6 +218,17 @@ export default {
                 return
             }
             actualValue = this.clampValue(Number(actualValue))
+            if (this.displayUnitEntries != null) {
+                const entry = bestEntry(actualValue, this.displayUnitEntries)
+                this.localData.multiplier = entry.value
+                this.localData.scaledValue = removeTrailingZeroes(toDisplay(actualValue, entry), this.numberDecimals)
+                const hasError = this.checkErrors()
+                if (!hasError) {
+                    this.modelValue[this.name] = actualValue
+                    this.$emit('update', actualValue, this.name)
+                }
+                return
+            }
             if (this.unit != null) {
                 const aux = getMultiplier(actualValue, 0.001)
                 let mult = aux.multiplier
@@ -211,6 +252,19 @@ export default {
             // Changing the unit on an empty optional field must not materialise a value.
             if (this.optional && this.localData.scaledValue == null) {
                 this.localData.multiplier = newMultiplier
+                return
+            }
+            if (this.displayUnitEntries != null) {
+                // Same rule as below: the displayed number stays, the SI value follows.
+                const entry = entryByValue(this.displayUnitEntries, newMultiplier)
+                const newActualValue = this.clampValue(fromDisplay(this.localData.scaledValue ?? 0, entry))
+                this.localData.multiplier = newMultiplier
+                this.localData.scaledValue = removeTrailingZeroes(toDisplay(newActualValue, entry), this.numberDecimals)
+                const hasError = this.checkErrors()
+                if (!hasError) {
+                    this.modelValue[this.name] = newActualValue
+                    this.$emit('update', newActualValue, this.name)
+                }
                 return
             }
             // Keep the displayed number unchanged; only the unit changes so the
@@ -245,6 +299,21 @@ export default {
             }
             const prevScaled = this.localData.scaledValue
             const prevMult = this.localData.multiplier
+            if (this.displayUnitEntries != null) {
+                const entry = entryByValue(this.displayUnitEntries, this.localData.multiplier)
+                const si = fromDisplay((Number(value) || 0) / this.visualScale, entry)
+                // Keep the unit the user is typing in (no auto-rescale to a
+                // "better" unit mid-typing); update() picks the best unit for
+                // programmatic values, typing keeps the dropdown as chosen.
+                const clamped = this.clampValue(si)
+                this.localData.scaledValue = removeTrailingZeroes(toDisplay(clamped, entry), this.numberDecimals)
+                const hasError = this.checkErrors()
+                if (!hasError) {
+                    this.modelValue[this.name] = clamped
+                    this.$emit('update', clamped, this.name)
+                }
+                return
+            }
             this.update((Number(value) || 0) * this.localData.multiplier / this.visualScale)
             // If update() left both scaledValue and multiplier unchanged (e.g. the
             // typed value was clamped to the same min/max already stored), Vue sees
@@ -303,6 +372,7 @@ export default {
                     :max="unitMax != null ? unitMax : max"
                     :unit="unit"
                     :use-metric-prefixes="useMetricPrefixes"
+                    :entries="displayUnitEntries"
                     class="dim-unit"
                     @update:model-value="changeMultiplier"
                 />
