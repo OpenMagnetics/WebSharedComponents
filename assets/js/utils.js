@@ -2,7 +2,7 @@ import * as Defaults from './defaults.js'
 import axios from "axios"
 import { recordExport } from './telemetry.js'
 import * as MAS from '/WebSharedComponents/assets/ts/MAS.ts'
-const { ConnectionType, CoreType, WiringTechnology } = MAS;
+const { ConnectionType, CoreType, MagneticCircuit, WiringTechnology } = MAS;
 
 // ───────────────────────────────────────────────────────────────────────
 // Legacy MAS case-normalisation
