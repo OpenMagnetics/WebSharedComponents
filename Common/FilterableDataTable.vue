@@ -112,6 +112,16 @@ export default {
             type: String,
             default: 'rows',
         },
+        /**
+         * Compact mode for wide tables (a dozen columns or more): a smaller type
+         * scale, tighter cells, and header titles in the case they were written in
+         * — an uppercased title turns a symbol like µi into "MI" and ρ into a Latin
+         * P. Lets a wide table fit a 1366 px screen without a horizontal scroll.
+         */
+        compact: {
+            type: Boolean,
+            default: false,
+        },
     },
     data() {
         return {
@@ -741,7 +751,7 @@ export default {
 </script>
 
 <template>
-    <div class="fdt" :class="{ 'column-filters-enabled': columnFilters }">
+    <div class="fdt" :class="{ 'column-filters-enabled': columnFilters, 'fdt-compact': compact }">
         <div v-if="columnFilters" class="filter-summary-bar">
             <div class="filter-count-row">
                 <div class="filter-count" :data-cy="cy('filter-count')">
@@ -813,6 +823,19 @@ export default {
 .dt-scroll-wrapper {
     overflow-x: auto;
     width: 100%;
+}
+
+/* Compact mode: see the `compact` prop. */
+.fdt-compact :deep(.dataTable) {
+    font-size: 0.8rem;
+}
+.fdt-compact :deep(.dataTable thead > tr > th),
+.fdt-compact :deep(.dataTable tbody > tr > td) {
+    padding-left: 0.3rem;
+    padding-right: 0.3rem;
+}
+.fdt-compact :deep(.dataTable thead > tr > th) {
+    text-transform: none;
 }
 
 .fdt-table {
