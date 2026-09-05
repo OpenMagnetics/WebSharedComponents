@@ -2,8 +2,18 @@
 import { toTitleCase, getMultiplier, removeTrailingZeroes } from '../assets/js/utils.js'
 import { displayEntries, bestEntry, toDisplay, unitSystem } from '../assets/js/units.js'
 import DimensionUnit from './DimensionUnit.vue'
+
 </script>
 <script>
+// Imperial readings of SI-sized quantities are small numbers (18.9 mm² is
+// 0.0293 in²): keep at least three significant digits whatever the caller's
+// SI-tuned decimals, or the panel shows "0 in²".
+function imperialDecimals(display, numberDecimals) {
+    if (display === 0 || !Number.isFinite(display)) return numberDecimals
+    const significant = Math.ceil(-Math.log10(Math.abs(display))) + 2
+    return Math.max(numberDecimals, significant, 0)
+}
+
 export default {
     props: {
         name: { type: String, required: true },
@@ -36,8 +46,9 @@ export default {
         const entries = displayEntries(this.unit)
         if (entries != null && this.value != null) {
             const entry = bestEntry(Number(this.value), entries)
+            const display = toDisplay(Number(this.value), entry)
             localData.multiplier = entry.value
-            localData.scaledValue = removeTrailingZeroes(toDisplay(Number(this.value), entry), this.numberDecimals)
+            localData.scaledValue = removeTrailingZeroes(display, imperialDecimals(display, this.numberDecimals))
             return { localData, shortenedName: this.name }
         }
         if (this.value != null) {
@@ -75,7 +86,9 @@ export default {
             return displayEntries(this.unit)
         },
         visuallyScaledValue() {
-            return removeTrailingZeroes(Number(this.localData.scaledValue * this.visualScale), this.numberDecimals)
+            const display = Number(this.localData.scaledValue * this.visualScale)
+            const decimals = this.displayUnitEntries != null ? imperialDecimals(display, this.numberDecimals) : this.numberDecimals
+            return removeTrailingZeroes(display, decimals)
         },
     },
     watch: {
@@ -99,8 +112,9 @@ export default {
         update(actualValue) {
             if (this.displayUnitEntries != null) {
                 const entry = bestEntry(Number(actualValue), this.displayUnitEntries)
+                const display = toDisplay(Number(actualValue), entry)
                 this.localData.multiplier = entry.value
-                this.localData.scaledValue = removeTrailingZeroes(toDisplay(Number(actualValue), entry), this.numberDecimals)
+                this.localData.scaledValue = removeTrailingZeroes(display, imperialDecimals(display, this.numberDecimals))
                 return
             }
             if (this.unit != null) {
