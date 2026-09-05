@@ -429,6 +429,9 @@ export default {
         try {
           mag = await enrichMagnetic(JSON.parse(JSON.stringify(magnetic)));
         } catch (e) {
+          // Say so: a silent fallback here left MVB++ to autocomplete the raw
+          // magnetic itself, which fails on the placeholder "Dummy" wire (ABT #1100).
+          console.warn('3D: engine enrichment failed, drawing from the raw magnetic:', e?.message ?? e);
           mag = JSON.parse(JSON.stringify(magnetic));
         }
 

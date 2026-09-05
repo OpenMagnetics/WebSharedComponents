@@ -831,25 +831,25 @@ export function processCoreTexts(data) {
     {
         localTexts.effectiveParametersTable = {}
         {
-            const aux = formatUnit(data.magnetic.core.processedDescription.effectiveParameters.effectiveLength, 'm');
+            const aux = formatDimension(data.magnetic.core.processedDescription.effectiveParameters.effectiveLength);
             localTexts.effectiveParametersTable['effectiveLength'] = {}
             localTexts.effectiveParametersTable['effectiveLength'].text = 'Effective length';
             localTexts.effectiveParametersTable['effectiveLength'].value = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
         }
         {
-            const aux = formatUnit(data.magnetic.core.processedDescription.effectiveParameters.effectiveArea, 'm²', 2);
+            const aux = formatArea(data.magnetic.core.processedDescription.effectiveParameters.effectiveArea);
             localTexts.effectiveParametersTable['effectiveArea'] = {}
             localTexts.effectiveParametersTable['effectiveArea'].text = 'Effective area';
             localTexts.effectiveParametersTable['effectiveArea'].value = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
         }
         {
-            const aux = formatUnit(data.magnetic.core.processedDescription.effectiveParameters.effectiveVolume, 'm³', 3);
+            const aux = formatVolume(data.magnetic.core.processedDescription.effectiveParameters.effectiveVolume);
             localTexts.effectiveParametersTable['effectiveVolume'] = {}
             localTexts.effectiveParametersTable['effectiveVolume'].text = 'Effective volume';
             localTexts.effectiveParametersTable['effectiveVolume'].value = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;
         }
         {
-            const aux = formatUnit(data.magnetic.core.processedDescription.effectiveParameters.minimumArea, 'm²', 2);
+            const aux = formatArea(data.magnetic.core.processedDescription.effectiveParameters.minimumArea);
             localTexts.effectiveParametersTable['minimumArea'] = {}
             localTexts.effectiveParametersTable['minimumArea'].text = 'Minimum Area';
             localTexts.effectiveParametersTable['minimumArea'].value = `${removeTrailingZeroes(aux.label, 2)} ${aux.unit}`;

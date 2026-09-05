@@ -28,6 +28,7 @@ export const tooltipsMagneticSynthesisOperatingPoints = {
 }
 
 export const tooltipsMagneticBuilder = {
+    coreMass: "Mass of the core set, from the material density and the core volume (in grams, or ounces / pounds under the imperial unit system)",
     "notImplementedYet": "Coming soon!",
     "windingSelector": "Allows choosing between properties of different windings",
     "sectionSelector": "Allows choosing between properties of different coil sections",

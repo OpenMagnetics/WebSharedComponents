@@ -190,9 +190,16 @@ export function getMkf() {
  */
 export async function enrichMagnetic(magnetic) {
     const m = await waitForMkf();
-    const result = await m.mas_autocomplete(JSON.stringify({ magnetic }), false, '{}');
-    const parsed = JSON.parse(result);
-    return parsed?.magnetic ?? parsed;
+    if (typeof m.magnetic_autocomplete !== 'function') {
+        // The MAS variant needs `inputs`, which a bare magnetic does not carry (ABT #1100).
+        throw new Error('The engine has no magnetic_autocomplete binding; rebuild libMKF');
+    }
+    const result = await m.magnetic_autocomplete(JSON.stringify(magnetic), '{}');
+    if (typeof result === 'string' && result.startsWith('Exception')) {
+        // Surface the engine's message; JSON.parse on it only said "not valid JSON".
+        throw new Error(result);
+    }
+    return JSON.parse(result);
 }
 
 /**
