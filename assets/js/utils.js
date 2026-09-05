@@ -1194,6 +1194,16 @@ export async function checkAndFixMas(mas, mkf=null) {
                 mas.magnetic.core.functionalDescription.shape.magneticCircuit = MagneticCircuit.Closed;
                 mas.magnetic.core.functionalDescription.gapping = [];
             }
+            else if (mas.magnetic.core.functionalDescription.shape.family == 'drum' ||
+                     mas.magnetic.core.functionalDescription.shape.family == 'rod') {
+                // Open-circuit single piece (drum ABT #331, rod ABT #933): the return path
+                // is air, so a gap carried over from the previous core is meaningless and
+                // MKF refuses it ("an open-circuit core cannot be gapped", ABT #1071).
+                // Mirrors MKF's magnetic_autocomplete.
+                mas.magnetic.core.functionalDescription.type = CoreType.OpenShape;
+                mas.magnetic.core.functionalDescription.shape.magneticCircuit = MagneticCircuit.Open;
+                mas.magnetic.core.functionalDescription.gapping = [];
+            }
             else {
                 mas.magnetic.core.functionalDescription.type = CoreType.TwoPieceSet;
                 mas.magnetic.core.functionalDescription.shape.magneticCircuit = MagneticCircuit.Open;
