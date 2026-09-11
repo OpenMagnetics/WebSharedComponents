@@ -200,6 +200,27 @@ export default {
         isFilled(value) {
             return value !== null && value !== undefined && value !== ''
         },
+        // The TEXT a cell shows, for a column whose renderer emits markup.
+        // The filter lists display values so it matches what the user sees, but a
+        // renderer that returns HTML (chips, badges, links) would otherwise put raw
+        // markup in the list -- and a column declared `data: null` hands the filter
+        // the whole row object, which stringifies to "[object Object]" and makes the
+        // column unfilterable. Both become the text a reader would read off the cell.
+        displayText(value) {
+            if (value === null || value === undefined) return ''
+            if (typeof value !== 'string') {
+                // Not a string and not renderable as one (a row object, an array):
+                // there is no honest text for it, so it is left out of the list
+                // rather than shown as "[object Object]".
+                return typeof value === 'number' || typeof value === 'boolean' ? String(value) : ''
+            }
+            if (!value.includes('<')) return value
+            // Tags become SPACES, not nothing: adjacent chips (<span>MAS</span><span>Meas</span>)
+            // would otherwise collapse into "MASMeas". Entities are decoded by the DOM after.
+            const host = document.createElement('div')
+            host.innerHTML = value.replace(/<[^>]*>/g, ' ')
+            return (host.textContent || '').replace(/\s+/g, ' ').trim()
+        },
         isNumericValue(value) {
             if (typeof value === 'number') return Number.isFinite(value)
             if (typeof value !== 'string') return false
@@ -517,10 +538,13 @@ export default {
             }
 
             const refresh = () => {
-                // Unique DISPLAY values of the column (the rendered text), so
-                // the list matches what the user sees in the cells.
-                const raw = api.column(colIdx).render('display').toArray()
-                uniqueValues = [...new Set(raw.filter((v) => this.isFilled(v)).map((v) => String(v).trim()))]
+                // Unique values of the column as it is SEARCHED, not as it is painted.
+                // `column().search()` below matches against the filter value, so a list built
+                // from anything else offers entries that select nothing. For an ordinary column
+                // DataTables returns the same string for both; for a type-aware renderer this
+                // is the difference between "MAS Meas" and a span full of markup.
+                const raw = api.column(colIdx).render('filter').toArray()
+                uniqueValues = [...new Set(raw.map((v) => this.displayText(v)).filter((v) => this.isFilled(v)))]
                     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
                 countSpan.textContent = `${uniqueValues.length} distinct`
                 populateSelect(input.value.trim())
