@@ -1289,6 +1289,17 @@ export async function checkAndFixMas(mas, mkf=null) {
         }
     }
 
+    // Guarded like every other core/coil access above: a document that reached
+    // here without magnetic.core (or without magnetic.coil) used to die on this
+    // line with a bare "Cannot read properties of undefined (reading
+    // 'functionalDescription')", which the Header import swallowed into the
+    // console — the user saw a load that simply did nothing. There is nothing to
+    // autocomplete without a core, so return the document untouched and let the
+    // caller's shape check report what is actually missing.
+    if (mas.magnetic.core == null || mas.magnetic.coil == null) {
+        return mas;
+    }
+
     if (mas.magnetic.core.functionalDescription.material != "" && mas.magnetic.core.functionalDescription.material != null) {
         if (mkf != null && (mas.magnetic.coil.bobbin == null || mas.magnetic.coil.bobbin == "Dummy" || mas.magnetic.core.processedDescription == null)) {
             try {
