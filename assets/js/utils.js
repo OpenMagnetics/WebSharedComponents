@@ -23,16 +23,17 @@ const { ConnectionType, CoreType, MagneticCircuit, WiringTechnology } = MAS;
 // the current schema, and even if they did, the canonical lowercase form
 // is the same string anyway).
 const ENUM_KEYS_TO_ENUMS = {
+    // Topology parameters (bridgeType, mode, viennaVariant, rectifierType, …),
+    // masConformance and configuration are not listed: MAS 76d5e9e (2026-07-02)
+    // removed inputs.converterInformation and the conformance metadata, so those
+    // keys can no longer occur in a MAS document and MAS.ts no longer has their
+    // enums. They were left here pointing at undefined enums, which the loop
+    // below skipped in silence (ABT #1326). `variant` went with them: in MAS it
+    // is now a free-form bobbin string, not an enum.
     ancillaryLabel:      [MAS.WaveformLabel],
     application:         [MAS.MagneticApplication],
-    bridgeType:          [MAS.LlcBridgeType, MAS.SrcBridgeType],
-    bridgeTypePrimary:   [MAS.LlcBridgeType],
-    bridgeTypeSecondary: [MAS.LlcBridgeType],
     coating:             [MAS.CoatingType],
     columnShape:         [MAS.ColumnShape],
-    configuration:       [MAS.Configuration],
-    controlMode:         [MAS.ControlMode],
-    controlStrategy:     [MAS.ClllcControlStrategy],
     coordinateSystem:    [MAS.CoordinateSystem],
     crossSectionalShape: [MAS.TurnCrossSectionalShape],
     cti:                 [MAS.CTI],
@@ -47,26 +48,17 @@ const ENUM_KEYS_TO_ENUMS = {
     layersOrientation:   [MAS.WindingOrientation],
     magneticCircuit:     [MAS.MagneticCircuit],
     market:              [MAS.Market],
-    masConformance:      [MAS.MASConformance],
     // `material` is sometimes a free-form CoreMaterial/InsulationMaterial
     // object (recursed into) and sometimes a plain MaterialType enum
     // string ("ferrite", "powder", …). Normalise the string case.
     material:            [MAS.MaterialType],
     materialComposition: [MAS.MaterialComposition],
     method:              [MAS.InitialPermeabilitModifierMethod, MAS.MassCoreLossesMethodType, MAS.VolumetricCoreLossesMethodType],
-    mode:                [MAS.FlybackModes, MAS.PfcModes],
-    modulationType:      [MAS.ModulationType],
     mounting:            [MAS.ConnectionType],
     orientation:         [MAS.TurnOrientation, MAS.WindingOrientation],
     origin:              [MAS.ResultOrigin],
-    outputCurrentsType:  [MAS.OutputSType],
-    outputVoltagesType:  [MAS.OutputSType],
     overvoltageCategory: [MAS.OvervoltageCategory],
     pollutionDegree:     [MAS.PollutionDegree],
-    powerFlow:           [MAS.PowerFlowDirection],
-    powerFlowDirection:  [MAS.PowerFlowDirection],
-    rectifierType:       [MAS.AhbRectifierType, MAS.BRectifierType, MAS.SrcRectifierType],
-    samplingStrategy:    [MAS.ViennaSamplingStrategy],
     sectionsAlignment:   [MAS.CoilAlignment],
     sectionsOrientation: [MAS.WindingOrientation],
     // "shape" is also used for free-form core shape objects; we only
@@ -79,19 +71,14 @@ const ENUM_KEYS_TO_ENUMS = {
     // (PEAS makes it overridable per family; MAS does not constrain it to an enum),
     // so there is no MAS.ts enum to normalise against — values pass through as-is.
     subApplication:      [],
-    switchType:          [MAS.ViennaSwitchType],
     temperatureClass:    [MAS.TemperatureClassEnum],
     terminalType:        [MAS.ConnectionType],
     topology:            [MAS.Topology],
-    topologyVariant:     [MAS.PfcTopologyVariants],
-    transitionMode:      [MAS.TransitionMode],
     turnsAlignment:      [MAS.CoilAlignment],
     type:                [MAS.ColumnType, MAS.ConnectionType, MAS.CoreGeometricalDescriptionElementType,
                           MAS.CoreMaterialType, MAS.CoreType, MAS.ElectricalType,
                           MAS.FunctionalDescriptionType, MAS.GapType, MAS.InsulationWireCoatingType,
                           MAS.PinDescriptionType, MAS.WireType, MAS.WiringTechnology],
-    variant:             [MAS.Variant],
-    viennaVariant:       [MAS.ViennaVariant],
     voltageType:         [MAS.VoltageType],
     waveformLabel:       [MAS.WaveformLabel],
     windingStyle:        [MAS.WindingStyle],
@@ -112,7 +99,11 @@ const ENUM_NORMALISATION = (() => {
         const exact = new Map();
         const fuzzy = new Map();
         for (const enumObj of enums) {
-            if (enumObj == null) continue;
+            if (enumObj == null) {
+                // An enum MAS.ts does not export: the schema moved on and this
+                // table did not. Skipping it would silently stop normalising the key.
+                throw new Error(`ENUM_KEYS_TO_ENUMS["${key}"] names an enum that MAS.ts does not export; update the table to the current MAS schema`);
+            }
             for (const v of Object.values(enumObj)) {
                 if (typeof v !== 'string') continue;
                 exact.set(v.toLowerCase(), v);
