@@ -1,6 +1,7 @@
 <script setup>
 import { deepCopy } from '../assets/js/utils.js'
 import { waitForMkf } from '../assets/js/mkfRuntime.js'
+import { sanitizeSvg } from '../assets/js/sanitize.js'
 
 </script>
 
@@ -82,7 +83,7 @@ export default {
                         console.error("Invalid SVG result from plot_wire");
                         return;
                     }
-                    this.$refs.wire2DPlotView.innerHTML = result;
+                    this.$refs.wire2DPlotView.innerHTML = sanitizeSvg(result);
                     this.posting = false;
 
                     const clientWidth = this.$refs.wire2DPlotViewContainer.clientWidth;
@@ -153,7 +154,7 @@ export default {
             }
             else {
                 if (!this.isMounted) return;
-                this.$refs.wire2DPlotView.innerHTML = this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex];
+                this.$refs.wire2DPlotView.innerHTML = sanitizeSvg(this.$stateStore.wire2DVisualizerState.plotCurrentViews[this.windingIndex]);
             }
         },
 

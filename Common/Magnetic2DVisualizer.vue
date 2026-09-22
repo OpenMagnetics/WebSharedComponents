@@ -1,5 +1,6 @@
 <script>
 import { waitForMkf } from '../assets/js/mkfRuntime.js';
+import { sanitizeSvg } from '../assets/js/sanitize.js';
 
 // Constants
 const ASPECT_RATIO_THRESHOLD = 0.85;
@@ -336,7 +337,7 @@ export default {
                 return;
             }
 
-            this.$refs.plotView.innerHTML = result;
+            this.$refs.plotView.innerHTML = sanitizeSvg(result);
 
             if (this.$refs.Magnetic2DVisualizerContainer == null) {
                 this.posting = false;

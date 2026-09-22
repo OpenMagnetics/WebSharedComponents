@@ -217,9 +217,11 @@ export default {
             if (!value.includes('<')) return value
             // Tags become SPACES, not nothing: adjacent chips (<span>MAS</span><span>Meas</span>)
             // would otherwise collapse into "MASMeas". Entities are decoded by the DOM after.
-            const host = document.createElement('div')
+            // A <template> is the decoder, not a <div>: its content is inert, so a fragment
+            // the regex cannot strip (an unterminated tag) never loads or runs anything.
+            const host = document.createElement('template')
             host.innerHTML = value.replace(/<[^>]*>/g, ' ')
-            return (host.textContent || '').replace(/\s+/g, ' ').trim()
+            return (host.content.textContent || '').replace(/\s+/g, ' ').trim()
         },
         isNumericValue(value) {
             if (typeof value === 'number') return Number.isFinite(value)
