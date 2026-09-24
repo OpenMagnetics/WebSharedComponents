@@ -354,12 +354,17 @@ async function legacyConverterCall(workerProxy, name, args) {
     // Component designers (not converters — no TAS): reshape their {inputs, <x>Diagnostics}
     // envelope back onto the legacy contract (MAS::Inputs at the root, diagnostics as sibling).
     if (parsed.mid === 'cmc' || parsed.mid === 'common_mode_choke') {
+        // SPICE button: the ideal CM deck the Simulated button runs, as netlist text. (Every verb used
+        // to fall through to design_cmc, so the SPICE modal showed the design JSON.)
+        if (parsed.verb === 'spice') return await workerProxy.callMethod('generate_cmc_ngspice_circuit', args[0]);
         const raw = await workerProxy.callMethod('design_cmc', args[0]);
         if (typeof raw === 'string' && raw.startsWith('Exception')) return raw;
         const out = JSON.parse(raw);
         return JSON.stringify({ ...(out.inputs || {}), cmcDiagnostics: out.cmcDiagnostics ?? null });
     }
     if (parsed.mid === 'dmc' || parsed.mid === 'differential_mode_choke') {
+        // SPICE button: the LC deck the Simulated button runs (first test frequency), as netlist text.
+        if (parsed.verb === 'spice') return await workerProxy.callMethod('generate_dmc_ngspice_circuit', args[0]);
         const raw = await workerProxy.callMethod('design_dmc', args[0]);
         if (typeof raw === 'string' && raw.startsWith('Exception')) return raw;
         const out = JSON.parse(raw);
