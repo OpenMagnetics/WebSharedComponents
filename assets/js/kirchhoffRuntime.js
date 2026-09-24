@@ -181,12 +181,26 @@ const KH_SIGNED_OUTPUT_TOPOLOGIES = new Set([
     'flyback', 'forward', 'two_switch_forward', 'push_pull', 'acf', 'llc', 'src',
 ]);
 
+// Every rectifier name a wizard can send. An unknown one THROWS — it used to be dropped
+// silently, so the engine designed its own default rectifier: the SRC wizard's
+// 'fullBridgeDiode' / 'centerTappedDiode' and the AHB wizard's 'ahbFlyback' never reached
+// Kirchhoff (the SRC defaulted to centre-tapped, the AHB flyback variant ran as full bridge).
 const KH_RECTIFIER_TYPES = {
-    'fullBridge': 'fullBridge', 'Full Bridge': 'fullBridge',
-    'centerTapped': 'centerTapped', 'Center Tapped': 'centerTapped',
+    'fullBridge': 'fullBridge', 'Full Bridge': 'fullBridge', 'fullBridgeDiode': 'fullBridge',
+    'centerTapped': 'centerTapped', 'Center Tapped': 'centerTapped', 'centerTappedDiode': 'centerTapped',
     'currentDoubler': 'currentDoubler', 'Current Doubler': 'currentDoubler',
     'voltageDoubler': 'voltageDoubler', 'Voltage Doubler': 'voltageDoubler',
+    'ahbFlyback': 'ahbFlyback',
 };
+
+// Primary bridge (config.bridgeType, Kirchhoff ABT #91). Only the engines that read it: SRC and LLC
+// (cfg::full_bridge_selected). It was never forwarded, so both always designed a HALF bridge — the SRC
+// wizard's full-bridge default got n ≈ 3.8 instead of ≈ 8.3 for 400 V → 48 V.
+const KH_BRIDGE_TYPES = {
+    'fullBridge': 'fullBridge', 'Full Bridge': 'fullBridge',
+    'halfBridge': 'halfBridge', 'Half Bridge': 'halfBridge',
+};
+const KH_BRIDGE_TYPE_TOPOLOGIES = new Set(['src', 'llc']);
 
 function buildKhConverterSpec(topology, params) {
     if (params.designRequirements) return params;   // already the KH envelope
@@ -275,8 +289,19 @@ function buildKhConverterSpec(topology, params) {
     if (params.inductanceRatio != null) config.inductanceRatio = params.inductanceRatio;
     if (params.minSwitchingFrequency != null) config.resonantBandMin = params.minSwitchingFrequency;
     if (params.maxSwitchingFrequency != null) config.resonantBandMax = params.maxSwitchingFrequency;
-    if (params.rectifierType != null && KH_RECTIFIER_TYPES[params.rectifierType]) {
-        config.rectifierType = KH_RECTIFIER_TYPES[params.rectifierType];
+    if (params.rectifierType != null) {
+        const rectifierType = KH_RECTIFIER_TYPES[params.rectifierType];
+        if (rectifierType == null) {
+            throw new Error(`webKirchhoff: unknown rectifierType '${params.rectifierType}' for ${topology}`);
+        }
+        config.rectifierType = rectifierType;
+    }
+    if (params.bridgeType != null && KH_BRIDGE_TYPE_TOPOLOGIES.has(topology)) {
+        const bridgeType = KH_BRIDGE_TYPES[params.bridgeType];
+        if (bridgeType == null) {
+            throw new Error(`webKirchhoff: unknown bridgeType '${params.bridgeType}' for ${topology}`);
+        }
+        config.bridgeType = bridgeType;
     }
     // PFC/Vienna topology variant + interleave count. Forwarded so the variant sizes distinctly the
     // moment KH's design_pfc reads them (KH ABT #11); harmless keys until then.
