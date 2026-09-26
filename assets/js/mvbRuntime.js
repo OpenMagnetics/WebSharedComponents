@@ -71,6 +71,12 @@ export async function buildMagneticSTEP(magnetic, opts = {}) {
     return callMvb('buildMagneticSTEP', [magnetic, opts]);
 }
 
+// FEM-ready STEP for gmsh / OMFEM: real winding, fused conformal bodies, copper footprint,
+// 12 segments, geometry checks skipped (see mvbWorker.js buildMagneticFemSTEP). Slow.
+export async function buildMagneticFemSTEP(magnetic) {
+    return callMvb('buildMagneticFemSTEP', [magnetic]);
+}
+
 export async function buildCoreSTL(magnetic, opts = {}) {
     return callMvb('buildCoreSTL', [magnetic, opts]);
 }

@@ -232,6 +232,31 @@ Comlink.expose({
         ]);
     },
 
+    // FEM-ready STEP: the geometry a mesher (gmsh / OMFEM) takes, not the one the viewer draws.
+    // Same product as `mvbpp_step_generator --real --fem --segments 12`: real winding (one
+    // continuous copper body per winding and parallel, with its leads), femReady (one-piece,
+    // fused, conformal bodies), the CONDUCTING footprint (no enamel coating: the enamel is air
+    // in the mesh), wire and core faceted together at 12 segments, and the geometry checks
+    // skipped (the collision proofs are for the drawing; this is a long build already). The
+    // solids keep MVB++'s names. Slow on purpose.
+    buildMagneticFemSTEP: timed('buildMagneticFemSTEP', async (magnetic) => {
+        await init();
+        const femSegments = 12;
+        _mvbpp.mvbppSetSkipChecks(true);
+        try {
+            return callDraw('drawMagnetic[fem step]', _mvbpp.drawMagnetic, [
+                JSON.stringify(magnetic), '3D', 'XY', 0.0, 'step',
+                1.0, femSegments, 'none', '',
+                false,  // paintCoating: conducting (copper) footprint, no coating
+                true,   // useRealWindingGeometry
+                true,   // femReady
+            ]);
+        }
+        finally {
+            _mvbpp.mvbppSetSkipChecks(false);
+        }
+    }),
+
     // Core only (drawCore now accepts a Magnetic JSON and enriches itself)
     // The magnetic-epoxy shell of a semi-shielded drum, as its own product so it can be
     // drawn translucent over the opaque drum. drawCoreShell returns null for every other
