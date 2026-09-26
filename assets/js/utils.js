@@ -1280,6 +1280,14 @@ export async function checkAndFixMas(mas, mkf=null) {
         }
     }
 
+    // A document that reached here without magnetic.core (or without magnetic.coil)
+    // used to die on the next line with a bare "Cannot read properties of undefined
+    // (reading 'functionalDescription')". There is nothing to autocomplete without
+    // them, so say which one is missing.
+    if (mas.magnetic.core == null || mas.magnetic.coil == null) {
+        throw new Error(`This design has no magnetic ${mas.magnetic.core == null ? 'core' : 'coil'}, so it cannot be completed or loaded.`);
+    }
+
     if (mas.magnetic.core.functionalDescription.material != "" && mas.magnetic.core.functionalDescription.material != null) {
         if (mkf != null && (mas.magnetic.coil.bobbin == null || mas.magnetic.coil.bobbin == "Dummy" || mas.magnetic.core.processedDescription == null)) {
             try {
