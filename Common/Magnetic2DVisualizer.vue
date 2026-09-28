@@ -327,7 +327,10 @@ export default {
 
             const isValidSvg = result.startsWith("<svg");
             if (!isValidSvg) {
-                this.handlePlotError();
+                // The engine answers "Exception: ..." when it cannot draw. Show why, and hand the
+                // reason up: a failure with a reason is not retried (BasicCoilBuilder.errorInImage).
+                console.error('[Magnetic2DVisualizer] plot failed:', result);
+                this.handlePlotError(String(result));
                 return;
             }
 
@@ -466,9 +469,12 @@ export default {
             }
             return `${originalWidth * proportion}px`;
         },
-        handlePlotError() {
+        handlePlotError(message) {
             this.posting = false;
-            this.$emit("errorInImage");
+            if (message) {
+                this.errorMessage = message;
+            }
+            this.$emit("errorInImage", message);
             this.lastSimulatedInputs = "";
             this.lastSimulatedMagnetics = "";
             this.lastForceUpdate = 0;
