@@ -3,7 +3,7 @@ export const tooltipsMagneticSynthesisDesignRequirements = {
     "numberWindings": "Number of windings that our magnetic component is going to have",
     "magnetizingInductance": "Magnetizing inductance as seen from the primary",
     "minimumImpedance": "List of minimum impedances that the filter has to reach",
-    "turnsRatios": "List of turns ratios, one for each secondary, each one referred to the primary",
+    "turnsRatios": "List of turns ratios Np/Ns, one for each secondary: primary turns divided by that winding's turns",
     "leakageInductance": "List of leakage inductances, with tolerance, one for each secondary, each one referred to the primary",
     "strayCapacitance": "List of stray capacitances, with tolerance, one for each secondary, each one referred to the primary",
     "operatingTemperature": "Range of operation temperatures that the magnetic will be subjected to",
@@ -83,7 +83,7 @@ export const tooltipsMagneticBuilder = {
     "skinFactor": "Proportion value that reflecs how much extra losses we have due to skin effect",
     "wireWidth": "Horizontal dimension of the wire, equal to diameter in round wires",
     "wireHeight": "Vectical dimension of the wire, equal to diameter in round wires",
-    "turnsRatio": "Turns ratio between the primary and this secondary",
+    "turnsRatio": "Turns ratio Np/Ns: primary turns divided by the turns of this winding",
 
     "coreShape": "Shape of the core",
     "coreShapeFamily": "Family of the shape of the core",
@@ -299,7 +299,7 @@ export const tooltipsConverterWizards = {
     "currentRippleRatio":   "Allowed peak-to-peak inductor-current ripple as a fraction of the average current (e.g. 0.3 = 30 %).",
 
     // ---------- Magnetics & tank ----------
-    "turnsRatio":           "Transformer turns ratio Np : Ns (primary turns divided by secondary turns).",
+    "turnsRatio":           "Transformer turns ratio Np/Ns: primary turns divided by secondary turns (8 means 8 primary turns per secondary turn; 0.01 is a 1:100 current transformer). With several outputs each output has its own ratio: Ns1 is the secondary of output 1, Ns2 of output 2, and so on.",
     "magnetizingInductance": "Primary-side magnetizing inductance of the transformer.",
     "leakageInductance":    "Primary-referred leakage inductance of the transformer.",
     "seriesInductance":     "External series (resonant or commutation) inductance in the primary loop, in addition to leakage.",
