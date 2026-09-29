@@ -225,6 +225,11 @@ export default {
             if (!newValue && this.currentPlotMode === PLOT_MODES.CONNECTIONS_YZ) {
                 this.currentPlotMode = PLOT_MODES.BASIC;
             }
+            // handleModelChange only redraws when the inputs, the magnetic, the plot mode or
+            // forceUpdate changed, and none of them does when only this setting flips: without
+            // forgetting the last drawn magnetic, turning real winding off kept the real-winding
+            // drawing (and its fit warning) on screen.
+            this.lastSimulatedMagnetics = null;
             this.handleModelChange(true);
         },
         forceUpdate: {
