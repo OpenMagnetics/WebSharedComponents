@@ -268,6 +268,16 @@ function buildKhConverterSpec(topology, params) {
     // LLC-only explicit tank pins (override Lr/Cr verbatim) — SPEC §3.
     if (params.desiredResonantInductance != null) dr.desiredResonantInductance = params.desiredResonantInductance;
     if (params.desiredResonantCapacitance != null) dr.desiredResonantCapacitance = params.desiredResonantCapacitance;
+    // CLLC tank pins (ABT #1538). KH design_cllc reads the primary Lr1/Cr1 through the LLC keys above and
+    // the physical secondary Lr2/Cr2 through desiredSecondaryResonant*; it solves the operating
+    // frequency from the tank as pinned, or throws. They were dropped here, so the wizard's
+    // "Override ..." inputs changed nothing.
+    if (topology === 'cllc') {
+        if (params.desiredResonantInductancePrimary != null) dr.desiredResonantInductance = params.desiredResonantInductancePrimary;
+        if (params.desiredResonantCapacitancePrimary != null) dr.desiredResonantCapacitance = params.desiredResonantCapacitancePrimary;
+        if (params.desiredResonantInductanceSecondary != null) dr.desiredSecondaryResonantInductance = params.desiredResonantInductanceSecondary;
+        if (params.desiredResonantCapacitanceSecondary != null) dr.desiredSecondaryResonantCapacitance = params.desiredResonantCapacitanceSecondary;
+    }
 
     const powers = volts.map((v, i) => {
         const p = Math.abs(v) * Math.abs(amps[i] != null ? amps[i] : 0);
@@ -299,6 +309,12 @@ function buildKhConverterSpec(topology, params) {
     // The CLLC wizard's operating frequency travels in operatingPoints[0].switchingFrequency, which
     // KH would take as the tank resonance; the wizard's "Resonant frequency" is the resonance (ABT #1503).
     if (topology === 'cllc' && params.resonantFrequency != null) dr.switchingFrequency = khDim(params.resonantFrequency);
+    // CLLLC "I know the design" tank pins (ABT #1538): MAS clllcResonant.primarySeriesInductance /
+    // primaryResonantCapacitance, which KH design_clllc reads from config (Lr2/Cr2 follow through N).
+    if (topology === 'clllc') {
+        if (params.desiredPrimarySeriesInductance != null) config.primarySeriesInductance = params.desiredPrimarySeriesInductance;
+        if (params.desiredPrimaryResonantCapacitance != null) config.primaryResonantCapacitance = params.desiredPrimaryResonantCapacitance;
+    }
     if (params.rectifierType != null) {
         const rectifierType = KH_RECTIFIER_TYPES[params.rectifierType];
         if (rectifierType == null) {

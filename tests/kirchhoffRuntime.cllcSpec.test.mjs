@@ -55,3 +55,40 @@ test('CLLLC spec carries its nominal frequency as the tank resonance, the band a
     assert.equal(spec.config.driveAtSwitchingFrequency, undefined);
     assert.equal(spec.designRequirements.efficiency, 0.97);
 });
+
+// ABT #1538: the CLLC wizard's "Override Pri./Sec. Res. Ind./Cap." values and the CLLLC I-know
+// Lr/Cr must reach Kirchhoff (they were dropped, so the inputs changed nothing).
+test('CLLC spec carries the tank overrides as the KH tank pins', () => {
+    const spec = buildKhConverterSpec('cllc', {
+        ...cllcParams(),
+        desiredResonantInductancePrimary: 36e-6,
+        desiredResonantInductanceSecondary: 50e-6,
+        desiredResonantCapacitancePrimary: 47e-9,
+        desiredResonantCapacitanceSecondary: 40e-9,
+    });
+    assert.equal(spec.designRequirements.desiredResonantInductance, 36e-6);
+    assert.equal(spec.designRequirements.desiredResonantCapacitance, 47e-9);
+    assert.equal(spec.designRequirements.desiredSecondaryResonantInductance, 50e-6);
+    assert.equal(spec.designRequirements.desiredSecondaryResonantCapacitance, 40e-9);
+});
+
+test('CLLC spec without overrides carries no tank pin', () => {
+    const dr = buildKhConverterSpec('cllc', cllcParams()).designRequirements;
+    for (const k of ['desiredResonantInductance', 'desiredResonantCapacitance',
+                     'desiredSecondaryResonantInductance', 'desiredSecondaryResonantCapacitance']) {
+        assert.equal(dr[k], undefined, k);
+    }
+});
+
+test('CLLLC spec carries the I-know Lr/Cr as config.primarySeriesInductance / primaryResonantCapacitance', () => {
+    const spec = buildKhConverterSpec('clllc', {
+        highVoltageBusVoltage: { nominal: 400 }, lowVoltageBusVoltage: { nominal: 48 }, efficiency: 0.95,
+        minSwitchingFrequency: 90e3, maxSwitchingFrequency: 150e3,
+        desiredTurnsRatios: [8], desiredMagnetizingInductance: 500e-6,
+        desiredPrimarySeriesInductance: 50e-6, desiredPrimaryResonantCapacitance: 33e-9,
+        operatingPoints: [{ outputVoltages: [48], outputCurrents: [5], switchingFrequency: 120e3, ambientTemperature: 25 }],
+    });
+    assert.equal(spec.config.primarySeriesInductance, 50e-6);
+    assert.equal(spec.config.primaryResonantCapacitance, 33e-9);
+    assert.deepEqual(spec.designRequirements.turnsRatios, [{ nominal: 8 }]);
+});
