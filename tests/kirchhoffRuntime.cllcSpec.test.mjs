@@ -92,3 +92,22 @@ test('CLLLC spec carries the I-know Lr/Cr as config.primarySeriesInductance / pr
     assert.equal(spec.config.primaryResonantCapacitance, 33e-9);
     assert.deepEqual(spec.designRequirements.turnsRatios, [{ nominal: 8 }]);
 });
+
+// ABT #1539: CLLC "I know the design I want": the operating frequency is the forced drive
+// (designRequirements.switchingFrequency) and the wizard's resonance travels as config.resonantFrequency.
+test('CLLC I-know spec forces the operating frequency as the drive and sends the resonance apart', () => {
+    const spec = buildKhConverterSpec('cllc', { ...cllcParams(), driveAtSwitchingFrequency: true });
+    assert.equal(spec.config.driveAtSwitchingFrequency, true);
+    assert.deepEqual(spec.designRequirements.switchingFrequency, { nominal: 150e3 });
+    assert.equal(spec.config.resonantFrequency, 120e3);
+    assert.equal(spec.config.resonantBandMin, 80e3);
+    assert.equal(spec.config.resonantBandMax, 200e3);
+});
+
+test('CLLLC ignores the drive flag (its single frequency is the tank resonance)', () => {
+    const spec = buildKhConverterSpec('clllc', {
+        highVoltageBusVoltage: { nominal: 400 }, lowVoltageBusVoltage: { nominal: 48 }, driveAtSwitchingFrequency: true,
+        operatingPoints: [{ outputVoltages: [48], outputCurrents: [1000 / 48], switchingFrequency: 100e3, ambientTemperature: 25 }],
+    });
+    assert.equal(spec.config, undefined);
+});
