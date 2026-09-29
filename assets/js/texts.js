@@ -485,6 +485,26 @@ export const tooltipsConverterWizards = {
     "diodeVoltageDrop":           "Forward voltage drop of any secondary rectifier diode (V). Set to 0 for an unrectified output.",
     "maximumPrimaryCurrentPeak":  "Peak value of the primary current to be measured (A).",
     "waveformLabel":              "Shape of the primary current waveform: Sinusoidal, Unipolar Rectangular, or Unipolar Triangular.",
+
+    // ---------- Shared Kirchhoff diagnostics card (KhDiagnosticsPanel.vue) ----------
+    // One set for every converter wizard: the card renders Kirchhoff's universal envelope.
+    "khDiagSwitchingFrequency":   "Switching frequency the converter was designed and run at.",
+    "khDiagPrimaryRmsCurrent":    "RMS current in the main magnetic's first winding (the primary, or the inductor for a non-isolated converter).",
+    "khDiagConductionMode":       "CCM: the primary current never reaches zero during a switching period. DCM: it does. Inferred from the primary winding current.",
+    "khDiagDutyCycle":            "Fraction of the switching period the primary winding current is on (0 to 1).",
+    "khDiagPrimaryPeakCurrent":   "Peak current in the main magnetic's first winding. This sets the flux density peak the core must stand.",
+    "khDiagMagnetizingInductance":"Magnetizing inductance of the main transformer, as designed for this run.",
+    "khDiagInductance":           "Inductance of the main (power) inductor, as designed for this run.",
+    "khDiagTurnsRatio":           "Turns ratio of the main magnetic, primary turns divided by the turns of winding 2 (Np/N2). Winding 2 is the secondary in most topologies, the other primary half in push-pull and Weinberg, and the reset winding in the single-switch forward.",
+    "khDiagResonantCapacitance":  "Capacitance of the resonant tank capacitor.",
+    "khDiagExtraInductor":        "An additional single-winding magnetic in the converter (resonant or output inductor), with its designed inductance.",
+    "khDiagCapacitor":            "A capacitor in the converter, with its capacitance and rated voltage. The tag shows its role in the circuit.",
+    "khDiagWindingCurrentRms":    "RMS current per winding of the main magnetic. Drives the copper losses.",
+    "khDiagWindingCurrentPeak":   "Peak current per winding of the main magnetic.",
+    "khDiagWindingCurrentAverage":"Average (DC) current per winding of the main magnetic.",
+    "khDiagWindingCurrentRipple": "Peak-to-peak current ripple per winding of the main magnetic.",
+    "khDiagWindingVoltagePeak":   "Peak voltage across each winding of the main magnetic.",
+    "khDiagWindingVoltageRms":    "RMS voltage across each winding of the main magnetic.",
 }
 
 // Display labels for converter-wizard <ElementFromList> dropdowns whose
