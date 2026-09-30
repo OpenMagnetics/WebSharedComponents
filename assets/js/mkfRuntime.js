@@ -68,6 +68,45 @@ const MKF_INIT_WATCHDOG_MS = 180_000;
 
 let wasmJsUrlForRestart = null;
 
+/**
+ * The error a worker call rejects with when the runtime, not the engine, ended it: the watchdog
+ * aborted it ('watchdog'), or the worker it was queued on or made through was torn down
+ * ('restarted'). The message is the same developer-facing text as before; the fields let a page
+ * tell the user why its result never came (engineAbortMessage) instead of only logging it.
+ */
+export class MkfCallAbortedError extends Error {
+    constructor(message, { methodName, kind, budgetMs = null, reason = null }) {
+        super(message);
+        this.name = 'MkfCallAbortedError';
+        this.methodName = methodName;
+        this.kind = kind;
+        this.budgetMs = budgetMs;
+        this.reason = reason;
+    }
+}
+
+/**
+ * The sentence to show the user when `error` is a call the runtime aborted, naming what was
+ * running (e.g. 'The adviser'). Returns null when `error` is anything else: an engine exception
+ * is the caller's to report with its own message.
+ * @param {unknown} error
+ * @param {string} activity - subject of the sentence, e.g. 'The adviser'
+ * @returns {string|null}
+ */
+export function engineAbortMessage(error, activity) {
+    if (!(error instanceof MkfCallAbortedError)) return null;
+    if (!activity) throw new Error('engineAbortMessage: activity is required');
+    if (error.kind === 'watchdog') {
+        return `${activity} was stopped after ${Math.round(error.budgetMs / 1000)} s without finishing \u2014 ` +
+            `try narrower requirements or run it again.`;
+    }
+    if (error.kind === 'restarted') {
+        // error.reason names the engine call that hung; it is for the console, not the user.
+        return `${activity} was stopped because the engine had to be restarted \u2014 run it again.`;
+    }
+    throw new Error(`engineAbortMessage: unknown abort kind '${error.kind}'`);
+}
+
 // The worker runs one Embind call at a time however many are posted to it. They used to be posted
 // all at once, which put the queue inside the worker where nothing could see it, and the watchdog's
 // clock started when a call was POSTED. A 1 ms call queued behind a long one therefore ran out the
@@ -108,9 +147,9 @@ export function setEngineRestoreHandler(handler) {
  */
 function enqueueCall(methodName, invoke, callGeneration) {
     if (callGeneration !== workerGeneration) {
-        return Promise.reject(new Error(
+        return Promise.reject(new MkfCallAbortedError(
             `MKF call '${methodName}' was made on an engine worker that has since been restarted; ` +
-            `retry the action.`));
+            `retry the action.`, { methodName, kind: 'restarted' }));
     }
     return new Promise((resolve, reject) => {
         const call = { methodName, settled: false };
@@ -149,10 +188,10 @@ async function withWatchdog(methodName, invoke, callGeneration, call) {
     const timeout = new Promise((_, reject) => {
         timer = setTimeout(() => {
             timedOut = true;
-            reject(new Error(
+            reject(new MkfCallAbortedError(
                 `MKF call '${methodName}' did not return within ` +
                 `${Math.round(budgetMs / 1000)}s and was aborted. The engine worker has been ` +
-                `restarted; retry the action.`));
+                `restarted; retry the action.`, { methodName, kind: 'watchdog', budgetMs }));
         }, budgetMs);
     });
     try {
@@ -366,7 +405,8 @@ export function terminateWorker(reason = 'the engine worker was shut down') {
         const orphaned = [...callsInFlight];
         callsInFlight.clear();
         for (const call of orphaned) {
-            call.cancel(new Error(`MKF call '${call.methodName}' was cancelled: ${reason}. Retry the action.`));
+            call.cancel(new MkfCallAbortedError(`MKF call '${call.methodName}' was cancelled: ${reason}. Retry the action.`,
+                { methodName: call.methodName, kind: 'restarted', reason }));
         }
         // Re-arm `ready` so the NEXT initWorker() resolves a FRESH promise. Without
         // this, `ready` stays resolved with the terminated worker's proxy, so every
