@@ -35,8 +35,23 @@ let useWorker = true; // Worker mode enabled - WASM runs in background thread
 // worker had no equivalent, so a single hung call was unrecoverable AND invisible.
 //
 // Generous by design: it is a stuck-detector, not a performance budget. The slowest legitimate calls
-// here are the catalogue loads (~0.5 s) and the adviser sweeps, which run in their own stores.
+// here are the catalogue loads (exempt below) and the adviser searches (their own budget below).
 const MKF_CALL_WATCHDOG_MS = 120_000;
+// The adviser searches go through this same worker queue, and a legitimate one takes minutes: on a
+// fast desktop the Magnetic Adviser needs 110-160 s for the default DAB, PSFB, flyback, push-pull and
+// single-switch-forward designs (MKF bc5af89e, measured in node against the shipped libMKF). Under
+// the 120 s budget the watchdog killed every one of those runs as "stuck", restarted the engine and
+// left the user with zero advised magnetics. They keep a stuck-detector, with a budget sized for a
+// search on a slow machine rather than for a single calculation.
+const MKF_ADVISER_WATCHDOG_MS = 600_000;
+const MKF_ADVISER_CALLS = new Set([
+    'calculate_advised_magnetics', 'calculate_advised_magnetics_with_context', 'calculate_advised_magnetics_from_cache',
+    'calculate_advised_cores', 'calculate_advised_cores_with_context',
+    'calculate_advised_coil', 'calculate_advised_coil_with_context',
+]);
+function watchdogBudgetMs(methodName) {
+    return MKF_ADVISER_CALLS.has(methodName) ? MKF_ADVISER_WATCHDOG_MS : MKF_CALL_WATCHDOG_MS;
+}
 // Calls that are legitimately long-running and must NOT be interrupted.
 const MKF_WATCHDOG_EXEMPT = new Set(['load_core_materials', 'load_core_shapes', 'load_wires', 'load_cores']);
 // ABT #929: the ABT #913 watchdog guards worker CALLS, which are made through the proxy created at
@@ -128,6 +143,7 @@ function enqueueCall(methodName, invoke, callGeneration) {
 async function withWatchdog(methodName, invoke, callGeneration, call) {
     if (MKF_WATCHDOG_EXEMPT.has(methodName)) return Promise.race([invoke(), call.cancelled]);
 
+    const budgetMs = watchdogBudgetMs(methodName);
     let timer;
     let timedOut = false;
     const timeout = new Promise((_, reject) => {
@@ -135,9 +151,9 @@ async function withWatchdog(methodName, invoke, callGeneration, call) {
             timedOut = true;
             reject(new Error(
                 `MKF call '${methodName}' did not return within ` +
-                `${Math.round(MKF_CALL_WATCHDOG_MS / 1000)}s and was aborted. The engine worker has been ` +
+                `${Math.round(budgetMs / 1000)}s and was aborted. The engine worker has been ` +
                 `restarted; retry the action.`));
-        }, MKF_CALL_WATCHDOG_MS);
+        }, budgetMs);
     });
     try {
         return await Promise.race([invoke(), timeout, call.cancelled]);
@@ -148,7 +164,7 @@ async function withWatchdog(methodName, invoke, callGeneration, call) {
             callsInFlight.delete(call);
             const url = wasmJsUrlForRestart;
             terminateWorker(`the engine worker was restarted because '${methodName}' did not return ` +
-                `within ${Math.round(MKF_CALL_WATCHDOG_MS / 1000)}s`);
+                `within ${Math.round(budgetMs / 1000)}s`);
             if (url) restartWorker(url);
         }
         throw error;
