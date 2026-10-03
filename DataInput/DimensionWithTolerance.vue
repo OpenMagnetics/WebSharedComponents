@@ -1,7 +1,7 @@
 <script setup>
 import { toTitleCase, getMultiplier } from '../assets/js/utils.js'
 import DimensionUnit from './DimensionUnit.vue'
-import InputNumber from 'primevue/inputnumber'
+import InputNumber from './DecimalInputNumber.js'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import InputGroup from 'primevue/inputgroup'
