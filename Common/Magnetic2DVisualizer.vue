@@ -178,6 +178,7 @@ export default {
             lastPlotMode: null,
             lastForceUpdate: 0,
             errorMessage: "",
+            fitWarning: "",
             width: "75%",
             isMounted: false,
             PLOT_MODES,
@@ -224,6 +225,11 @@ export default {
             if (!newValue && this.currentPlotMode === PLOT_MODES.CONNECTIONS_YZ) {
                 this.currentPlotMode = PLOT_MODES.BASIC;
             }
+            // handleModelChange only redraws when the inputs, the magnetic, the plot mode or
+            // forceUpdate changed, and none of them does when only this setting flips: without
+            // forgetting the last drawn magnetic, turning real winding off kept the real-winding
+            // drawing (and its fit warning) on screen.
+            this.lastSimulatedMagnetics = null;
             this.handleModelChange(true);
         },
         forceUpdate: {
@@ -340,6 +346,10 @@ export default {
                 return;
             }
 
+            // A coil whose wind does not fit is still drawn: MKF rings the escaping turns and
+            // carries the reason in <desc id="om-winding-fit-failure">. Read from the engine's
+            // own string, before sanitizing, and shown beside the drawing.
+            this.fitWarning = this.extractWindingFitFailure(result);
             this.$refs.plotView.innerHTML = sanitizeSvg(result);
 
             if (this.$refs.Magnetic2DVisualizerContainer == null) {
@@ -469,8 +479,14 @@ export default {
             }
             return `${originalWidth * proportion}px`;
         },
+        extractWindingFitFailure(svg) {
+            const description = new DOMParser().parseFromString(svg, 'image/svg+xml')
+                .getElementById('om-winding-fit-failure');
+            return description == null ? "" : description.textContent;
+        },
         handlePlotError(message) {
             this.posting = false;
+            this.fitWarning = "";
             if (message) {
                 this.errorMessage = message;
             }
@@ -919,6 +935,7 @@ export default {
                 return;
             }
             this.errorMessage = "";
+            this.fitWarning = "";
             this.tryingToPlot = false;
             switch (this.currentPlotMode) {
                 case PLOT_MODES.MAGNETIC_FIELD:
@@ -1052,6 +1069,7 @@ export default {
                     </div>
                 </div>
             </div>
+            <label v-if="fitWarning" :data-cy="dataTestLabel + '-FitWarning'" class="text-warning m-0" style="font-size: 0.9em"><i class="pi pi-exclamation-triangle"></i> {{fitWarning}}</label>
             <label :data-cy="dataTestLabel + '-ErrorMessage'" class="text-danger m-0" style="font-size: 0.9em"> {{errorMessage}}</label>
         </div>
     </div>
