@@ -378,16 +378,54 @@ export async function enrichMagnetic(magnetic) {
  * is applied at engine init from the persisted store — once it is on, every wind
  * of the session is a real one, with no intermediate ideal pass to be painted.
  *
- * Every other settings writer in the app seeds its object from get_settings(),
- * so this value then survives all of them.
+ * Written through updateEngineSettings, so a concurrent writer cannot put the
+ * old value back.
  *
  * @param {Object} mkf - the MKF instance/proxy
  * @param {boolean} useRealWindingGeometry
  */
 export async function applyRealWindingGeometrySetting(mkf, useRealWindingGeometry) {
-    const settings = JSON.parse(await mkf.get_settings());
-    settings.coilUseRealWindingGeometry = !!useRealWindingGeometry;
-    await mkf.set_settings(JSON.stringify(settings));
+    await updateEngineSettings(mkf, (settings) => {
+        settings.coilUseRealWindingGeometry = !!useRealWindingGeometry;
+    });
+}
+
+// The engine's settings are ONE object in the worker, and every writer used to
+// read it whole (get_settings), change its own fields and write it whole back
+// (set_settings). Two writers interleaving lost an update: a 2D redraw that read
+// the settings before an advise pushed the wire standard wrote its stale copy
+// back after the push, and the advise ran with the wrong standard (ABT #1660).
+// All read-modify-writes therefore go through this queue, one at a time.
+let engineSettingsQueue = Promise.resolve();
+
+/**
+ * Run `task` once every earlier queued settings task has finished, and keep
+ * later ones waiting until it is done. Use it for a whole-settings write (set
+ * or reset) that is not a read-modify-write.
+ */
+export function queueEngineSettingsTask(task) {
+    const run = engineSettingsQueue.then(task);
+    engineSettingsQueue = run.then(() => undefined, () => undefined);
+    return run;
+}
+
+/**
+ * Change some engine settings without losing anyone else's: read the current
+ * settings, let `change` set its fields on them, write them back, all inside
+ * the queue. When `whileSet` is given it runs inside the queue too, right after
+ * the write, so no other writer can change the settings between the write and
+ * the engine call that depends on them (an advise reading the wire standard).
+ * `whileSet` must not queue settings work itself, or it waits for itself.
+ *
+ * @returns the value of `whileSet`, or the settings written
+ */
+export function updateEngineSettings(mkf, change, whileSet = null) {
+    return queueEngineSettingsTask(async () => {
+        const settings = JSON.parse(await mkf.get_settings());
+        change(settings);
+        await mkf.set_settings(JSON.stringify(settings));
+        return whileSet == null ? settings : await whileSet(settings);
+    });
 }
 
 /**

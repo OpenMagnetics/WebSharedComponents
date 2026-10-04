@@ -1,5 +1,5 @@
 <script>
-import { waitForMkf } from '../assets/js/mkfRuntime.js';
+import { waitForMkf, updateEngineSettings } from '../assets/js/mkfRuntime.js';
 import { sanitizeSvg } from '../assets/js/sanitize.js';
 
 // Constants
@@ -526,19 +526,19 @@ export default {
             try {
                 const mkf = await waitForMkf();
                 // Apply insulation/margin colors before plotting
-                const settings = JSON.parse(await mkf.get_settings());
-                settings.painterColorInsulation = this.insulationColor;
-                settings.painterColorMargin = this.marginColor;
-                settings.painterColorSpacer = this.spacerColor;
-                settings.painterColorFerrite = this.ferriteColor;
-                settings.painterColorCopper = this.copperColor;
-                settings.painterDrawSpacer = this.drawSpacer;
-                // Real winding: MKF lays the turns out as they are actually wound
-                // (leads, pitch, dragbacks) rather than as idealised rings. One flag
-                // for the whole app, so the 2D and 3D views never disagree about what
-                // they are drawing. Tool menu > Settings > Display > Real winding.
-                settings.coilUseRealWindingGeometry = this.realWinding;
-                await mkf.set_settings(JSON.stringify(settings));
+                await updateEngineSettings(mkf, (settings) => {
+                    settings.painterColorInsulation = this.insulationColor;
+                    settings.painterColorMargin = this.marginColor;
+                    settings.painterColorSpacer = this.spacerColor;
+                    settings.painterColorFerrite = this.ferriteColor;
+                    settings.painterColorCopper = this.copperColor;
+                    settings.painterDrawSpacer = this.drawSpacer;
+                    // Real winding: MKF lays the turns out as they are actually wound
+                    // (leads, pitch, dragbacks) rather than as idealised rings. One flag
+                    // for the whole app, so the 2D and 3D views never disagree about what
+                    // they are drawing. Tool menu > Settings > Display > Real winding.
+                    settings.coilUseRealWindingGeometry = this.realWinding;
+                });
                 // plot_turns draws core + bobbin + turns and stops there — it never draws how
                 // the turns are CONNECTED. With real winding on that is exactly what is being
                 // asked for, so paint the magnetic instead: the XY projection adds the
@@ -563,15 +563,15 @@ export default {
             }
             try {
                 const mkf = await waitForMkf();
-                const settings = JSON.parse(await mkf.get_settings());
-                settings.painterColorInsulation = this.insulationColor;
-                settings.painterColorMargin = this.marginColor;
-                settings.painterColorSpacer = this.spacerColor;
-                settings.painterColorFerrite = this.ferriteColor;
-                settings.painterColorCopper = this.copperColor;
-                settings.painterDrawSpacer = this.drawSpacer;
-                settings.coilUseRealWindingGeometry = this.realWinding;
-                await mkf.set_settings(JSON.stringify(settings));
+                await updateEngineSettings(mkf, (settings) => {
+                    settings.painterColorInsulation = this.insulationColor;
+                    settings.painterColorMargin = this.marginColor;
+                    settings.painterColorSpacer = this.spacerColor;
+                    settings.painterColorFerrite = this.ferriteColor;
+                    settings.painterColorCopper = this.copperColor;
+                    settings.painterDrawSpacer = this.drawSpacer;
+                    settings.coilUseRealWindingGeometry = this.realWinding;
+                });
                 const result = await mkf.plot_magnetic(JSON.stringify(this.modelValue.magnetic), 'YZ');
                 this.processSvgResult(result);
             } catch (error) {
@@ -599,17 +599,17 @@ export default {
 
             try {
                 const mkf = await waitForMkf();
-                const settings = JSON.parse(await mkf.get_settings());
-                settings.painterSimpleLitz = true;
-                settings.painterAdvancedLitz = false;
-                settings.painterColorFerrite = this.ferriteColor;
-                settings.painterIncludeFringing = this.includeFringing;
-                // Real winding: MKF lays the turns out as they are actually wound
-                // (leads, pitch, dragbacks) rather than as idealised rings. One flag
-                // for the whole app, so the 2D and 3D views never disagree about what
-                // they are drawing. Tool menu > Settings > Display > Real winding.
-                settings.coilUseRealWindingGeometry = this.realWinding;
-                await mkf.set_settings(JSON.stringify(settings));
+                await updateEngineSettings(mkf, (settings) => {
+                    settings.painterSimpleLitz = true;
+                    settings.painterAdvancedLitz = false;
+                    settings.painterColorFerrite = this.ferriteColor;
+                    settings.painterIncludeFringing = this.includeFringing;
+                    // Real winding: MKF lays the turns out as they are actually wound
+                    // (leads, pitch, dragbacks) rather than as idealised rings. One flag
+                    // for the whole app, so the 2D and 3D views never disagree about what
+                    // they are drawing. Tool menu > Settings > Display > Real winding.
+                    settings.coilUseRealWindingGeometry = this.realWinding;
+                });
 
                 const result = await mkf.plot_magnetic_field(
                     JSON.stringify(this.modelValue.magnetic),
@@ -641,16 +641,16 @@ export default {
 
             try {
                 const mkf = await waitForMkf();
-                const settings = JSON.parse(await mkf.get_settings());
-                settings.painterSimpleLitz = true;
-                settings.painterAdvancedLitz = false;
-                settings.painterColorFerrite = this.ferriteColor;
-                // Real winding: MKF lays the turns out as they are actually wound
-                // (leads, pitch, dragbacks) rather than as idealised rings. One flag
-                // for the whole app, so the 2D and 3D views never disagree about what
-                // they are drawing. Tool menu > Settings > Display > Real winding.
-                settings.coilUseRealWindingGeometry = this.realWinding;
-                await mkf.set_settings(JSON.stringify(settings));
+                await updateEngineSettings(mkf, (settings) => {
+                    settings.painterSimpleLitz = true;
+                    settings.painterAdvancedLitz = false;
+                    settings.painterColorFerrite = this.ferriteColor;
+                    // Real winding: MKF lays the turns out as they are actually wound
+                    // (leads, pitch, dragbacks) rather than as idealised rings. One flag
+                    // for the whole app, so the 2D and 3D views never disagree about what
+                    // they are drawing. Tool menu > Settings > Display > Real winding.
+                    settings.coilUseRealWindingGeometry = this.realWinding;
+                });
 
                 const result = await mkf.plot_electric_field(
                     JSON.stringify(this.modelValue.magnetic),
@@ -743,16 +743,16 @@ export default {
 
             try {
                 const mkf = await waitForMkf();
-                const settings = JSON.parse(await mkf.get_settings());
-                settings.painterSimpleLitz = true;
-                settings.painterAdvancedLitz = false;
-                settings.painterColorFerrite = this.ferriteColor;
-                // Real winding: MKF lays the turns out as they are actually wound
-                // (leads, pitch, dragbacks) rather than as idealised rings. One flag
-                // for the whole app, so the 2D and 3D views never disagree about what
-                // they are drawing. Tool menu > Settings > Display > Real winding.
-                settings.coilUseRealWindingGeometry = this.realWinding;
-                await mkf.set_settings(JSON.stringify(settings));
+                await updateEngineSettings(mkf, (settings) => {
+                    settings.painterSimpleLitz = true;
+                    settings.painterAdvancedLitz = false;
+                    settings.painterColorFerrite = this.ferriteColor;
+                    // Real winding: MKF lays the turns out as they are actually wound
+                    // (leads, pitch, dragbacks) rather than as idealised rings. One flag
+                    // for the whole app, so the 2D and 3D views never disagree about what
+                    // they are drawing. Tool menu > Settings > Display > Real winding.
+                    settings.coilUseRealWindingGeometry = this.realWinding;
+                });
                 // Ensure color values are plain strings (not reactive objects)
                 const textColorStr = String(this.textColor || 'var(--p-white)');
                 const bgColorStr = String(this.backgroundColor || 'var(--p-dark)');
@@ -803,16 +803,16 @@ export default {
 
             try {
                 const mkf = await waitForMkf();
-                const settings = JSON.parse(await mkf.get_settings());
-                settings.painterSimpleLitz = true;
-                settings.painterAdvancedLitz = false;
-                settings.painterColorFerrite = this.ferriteColor;
-                // Real winding: MKF lays the turns out as they are actually wound
-                // (leads, pitch, dragbacks) rather than as idealised rings. One flag
-                // for the whole app, so the 2D and 3D views never disagree about what
-                // they are drawing. Tool menu > Settings > Display > Real winding.
-                settings.coilUseRealWindingGeometry = this.realWinding;
-                await mkf.set_settings(JSON.stringify(settings));
+                await updateEngineSettings(mkf, (settings) => {
+                    settings.painterSimpleLitz = true;
+                    settings.painterAdvancedLitz = false;
+                    settings.painterColorFerrite = this.ferriteColor;
+                    // Real winding: MKF lays the turns out as they are actually wound
+                    // (leads, pitch, dragbacks) rather than as idealised rings. One flag
+                    // for the whole app, so the 2D and 3D views never disagree about what
+                    // they are drawing. Tool menu > Settings > Display > Real winding.
+                    settings.coilUseRealWindingGeometry = this.realWinding;
+                });
 
                 const result = await mkf.plot_wire_losses(
                     JSON.stringify(this.modelValue.magnetic),
