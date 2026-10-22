@@ -1,4 +1,6 @@
 <script>
+// Warnings and errors go to the host's log when it has one (notices.js).
+import { reportNotice, noticesShownInline } from '../assets/js/notices.js'
 import { waitForMkf, updateEngineSettings } from '../assets/js/mkfRuntime.js';
 import { sanitizeSvg } from '../assets/js/sanitize.js';
 
@@ -218,6 +220,12 @@ export default {
         },
     },
     watch: {
+        errorMessage(message) {
+            reportNotice('ERROR', 'Magnetic drawing', message);
+        },
+        fitWarning(message) {
+            reportNotice('WARNING', 'Magnetic drawing', message);
+        },
         // Changing it changes the GEOMETRY MKF paints, so the plot has to be redrawn.
         realWinding(newValue) {
             // The connection view disappears with the setting; don't leave the component
@@ -256,6 +264,9 @@ export default {
         },
     },
     methods: {
+        inlineNotices() {
+            return noticesShownInline();
+        },
         handleModelChange(checkWarning = false) {
             if (this.blockingRebounds || !this.isMounted) {
                 return;
@@ -1069,8 +1080,8 @@ export default {
                     </div>
                 </div>
             </div>
-            <label v-if="fitWarning" :data-cy="dataTestLabel + '-FitWarning'" class="text-warning m-0" style="font-size: 0.9em"><i class="pi pi-exclamation-triangle"></i> {{fitWarning}}</label>
-            <label :data-cy="dataTestLabel + '-ErrorMessage'" class="text-danger m-0" style="font-size: 0.9em"> {{errorMessage}}</label>
+            <label v-if="inlineNotices() && fitWarning" :data-cy="dataTestLabel + '-FitWarning'" class="text-warning m-0" style="font-size: 0.9em"><i class="pi pi-exclamation-triangle"></i> {{fitWarning}}</label>
+            <label v-if="inlineNotices()" :data-cy="dataTestLabel + '-ErrorMessage'" class="text-danger m-0" style="font-size: 0.9em"> {{errorMessage}}</label>
         </div>
     </div>
 
