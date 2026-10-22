@@ -179,6 +179,13 @@ export default {
             lastSimulatedMagnetics: "",
             lastPlotMode: null,
             lastForceUpdate: 0,
+            // The operating point the drawing on screen was made for. Field, temperature and
+            // loss plots are computed for inputs.operatingPoints[operatingPointIndex], so a
+            // different index is a different drawing even when the inputs are unchanged.
+            lastOperatingPointIndex: null,
+            // A change that arrived while blockingRebounds was set, re-checked when it clears:
+            // null, or { checkWarning } of the call that was held back.
+            pendingModelChange: null,
             errorMessage: "",
             fitWarning: "",
             width: "75%",
@@ -268,7 +275,12 @@ export default {
             return noticesShownInline();
         },
         handleModelChange(checkWarning = false) {
-            if (this.blockingRebounds || !this.isMounted) {
+            if (!this.isMounted) {
+                return;
+            }
+            if (this.blockingRebounds) {
+                // Not dropped: the debounce only coalesces, so look again once it ends.
+                this.pendingModelChange = { checkWarning: checkWarning || (this.pendingModelChange?.checkWarning ?? false) };
                 return;
             }
             if (this.modelValue.magnetic == null || this.modelValue.inputs == null) {
@@ -279,13 +291,15 @@ export default {
             const magneticsString = JSON.stringify(this.modelValue.magnetic);
             const currentPlotMode = this.plotModeInit;
 
-            // Check if anything has changed: inputs, magnetics, plot mode, or forceUpdate (models)
+            // Check if anything has changed: inputs, magnetics, plot mode, forceUpdate (models)
+            // or the operating point the plot is drawn for.
             const inputsChanged = inputsString !== this.lastSimulatedInputs;
             const magneticsChanged = magneticsString !== this.lastSimulatedMagnetics;
             const plotModeChanged = currentPlotMode !== this.lastPlotMode;
             const forceUpdateChanged = this.forceUpdate !== this.lastForceUpdate;
+            const operatingPointChanged = this.operatingPointIndex !== this.lastOperatingPointIndex;
 
-            if (!inputsChanged && !magneticsChanged && !plotModeChanged && !forceUpdateChanged) {
+            if (!inputsChanged && !magneticsChanged && !plotModeChanged && !forceUpdateChanged && !operatingPointChanged) {
                 return;
             }
 
@@ -299,7 +313,14 @@ export default {
             this.recentChange = true;
             this.tryToPlot();
 
-            setTimeout(() => { this.blockingRebounds = false; }, DEBOUNCE_DELAY_MS);
+            setTimeout(() => {
+                this.blockingRebounds = false;
+                const pending = this.pendingModelChange;
+                this.pendingModelChange = null;
+                if (pending != null) {
+                    this.handleModelChange(pending.checkWarning);
+                }
+            }, DEBOUNCE_DELAY_MS);
             if (checkWarning) {
                 setTimeout(() => this.checkShowWarning(), WARNING_CHECK_DELAY_MS);
             }
@@ -308,6 +329,7 @@ export default {
             this.lastSimulatedMagnetics = magneticsString;
             this.lastPlotMode = currentPlotMode;
             this.lastForceUpdate = this.forceUpdate;
+            this.lastOperatingPointIndex = this.operatingPointIndex;
         },
         checkShowWarning() {
             this.showWarning = !this.coilFits && !(this.posting || this.tryingToPlot || this.recentChange);
@@ -996,6 +1018,7 @@ export default {
     mounted() {
         this.isMounted = true;
         this.lastPlotMode = this.plotModeInit;
+        this.lastOperatingPointIndex = this.operatingPointIndex;
         setTimeout(() => {
             if (this.isMounted) {
                 this.posting = true;
@@ -1009,6 +1032,7 @@ export default {
         this.posting = false;
         this.tryingToPlot = false;
         this.blockingRebounds = false;
+        this.pendingModelChange = null;
     },
 }
 
