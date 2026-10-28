@@ -193,6 +193,14 @@ const KH_RECTIFIER_TYPES = {
     'ahbFlyback': 'ahbFlyback',
 };
 
+// PFC conduction mode (config.mode): the wizard's MAS names -> the canonical names KH
+// normalize_pfc_mode returns. An unmapped mode throws in buildKhConverterSpec.
+const KH_PFC_MODES = {
+    'continuousConductionMode': 'ccm',
+    'discontinuousConductionMode': 'dcm',
+    'criticalConductionMode': 'crm',
+};
+
 // Primary bridge (config.bridgeType, Kirchhoff ABT #91). Only the engines that read it: SRC and LLC
 // (cfg::full_bridge_selected). It was never forwarded, so both always designed a HALF bridge — the SRC
 // wizard's full-bridge default got n ≈ 3.8 instead of ≈ 8.3 for 400 V → 48 V.
@@ -425,6 +433,24 @@ export function buildKhConverterSpec(topology, params) {
     // moment KH's design_pfc reads them (KH ABT #11); harmless keys until then.
     if (params.topologyVariant != null) config.topologyVariant = params.topologyVariant;
     if (params.numberOfPhases != null) config.numberOfPhases = params.numberOfPhases;
+    // PFC conduction mode and wide-bandgap switch: KH design_pfc reads config.mode (ccm | dcm | crm |
+    // transition) and config.wideBandgapSwitch. Neither was forwarded, so the wizard's DCM/CrM choice
+    // changed nothing (KH sized every PFC in CCM) and a Si totem-pole in CCM was never refused.
+    if (topology === 'pfc') {
+        if (params.mode != null) {
+            const mode = KH_PFC_MODES[params.mode];
+            if (mode == null) {
+                throw new Error(`webKirchhoff: unknown PFC conduction mode '${params.mode}'`);
+            }
+            config.mode = mode;
+        }
+        if (params.wideBandgapSwitch != null) {
+            if (typeof params.wideBandgapSwitch !== 'boolean') {
+                throw new Error(`webKirchhoff: PFC wideBandgapSwitch must be a boolean, got ${JSON.stringify(params.wideBandgapSwitch)}`);
+            }
+            config.wideBandgapSwitch = params.wideBandgapSwitch;
+        }
+    }
     // Vienna: KH reads these from `config` (Vienna.cpp cfg::get*(d.config, ...)). They were never
     // forwarded, so the wizard's samplingStrategy was silently dropped and KH fell back to its own
     // default of "fullLineCycle" -- which returns the boost-inductor excitation stamped at the LINE
