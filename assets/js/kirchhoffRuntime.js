@@ -202,7 +202,67 @@ const KH_BRIDGE_TYPES = {
 };
 const KH_BRIDGE_TYPE_TOPOLOGIES = new Set(['src', 'llc']);
 
-function buildKhConverterSpec(topology, params) {
+// The wizard's ripple ratio (currentRippleRatio) lands on the config key each Kirchhoff topology
+// actually reads (Kirchhoff src/<Topology>.cpp, cfg::get(d.config, <key>, ...)). It used to go to
+// config.rippleRatio for every topology, which only buck and boost read: every other topology
+// silently designed with its own default ripple. The 2-inductor topologies (sepic / cuk / zeta /
+// weinberg) size their main (input) inductor L1 from l1RippleRatio. A topology missing here THROWS
+// when a wizard sends a ripple ratio, so a new wizard cannot drop it again.
+const KH_RIPPLE_RATIO_KEY = {
+    buck: 'rippleRatio',
+    boost: 'rippleRatio',
+    flyback: 'inductorRippleRatio',
+    forward: 'inductorRippleRatio',
+    two_switch_forward: 'inductorRippleRatio',
+    acf: 'inductorRippleRatio',
+    push_pull: 'inductorRippleRatio',
+    isolated_buck: 'inductorRippleRatio',
+    isolated_buck_boost: 'inductorRippleRatio',
+    fsbb: 'inductorRippleRatio',
+    vienna: 'inductorRippleRatio',
+    sepic: 'l1RippleRatio',
+    cuk: 'l1RippleRatio',
+    zeta: 'l1RippleRatio',
+    weinberg: 'l1RippleRatio',
+    pfc: 'currentRippleFraction',
+};
+
+// The wizard's maximum duty cycle, per the key each topology reads. Flyback / forward / two-switch
+// forward / push-pull read maxDutyCycle (the duty at Vin_min that sizes the turns ratio). The active
+// clamp forward reads the same quantity as operatingDutyCycle ("MAX forward duty, occurs at
+// Vin_min", Acf.cpp). The AHB reads maximumDutyCycle as a limit on its operating duty (Ahb.cpp).
+// It used to go to config.maxDutyCycle for every topology, so the ACF and AHB dropped it.
+const KH_MAX_DUTY_KEY = {
+    flyback: 'maxDutyCycle',
+    forward: 'maxDutyCycle',
+    two_switch_forward: 'maxDutyCycle',
+    push_pull: 'maxDutyCycle',
+    acf: 'operatingDutyCycle',
+    ahb: 'maximumDutyCycle',
+};
+
+// Switch-stress limits (KirchhoffConfig.hpp check_maximum_switch_current /
+// check_maximum_drain_source_voltage; buck / boost / zeta also SIZE the inductor from the current
+// limit). Same key for every topology. Neither was forwarded before.
+const KH_SWITCH_LIMIT_KEYS = ['maximumSwitchCurrent', 'maximumDrainSourceVoltage'];
+
+function khConfigKey(table, what, topology) {
+    const key = table[topology];
+    if (key == null) {
+        throw new Error(`webKirchhoff: the wizard sent ${what} for ${topology}, but no Kirchhoff config key is mapped for it`);
+    }
+    return key;
+}
+
+function khFiniteNumber(value, what, topology) {
+    const n = typeof value === 'string' && value.trim() !== '' ? Number(value) : value;
+    if (typeof n !== 'number' || !Number.isFinite(n)) {
+        throw new Error(`webKirchhoff: ${what} for ${topology} must be a number, got ${JSON.stringify(value)}`);
+    }
+    return n;
+}
+
+export function buildKhConverterSpec(topology, params) {
     if (params.designRequirements) return params;   // already the KH envelope
 
     const op0 = (params.operatingPoints || [])[0] || {};
@@ -293,8 +353,23 @@ function buildKhConverterSpec(topology, params) {
 
     // Optional design knobs — only documented SPEC §4/§5 keys are forwarded.
     const config = {};
-    if (params.currentRippleRatio != null) config.rippleRatio = params.currentRippleRatio;
-    if (params.maximumDutyCycle != null) config.maxDutyCycle = params.maximumDutyCycle;
+    if (params.currentRippleRatio != null) {
+        config[khConfigKey(KH_RIPPLE_RATIO_KEY, 'currentRippleRatio', topology)] =
+            khFiniteNumber(params.currentRippleRatio, 'currentRippleRatio', topology);
+    }
+    if (params.maximumDutyCycle != null) {
+        config[khConfigKey(KH_MAX_DUTY_KEY, 'maximumDutyCycle', topology)] =
+            khFiniteNumber(params.maximumDutyCycle, 'maximumDutyCycle', topology);
+    }
+    // The rectifier forward drop the wizard asks for (Kirchhoff ComponentRequirements.hpp
+    // fixed_diode_drop: config.diodeVoltageDrop, read by every converter). It was never forwarded, so
+    // Kirchhoff sized around its own drop instead (the ACF its synchronous-rectifier drop Io·0.01).
+    if (params.diodeVoltageDrop != null) {
+        config.diodeVoltageDrop = khFiniteNumber(params.diodeVoltageDrop, 'diodeVoltageDrop', topology);
+    }
+    for (const key of KH_SWITCH_LIMIT_KEYS) {
+        if (params[key] != null) config[key] = khFiniteNumber(params[key], key, topology);
+    }
     if (params.qualityFactor != null) config.qualityFactor = params.qualityFactor;
     if (params.inductanceRatio != null) config.inductanceRatio = params.inductanceRatio;
     if (params.minSwitchingFrequency != null) config.resonantBandMin = params.minSwitchingFrequency;
