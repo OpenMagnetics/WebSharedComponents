@@ -270,7 +270,139 @@ function khFiniteNumber(value, what, topology) {
     return n;
 }
 
-export function buildKhConverterSpec(topology, params) {
+// ── One operating point per input voltage the user entered (ABT #2160) ─────────────────────────
+// Kirchhoff evaluates ONE operating point per call (operatingPoints[0]). Legacy MKF
+// (Topology::collect_input_voltages, before MKF 3e0261fd) evaluated the converter at every input
+// voltage the user entered, in the order Nominal, Minimum, Maximum, and never at a made-up
+// midpoint. The web runtime reproduces that: one call per entered voltage.
+const KH_INPUT_VOLTAGE_POINTS = [
+    ['nominal', 'Nom.'],
+    ['minimum', 'Min.'],
+    ['maximum', 'Max.'],
+];
+
+// The input voltage the spec carries, with the wizard aliases resolved: CLLLC names it
+// highVoltageBusVoltage; the Vienna wizard carries the LINE-TO-LINE grid voltage while SPEC wants
+// per-phase line RMS (V_phase = V_LL / √3). `display` is the voltage as the wizard shows it.
+function khResolveInputVoltage(topology, params) {
+    let inputVoltage = params.inputVoltage != null ? params.inputVoltage : params.highVoltageBusVoltage;
+    let display = inputVoltage;
+    if (inputVoltage == null && topology === 'vienna' && params.lineToLineVoltage != null) {
+        const vll = params.lineToLineVoltage;
+        const scale = (x) => (x == null ? undefined : x / Math.sqrt(3));
+        inputVoltage = typeof vll === 'object'
+            ? { minimum: scale(vll.minimum), nominal: scale(vll.nominal), maximum: scale(vll.maximum) }
+            : scale(vll);
+        display = vll;
+    }
+    return { inputVoltage, display };
+}
+
+function khFormatVolts(v) {
+    return Number.isInteger(v) ? String(v) : String(Number(v.toPrecision(4)));
+}
+
+/**
+ * The operating points the wizard asked for: one per input voltage the user entered, in the
+ * legacy order Nominal, Minimum, Maximum. Never a synthesized midpoint.
+ * @returns {Array<{key: string, label: string, value: number, name: string}>}
+ */
+export function khInputVoltagePoints(topology, params) {
+    const { inputVoltage, display } = khResolveInputVoltage(topology, params);
+    if (inputVoltage == null) {
+        throw new Error('The input voltage is empty. Enter at least one of its Nom., Min. or Max. values.');
+    }
+    const asObject = (v) => (typeof v === 'object' ? v : { nominal: v });
+    const values = asObject(inputVoltage);
+    const shown = asObject(display);
+    const points = KH_INPUT_VOLTAGE_POINTS
+        .filter(([key]) => values[key] != null)
+        .map(([key, label]) => {
+            const value = khFiniteNumber(values[key], `input voltage ${key}`, topology);
+            const shownValue = khFiniteNumber(shown[key], `input voltage ${key}`, topology);
+            return { key, label, value, name: `${label} input (${khFormatVolts(shownValue)} V)` };
+        });
+    if (!points.length) {
+        throw new Error('The input voltage is empty. Enter at least one of its Nom., Min. or Max. values.');
+    }
+    return points;
+}
+
+// The duty cycle the user typed in "I know the design I want" (Forward x3, Flyback, Push-Pull,
+// Isolated Buck-Boost) is keyed by the input voltage it belongs to: {nominal?, minimum?, maximum?}.
+// It reaches Kirchhoff on the operating point of that input voltage, as Kirchhoff's duty pin
+// spec.config.forcedDutyCycle (0 < D < 1, the main-switch command at operatingPoints[0]). Kirchhoff
+// holds the load, so the delivered output voltage becomes a RESULT (diagnostics.forcedDutyCycle and
+// diagnostics.outputs[{name, requestedVoltage, voltage, power}]). An empty duty row lets Kirchhoff
+// derive the duty from the turns ratio at that voltage. Accepted only by these topologies:
+const KH_DUTY_PIN_KEY = 'forcedDutyCycle';
+const KH_DUTY_PIN_TOPOLOGIES = new Set(['flyback', 'forward', 'two_switch_forward', 'acf', 'push_pull', 'isolated_buck_boost']);
+const KH_UI_FIELD_NAMES = { nominal: 'Nom.', minimum: 'Min.', maximum: 'Max.' };
+
+function khDutyCyclesByInputVoltage(topology, params) {
+    const duty = params.desiredDutyCycle;
+    if (duty == null) return null;
+    if (Array.isArray(duty)) {
+        // The old positional form ([[d, d, d]] in min/nom/max order, entries skipped when the
+        // matching voltage was missing) cannot say which input voltage a duty belongs to.
+        throw new Error(`webKirchhoff: desiredDutyCycle for ${topology} must be keyed by input voltage ({nominal, minimum, maximum}), got ${JSON.stringify(duty)}`);
+    }
+    const out = {};
+    for (const key of Object.keys(duty)) {
+        if (!(key in KH_UI_FIELD_NAMES)) {
+            throw new Error(`webKirchhoff: desiredDutyCycle for ${topology} has an unknown key '${key}'`);
+        }
+        if (duty[key] == null) continue;
+        out[key] = khFiniteNumber(duty[key], `desiredDutyCycle.${key}`, topology);
+    }
+    return Object.keys(out).length ? out : null;
+}
+
+/**
+ * A duty cycle typed for an input voltage the user did not enter (e.g. Duty Cycle Nom. with only
+ * Input Voltage Min. and Max.) belongs to no operating point. Returns the message the wizard shows
+ * for it, or null when every typed duty has its input voltage. Field names as the UI shows them.
+ */
+export function dutyCycleWithoutInputVoltageMessage(inputVoltage, dutyCycle) {
+    if (dutyCycle == null || typeof dutyCycle !== 'object') return null;
+    const voltages = inputVoltage != null && typeof inputVoltage === 'object' ? inputVoltage
+        : inputVoltage != null ? { nominal: inputVoltage } : {};
+    const orphans = Object.keys(KH_UI_FIELD_NAMES).filter((k) => dutyCycle[k] != null && voltages[k] == null);
+    if (!orphans.length) return null;
+    const names = orphans.map((k) => KH_UI_FIELD_NAMES[k]).join(' and ');
+    return `The Duty Cycle ${names} has no Input Voltage ${names}: a duty cycle applies to the input voltage of `
+        + `the same row. Enter the Input Voltage ${names} or clear the Duty Cycle ${names} row.`;
+}
+
+/**
+ * The wizards' "Duty Cycle" (Nom. / Min. / Max. rows) as the desiredDutyCycle they send: keyed by
+ * the input voltage each duty belongs to. Throws the UI message when a duty has no input voltage.
+ * Returns undefined when no duty is typed.
+ */
+export function khDesiredDutyCycle(inputVoltage, dutyCycle) {
+    if (dutyCycle == null) return undefined;
+    if (typeof dutyCycle !== 'object') {
+        throw new Error('The Duty Cycle must be entered per input voltage, in its Nom., Min. or Max. rows.');
+    }
+    const message = dutyCycleWithoutInputVoltageMessage(inputVoltage, dutyCycle);
+    if (message) throw new Error(message);
+    const out = {};
+    for (const key of Object.keys(KH_UI_FIELD_NAMES)) {
+        if (dutyCycle[key] != null) out[key] = dutyCycle[key];
+    }
+    return Object.keys(out).length ? out : undefined;
+}
+
+function khCheckDutyCycles(topology, params) {
+    const duties = khDutyCyclesByInputVoltage(topology, params);
+    if (!duties) return null;
+    const { inputVoltage } = khResolveInputVoltage(topology, params);
+    const message = dutyCycleWithoutInputVoltageMessage(inputVoltage, duties);
+    if (message) throw new Error(message);
+    return duties;
+}
+
+export function buildKhConverterSpec(topology, params, point = null) {
     if (params.designRequirements) return params;   // already the KH envelope
 
     const op0 = (params.operatingPoints || [])[0] || {};
@@ -294,16 +426,7 @@ export function buildKhConverterSpec(topology, params) {
               : (params.outputPower != null && params.outputVoltage ? params.outputPower / params.outputVoltage : 0)];
     }
 
-    // Input rail aliases: CLLLC names it highVoltageBusVoltage; the Vienna wizard carries the
-    // LINE-TO-LINE grid voltage while SPEC wants per-phase line RMS (V_phase = V_LL / √3).
-    let inputVoltage = params.inputVoltage != null ? params.inputVoltage : params.highVoltageBusVoltage;
-    if (inputVoltage == null && topology === 'vienna' && params.lineToLineVoltage != null) {
-        const vll = params.lineToLineVoltage;
-        const scale = (x) => (x == null ? undefined : x / Math.sqrt(3));
-        inputVoltage = typeof vll === 'object'
-            ? { minimum: scale(vll.minimum), nominal: scale(vll.nominal), maximum: scale(vll.maximum) }
-            : scale(vll);
-    }
+    const { inputVoltage } = khResolveInputVoltage(topology, params);
 
     const isAc = topology === 'pfc' || topology === 'vienna';
     const signedOutputs = KH_SIGNED_OUTPUT_TOPOLOGIES.has(topology);
@@ -351,13 +474,32 @@ export function buildKhConverterSpec(topology, params) {
         const p = Math.abs(v) * Math.abs(amps[i] != null ? amps[i] : 0);
         return p > 0 ? p : (params.outputPower != null ? Math.abs(params.outputPower) : p);
     });
+    // Without `point` this is the DESIGN spec: one operating point at the nominal input voltage, or
+    // (min+max)/2 without one, which is how legacy MKF sized DAB / LLC (Vin_nom, else the midpoint)
+    // and what Kirchhoff designed from before ABT #2160. With `point` (one of khInputVoltagePoints)
+    // the operating point is that input voltage, carrying the duty typed for it.
     const operatingPoints = [{
-        name: 'full_load',
-        inputVoltage: khNominal(inputVoltage),
+        name: point ? point.name : 'full_load',
+        inputVoltage: point ? point.value : khNominal(inputVoltage),
         ambientTemperature: op0.ambientTemperature != null ? op0.ambientTemperature
                           : params.ambientTemperature != null ? params.ambientTemperature : 25,
         outputs: dr.outputs.map((o, i) => ({ name: o.name, power: powers[i] })),
     }];
+    const pointConfig = {};
+    if (point) {
+        const duties = khCheckDutyCycles(topology, params);
+        if (duties && duties[point.key] != null) {
+            if (!KH_DUTY_PIN_TOPOLOGIES.has(topology)) {
+                throw new Error('This converter cannot hold a typed Duty Cycle: its duty follows from the turns ratio '
+                    + 'at each input voltage. Leave the Duty Cycle rows empty.');
+            }
+            const d = duties[point.key];
+            if (!(d > 0 && d < 1)) {
+                throw new Error(`The Duty Cycle ${KH_UI_FIELD_NAMES[point.key]} must be between 0 and 1, got ${d}.`);
+            }
+            pointConfig[KH_DUTY_PIN_KEY] = d;
+        }
+    }
 
     // Optional design knobs — only documented SPEC §4/§5 keys are forwarded.
     const config = {};
@@ -482,9 +624,230 @@ export function buildKhConverterSpec(topology, params) {
         config.tranStopTime = (params.numberOfSteadyStatePeriods + params.numberOfPeriods) / fswForStop;
     }
 
+    // Dead time: Kirchhoff takes config.forcedDeadTime for the ACF only. The Flyback and Isolated
+    // Buck-Boost wizards send desiredDeadTime, which no Kirchhoff topology reads: never drop it silently.
+    // A dead time of 0 (the wizards' default) asks for nothing and is not an error.
+    if ([].concat(params.desiredDeadTime ?? []).some((t) => t != null && Number(t) !== 0)) {
+        throw new Error('The Dead Time you entered cannot be applied: the converter engine takes a dead time only for the '
+            + 'Active Clamp Forward. Remove the Dead Time value.');
+    }
+    Object.assign(config, pointConfig);
     const spec = { designRequirements: dr, operatingPoints };
     if (Object.keys(config).length) spec.config = config;
     return spec;
+}
+
+// ── Same design at every input voltage (ABT #2160) ──────────────────────────────────────────────
+// Kirchhoff sizes parts of the converter from the operating point's input voltage, so the same
+// requirements evaluated at another input voltage give ANOTHER converter (DAB turns ratio 7.50 /
+// 8.33 / 9.17 at 360 / 400 / 440 V). Legacy MKF designed once and evaluated that one design at every
+// input voltage. So: ONE design call (the spec without a point), then every operating point's spec
+// carries that design pinned. Pinned: the main magnetic's inductance and turns ratios, plus the
+// other parts each topology lets the spec pin. After every point the pinned values are checked
+// against the design; a point that comes back with another design throws.
+const khPinnedInductor = (name) => (diag) => (diag.computed?.extraInductors || []).find((x) => x.name === name)?.inductance;
+const khPinnedCapacitor = (name) => (diag) => (diag.capacitors || []).find((x) => x.name === name)?.capacitance;
+const khSetDr = (key) => (spec, v) => { spec.designRequirements[key] = v; };
+const khSetConfig = (key) => (spec, v) => { spec.config = { ...(spec.config || {}), [key]: v }; };
+
+// topology -> [[what (as the diagnostics card names it), read(diagnostics), write(spec, value)]].
+// A part the design does not have (e.g. the AHB flyback variant has no output inductor) is not pinned.
+const KH_EXTRA_DESIGN_PINS = {
+    llc: [
+        ['Inductor Lr', khPinnedInductor('Lr'), khSetDr('desiredResonantInductance')],
+        ['Resonant capacitance', (d) => d.computed?.resonantCapacitance, khSetDr('desiredResonantCapacitance')],
+    ],
+    dab: [['Inductor Lr', khPinnedInductor('Lr'), khSetDr('desiredSeriesInductance')]],
+    psfb: [
+        ['Inductor Lr', khPinnedInductor('Lr'), khSetDr('desiredSeriesInductance')],
+        ['Inductor Lout', khPinnedInductor('Lout'), khSetConfig('outputInductance')],
+    ],
+    pshb: [
+        ['Inductor Lr', khPinnedInductor('Lr'), khSetDr('desiredSeriesInductance')],
+        ['Inductor Lout', khPinnedInductor('Lout'), khSetConfig('outputInductance')],
+    ],
+    ahb: [
+        ['Inductor Lout', khPinnedInductor('Lout'), khSetConfig('outputInductance')],
+        ['Capacitor Cb', khPinnedCapacitor('Cb'), khSetConfig('dcBlockingCapacitance')],
+    ],
+    cllc: [
+        ['Inductor Lr1', khPinnedInductor('Lr1'), khSetDr('desiredResonantInductance')],
+        ['Capacitor Cr1', khPinnedCapacitor('Cr1'), khSetDr('desiredResonantCapacitance')],
+        ['Inductor Lr2', khPinnedInductor('Lr2'), khSetDr('desiredSecondaryResonantInductance')],
+        ['Capacitor Cr2', khPinnedCapacitor('Cr2'), khSetDr('desiredSecondaryResonantCapacitance')],
+    ],
+    clllc: [
+        ['Inductor Lr1', khPinnedInductor('Lr1'), khSetConfig('primarySeriesInductance')],
+        ['Capacitor Cr1', khPinnedCapacitor('Cr1'), khSetConfig('primaryResonantCapacitance')],
+    ],
+};
+
+function khMainMagnetic(diag, topology) {
+    const mains = (diag?.magnetics || []).filter((m) => m.isMain);
+    if (mains.length !== 1) {
+        throw new Error(`webKirchhoff: the ${topology} design reports ${mains.length} main magnetics; expected exactly one`);
+    }
+    const main = mains[0];
+    if (!(typeof main.magnetizingInductance === 'number' && main.magnetizingInductance > 0)) {
+        throw new Error(`webKirchhoff: the ${topology} design reports no inductance for its main magnetic ${main.name}`);
+    }
+    return main;
+}
+
+// The design, read off the design call's diagnostics: [{what, value, write}].
+function khDesignPins(topology, designDiag) {
+    const main = khMainMagnetic(designDiag, topology);
+    const pins = [{
+        what: main.windings > 1 ? 'Magnetizing inductance' : 'Inductance',
+        read: (d) => khMainMagnetic(d, topology).magnetizingInductance,
+        value: main.magnetizingInductance,
+        write: khSetDr('magnetizingInductance'),
+        asDimension: true,
+    }];
+    (main.turnsRatios || []).forEach((n, i) => {
+        pins.push({
+            what: `Turns ratio ${i + 1} of ${main.name}`,
+            read: (d) => (khMainMagnetic(d, topology).turnsRatios || [])[i],
+            value: n,
+            write: (spec, v) => {
+                const dr = spec.designRequirements;
+                dr.turnsRatios = Array.isArray(dr.turnsRatios) ? dr.turnsRatios.slice() : [];
+                dr.turnsRatios[i] = { nominal: v };
+            },
+        });
+    });
+    for (const [what, read, write] of (KH_EXTRA_DESIGN_PINS[topology] || [])) {
+        const value = read(designDiag);
+        if (value == null) continue;
+        pins.push({ what, read, value, write });
+    }
+    return pins;
+}
+
+function khPinDesign(spec, pins) {
+    const pinned = JSON.parse(JSON.stringify(spec));
+    for (const pin of pins) pin.write(pinned, pin.asDimension ? { nominal: pin.value } : pin.value);
+    return pinned;
+}
+
+const khFormatValue = (v) => (typeof v === 'number' ? String(Number(v.toPrecision(5))) : 'missing');
+
+function khSameValue(a, b) {
+    return typeof a === 'number' && typeof b === 'number'
+        && Math.abs(a - b) <= 1e-6 * Math.max(Math.abs(a), Math.abs(b));
+}
+
+// Every pinned value must come back unchanged, or the point describes another converter.
+function khCheckPinnedDesign(topology, pins, point, diag) {
+    for (const pin of pins) {
+        const got = pin.read(diag);
+        if (!khSameValue(got, pin.value)) {
+            throw new Error(
+                `The converter changed between input voltages: ${pin.what} is ${khFormatValue(pin.value)} in the design but `
+                + `${khFormatValue(got)} at ${point.name}, so the operating points would not describe one converter. `
+                + 'Enter the design in "I know the design I want", or report this case with the bug reporter.');
+        }
+    }
+}
+
+// process_converter, with the ngspice watchdog: on a non-converging deck the synchronous Embind run
+// would spin forever and block the worker for good. On timeout, kill+respawn the worker and surface
+// a loud, specific Exception — never a fabricated result.
+async function khProcessConverter(workerProxy, topology, specJson, engine) {
+    if (engine !== 'ngspice') return await workerProxy.callMethod('process_converter', topology, specJson, engine);
+    let timer;
+    const watchdog = new Promise((resolve) => {
+        timer = setTimeout(() => resolve(
+            `Exception: webKirchhoff ngspice simulation for '${topology}' did not finish within ` +
+            `${Math.round(KH_SIMULATE_WATCHDOG_MS / 1000)}s and was aborted (likely a non-converging ` +
+            `deck at these parameters). The analytical result is available; try the Analytical button.`), KH_SIMULATE_WATCHDOG_MS);
+    });
+    const raw = await Promise.race([
+        workerProxy.callMethod('process_converter', topology, specJson, engine),
+        watchdog,
+    ]);
+    clearTimeout(timer);
+    if (typeof raw === 'string' && raw.startsWith('Exception: webKirchhoff ngspice simulation')) {
+        // The worker is still stuck in the hung Embind call — respawn it so later calls work.
+        reinitKirchhoffWorker();
+    }
+    return raw;
+}
+
+function khParse(raw, topology) {
+    try {
+        return JSON.parse(raw);
+    } catch (e) {
+        throw new Error(`could not parse webKirchhoff process_converter output for ${topology}: ${e.message}`);
+    }
+}
+
+/**
+ * Design once, then evaluate that design at every input voltage the user entered.
+ * `callEngine(topology, specJson, engine)` returns process_converter's raw string.
+ * Returns {design, points: [{point, spec, out}]} or throws (engine exceptions are rethrown verbatim).
+ */
+// A typed duty that the engine did not apply would be dropped silently: the engine must echo the
+// pin (diagnostics.forcedDutyCycle) and report the delivered outputs, or the run fails.
+function khCheckAppliedDutyCycle(spec, point, diagnostics) {
+    const typed = spec.config?.[KH_DUTY_PIN_KEY];
+    if (typed == null) return;
+    const field = KH_UI_FIELD_NAMES[point.key];
+    const applied = diagnostics?.[KH_DUTY_PIN_KEY];
+    if (applied == null || Math.abs(applied - typed) > 1e-9 * Math.max(1, Math.abs(typed))) {
+        throw new Error(`The engine did not apply the Duty Cycle ${field} ${typed} you typed for the input voltage `
+            + `${point.value} V: this engine version cannot hold a typed duty cycle. Clear the Duty Cycle ${field} row `
+            + 'to let the engine derive the duty from the turns ratio.');
+    }
+    if (!Array.isArray(diagnostics.outputs) || !diagnostics.outputs.length) {
+        throw new Error(`webKirchhoff: the engine held the Duty Cycle ${field} but reported no delivered output voltages`);
+    }
+}
+
+export async function khRunAtEachInputVoltage(callEngine, topology, params, engine) {
+    const points = khInputVoltagePoints(topology, params);
+    khCheckDutyCycles(topology, params);
+    const designSpec = buildKhConverterSpec(topology, params);
+    const designRaw = await callEngine(topology, JSON.stringify(designSpec), 'analytical');
+    if (typeof designRaw === 'string' && designRaw.startsWith('Exception')) throw new Error(designRaw);
+    const design = khParse(designRaw, topology);
+    const pins = khDesignPins(topology, design.diagnostics);
+    const results = [];
+    for (const point of points) {
+        const spec = khPinDesign(buildKhConverterSpec(topology, params, point), pins);
+        const raw = await callEngine(topology, JSON.stringify(spec), engine);
+        if (typeof raw === 'string' && raw.startsWith('Exception')) throw new Error(raw);
+        const out = khParse(raw, topology);
+        khCheckPinnedDesign(topology, pins, point, out.diagnostics);
+        khCheckAppliedDutyCycle(spec, point, out.diagnostics);
+        results.push({ point, spec, out });
+    }
+    return { design, pins, points: results };
+}
+
+// The main magnetic's sampled excitations of one process_converter result. The wizards build their
+// charts from operatingPoints[].excitationsPerWinding[].*.waveform {time,data}; main_magnetic_inputs'
+// operating points only carry processed/harmonics. Full sampled waveforms come from (in preference
+// order): 1. out.operatingPoint — the engine-extracted op; carries real traces on the ngspice path;
+// 2. the analyticalWaveforms registry ({component: MAS::OperatingPoint}) — analytical path.
+function khFullExcitations(out) {
+    const hasWaveformData = (excitations) => Array.isArray(excitations) && excitations.some(
+        (e) => e?.current?.waveform?.data?.length || e?.voltage?.waveform?.data?.length);
+    if (hasWaveformData(out.operatingPoint?.excitationsPerWinding)) {
+        return out.operatingPoint.excitationsPerWinding;
+    }
+    const registry = out.analyticalWaveforms || {};
+    const registryKeys = Object.keys(registry);
+    if (registryKeys.length) {
+        // Main magnetic = the entry with the most windings (transformer beats output inductor).
+        const mainKey = registryKeys.sort((a, b) =>
+            ((registry[b].excitationsPerWinding || []).length - (registry[a].excitationsPerWinding || []).length)
+            || a.localeCompare(b))[0];
+        if (hasWaveformData(registry[mainKey].excitationsPerWinding)) {
+            return registry[mainKey].excitationsPerWinding;
+        }
+    }
+    return null;
 }
 
 // Reshape webKirchhoff output back into the legacy webMKF string contract. Returns a JSON string (or a
@@ -550,13 +913,41 @@ async function legacyConverterCall(workerProxy, name, args) {
     }
 
     // Translate the wizard's legacy buildParams() payload into the KH spec envelope
-    // (docs/SPEC.md); payloads already carrying designRequirements pass through.
+    // (docs/SPEC.md); payloads already carrying designRequirements pass through untouched (one call,
+    // the caller owns its operating point).
     const legacyParams = JSON.parse(args[0]); // callers already pass JSON.stringify(params)
-    const specJson = JSON.stringify(buildKhConverterSpec(topology, legacyParams));
+    const callEngine = (topo, specJson, engine) => khProcessConverter(workerProxy, topo, specJson, engine);
 
     if (parsed.verb === 'spice') {
         // Old signature was generate_<topo>_ngspice_circuit(spec, inputVoltageIndex, operatingPointIndex).
-        // webKirchhoff assembles the deck from the whole TAS, so the per-OP indices are no longer used.
+        // inputVoltageIndex picks the input voltage (legacy order Nom., Min., Max.); the deck is the
+        // design pinned at that voltage, the same converter the Simulated button runs there.
+        let specJson;
+        try {
+            if (legacyParams.designRequirements) {
+                specJson = JSON.stringify(legacyParams);
+            } else {
+                const points = khInputVoltagePoints(topology, legacyParams);
+                const index = args[1] == null ? 0 : args[1];
+                const point = points[index];
+                if (!point) {
+                    return `Exception: input voltage index ${index} is out of range; this design has ${points.length} input voltage(s)`;
+                }
+                const designRaw = await callEngine(topology, JSON.stringify(buildKhConverterSpec(topology, legacyParams)), 'analytical');
+                if (typeof designRaw === 'string' && designRaw.startsWith('Exception')) return designRaw;
+                const pins = khDesignPins(topology, khParse(designRaw, topology).diagnostics);
+                const pointSpec = khPinDesign(buildKhConverterSpec(topology, legacyParams, point), pins);
+                if (pointSpec.config?.[KH_DUTY_PIN_KEY] != null) {
+                    // The deck must hold the typed duty too: confirm the engine applies it at this point.
+                    const pointRaw = await callEngine(topology, JSON.stringify(pointSpec), 'analytical');
+                    if (typeof pointRaw === 'string' && pointRaw.startsWith('Exception')) return pointRaw;
+                    khCheckAppliedDutyCycle(pointSpec, point, khParse(pointRaw, topology).diagnostics);
+                }
+                specJson = JSON.stringify(pointSpec);
+            }
+        } catch (e) {
+            return `Exception: ${e.message}`;
+        }
         const tas = await workerProxy.callMethod('design_tas', topology, specJson);
         if (typeof tas === 'string' && tas.startsWith('Exception')) return tas;
         // PEAS Fidelity requires an origin; REQUIREMENTS = ideal devices from the design
@@ -568,93 +959,62 @@ async function legacyConverterCall(workerProxy, name, args) {
     // calculate_<topo>_inputs (Analytical button) → 'analytical'; simulate_<topo>_ideal_waveforms
     // (Simulated button) → 'ngspice' (the old webMKF ran the ngspice deck for that button too).
     const engine = parsed.verb === 'waveforms' ? 'ngspice' : 'analytical';
-    let raw;
-    if (engine === 'ngspice') {
-        // Guard the (synchronous-in-worker) ngspice run with a watchdog: on a non-converging
-        // topology it would spin forever and block the worker for good. On timeout, kill+respawn
-        // the worker and surface a loud, specific Exception (the caller's startsWith('Exception')
-        // check throws it) — never a fabricated result.
-        let timer;
-        const watchdog = new Promise((resolve) => {
-            timer = setTimeout(() => resolve(
-                `Exception: webKirchhoff ngspice simulation for '${topology}' did not finish within ` +
-                `${Math.round(KH_SIMULATE_WATCHDOG_MS / 1000)}s and was aborted (likely a non-converging ` +
-                `deck at these parameters). The analytical result is available; try the Analytical button.`), KH_SIMULATE_WATCHDOG_MS);
-        });
-        raw = await Promise.race([
-            workerProxy.callMethod('process_converter', topology, specJson, engine),
-            watchdog,
-        ]);
-        clearTimeout(timer);
-        if (typeof raw === 'string' && raw.startsWith('Exception: webKirchhoff ngspice simulation')) {
-            // The worker is still stuck in the hung Embind call — respawn it so later calls work.
-            reinitKirchhoffWorker();
-            return raw;
-        }
-    } else {
-        raw = await workerProxy.callMethod('process_converter', topology, specJson, engine);
-    }
-    if (typeof raw === 'string' && raw.startsWith('Exception')) return raw;
-
-    let out;
+    let runs;
     try {
-        out = JSON.parse(raw);
-    } catch (e) {
-        return `Exception: could not parse webKirchhoff process_converter output for ${topology}: ${e.message}`;
-    }
-
-    const inputs = out.inputs || {};
-    const reshaped = { ...inputs };            // MAS::Inputs at the root (legacy contract)
-    const diag = out.diagnostics ?? null;
-    reshaped.diagnostics = diag;               // generic handle
-    for (const key of (LEGACY_MID_TO_DIAG_KEYS[parsed.mid] || [])) {
-        reshaped[key] = diag;                  // `<topo>Diagnostics` sibling(s) the wizards read
-    }
-
-    // The wizards build their charts from operatingPoints[].excitationsPerWinding[].*.waveform
-    // {time,data}. main_magnetic_inputs' operating points only carry processed/harmonics. Full
-    // sampled waveforms come from (in preference order):
-    //   1. out.operatingPoint — the engine-extracted op; carries real traces on the ngspice path.
-    //   2. the analyticalWaveforms registry ({component: MAS::OperatingPoint}) — analytical path.
-    // Graft the main magnetic's excitations onto the first operating point. Conditions/name stay
-    // from `inputs` (the registry op's conditions are not populated — uninitialized ambient).
-    const hasWaveformData = (excitations) => Array.isArray(excitations) && excitations.some(
-        (e) => e?.current?.waveform?.data?.length || e?.voltage?.waveform?.data?.length);
-    let fullExcitations = null;
-    if (hasWaveformData(out.operatingPoint?.excitationsPerWinding)) {
-        fullExcitations = out.operatingPoint.excitationsPerWinding;
-    } else {
-        const registry = out.analyticalWaveforms || {};
-        const registryKeys = Object.keys(registry);
-        if (registryKeys.length) {
-            // Main magnetic = the entry with the most windings (transformer beats output inductor).
-            const mainKey = registryKeys.sort((a, b) =>
-                ((registry[b].excitationsPerWinding || []).length - (registry[a].excitationsPerWinding || []).length)
-                || a.localeCompare(b))[0];
-            if (hasWaveformData(registry[mainKey].excitationsPerWinding)) {
-                fullExcitations = registry[mainKey].excitationsPerWinding;
-            }
+        if (legacyParams.designRequirements) {
+            const raw = await callEngine(topology, JSON.stringify(legacyParams), engine);
+            if (typeof raw === 'string' && raw.startsWith('Exception')) return raw;
+            const out = khParse(raw, topology);
+            const name = out.inputs?.operatingPoints?.[0]?.name || legacyParams.operatingPoints?.[0]?.name || 'Operating Point 1';
+            runs = { design: out, points: [{ point: { name }, out }] };
+        } else {
+            runs = await khRunAtEachInputVoltage(callEngine, topology, legacyParams, engine);
         }
+    } catch (e) {
+        return e.message.startsWith('Exception') ? e.message : `Exception: ${e.message}`;
     }
-    if (fullExcitations && Array.isArray(reshaped.operatingPoints) && reshaped.operatingPoints.length) {
+
+    // MAS::Inputs at the root (legacy contract). designRequirements come from the design call (they
+    // carry its tolerances); the operating points are one per input voltage, in legacy order.
+    const first = runs.points[0].out;
+    const reshaped = { ...(first.inputs || {}) };
+    if (runs.design.inputs?.designRequirements) reshaped.designRequirements = runs.design.inputs.designRequirements;
+    reshaped.operatingPoints = runs.points.map(({ point, out }) => {
+        const op = (out.inputs?.operatingPoints || [])[0];
+        if (!op) throw new Error(`webKirchhoff: ${topology} returned no operating point for ${point.name}`);
         // KH is the master of the waveforms and emits ONE canonical steady-state period per
         // signal — that canonical period is what goes into the MAS operating points (harmonics,
         // processed and downstream MKF advisers all assume waveform span == 1/frequency; tiling
         // here once corrupted the adviser's physics). The wizard's Periods knob is display-only
         // and is applied in the chart layer (ConverterWizardBase tiles the plotted arrays).
-        reshaped.operatingPoints = reshaped.operatingPoints.map((op, i) =>
-            i === 0 ? { ...op, excitationsPerWinding: fullExcitations } : op);
+        const fullExcitations = khFullExcitations(out);
+        return { ...op, name: point.name, ...(fullExcitations ? { excitationsPerWinding: fullExcitations } : {}) };
+    });
+
+    // Diagnostics: the first point's envelope (the shape every wizard reads), plus every point's own
+    // envelope under inputVoltagePoints for the diagnostics card.
+    const diag = first.diagnostics == null ? null : {
+        ...first.diagnostics,
+        inputVoltagePoints: runs.points.map(({ point, out }) => ({
+            name: point.name,
+            inputVoltage: point.value,
+            diagnostics: out.diagnostics ?? null,
+        })),
+    };
+    reshaped.diagnostics = diag;               // generic handle
+    for (const key of (LEGACY_MID_TO_DIAG_KEYS[parsed.mid] || [])) {
+        reshaped[key] = diag;                  // `<topo>Diagnostics` sibling(s) the wizards read
     }
 
     if (parsed.verb === 'waveforms') {
         // Converter-node overlays for the magnetic↔converter view toggle come from
         // component_waveforms (SPEC §6.5) — but that is a SECOND full ngspice run over the TAS.
         // Running it eagerly here doubled every Simulated click's wall time (and pushed heavy
-        // topologies past their timeouts), so we do NOT run it inline. The TAS is carried on the
-        // result as `__converterTas`; the converter-view toggle can lazily call
-        // component_waveforms(__converterTas) on demand and reshape via convertConverterWaveforms.
+        // topologies past their timeouts), so we do NOT run it inline. Each operating point's TAS is
+        // carried on the result; the converter-view toggle lazily calls component_waveforms on them.
         reshaped.converterWaveforms = [];
-        reshaped.__converterTas = out.tas;
+        reshaped.__converterTas = first.tas;
+        reshaped.__converterTasPerOperatingPoint = runs.points.map(({ point, out }) => ({ name: point.name, tas: out.tas }));
     }
 
     return JSON.stringify(reshaped);
