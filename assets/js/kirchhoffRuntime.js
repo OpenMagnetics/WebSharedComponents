@@ -782,6 +782,42 @@ function khMainMagnetic(diag, topology) {
     return main;
 }
 
+// How a topology reads designRequirements.turnsRatios (Kirchhoff src/<Topology>.cpp, req::provided_turns_ratio)
+// against what its main transformer reports (diagnostics.magnetics[].turnsRatios, one ratio per winding after the
+// primary). Most topologies read that per-winding list itself: output i at index offset + w*i, w windings per
+// output (flyback / forward / acf / dab / isolated_* with one winding per output; llc / src read wpo*i,
+// Llc.cpp / Src.cpp). push_pull reads ONE ratio per output, at index 1 + i (PushPull.cpp provided_turns_ratio(dr, 1)
+// and (dr, 1 + i)), while its transformer reports [1 (2nd primary half), (N_i, N_i) per output] (centre-tapped
+// secondaries, PushPull.cpp build_push_pull_tas). Copied index for index, output 2 would read output 1's second
+// half. offset = the reported entries before the first output's windings, sent through unchanged.
+const KH_TURNS_RATIOS_PER_OUTPUT = { push_pull: { offset: 1 } };
+
+// designRequirements.turnsRatios as the topology reads it, from the design's main transformer. A per-output
+// topology's report must split into one equal group of windings per output, every winding of a group at one
+// ratio (one pin per output holds the whole group); anything else throws.
+function khSpecTurnsRatios(topology, main, designSpec) {
+    const reported = main.turnsRatios;
+    const layout = KH_TURNS_RATIOS_PER_OUTPUT[topology];
+    if (!layout) return reported.slice();
+    const outputs = khOutputCount(designSpec);
+    const secondaryWindings = reported.length - layout.offset;
+    if (!(secondaryWindings > 0) || secondaryWindings % outputs !== 0) {
+        throw new Error(`webKirchhoff: the ${topology} design's ${main.name} reports turns ratios ${khFormatValue(reported)}: `
+            + `${Math.max(secondaryWindings, 0)} windings after the first ${layout.offset} do not split into one group per output `
+            + `for ${outputs} outputs, so its turns ratios cannot be pinned output by output`);
+    }
+    const perOutput = secondaryWindings / outputs;
+    const ratios = Array.from({ length: outputs }, (_, i) => {
+        const group = reported.slice(layout.offset + perOutput * i, layout.offset + perOutput * (i + 1));
+        if (group.some((n) => !khSameValue(n, group[0]))) {
+            throw new Error(`webKirchhoff: the ${topology} design's ${main.name} reports turns ratios ${khFormatValue(group)} `
+                + `for the windings of output ${i + 1}, but the spec pins one turns ratio per output`);
+        }
+        return group[0];
+    });
+    return [...reported.slice(0, layout.offset), ...ratios];
+}
+
 // The design, read off the design call's diagnostics (and the spec it was designed from): [{what, value, write}].
 function khDesignPins(topology, designDiag, designSpec) {
     const main = khMainMagnetic(designDiag, topology);
@@ -792,18 +828,17 @@ function khDesignPins(topology, designDiag, designSpec) {
         write: khSetDr('magnetizingInductance'),
         asDimension: true,
     }];
-    (main.turnsRatios || []).forEach((n, i) => {
+    const windingRatios = main.turnsRatios || [];
+    if (windingRatios.length) {
+        // Checked at every point as the transformer's full per-winding list; pinned in the form the topology reads.
+        const specRatios = khSpecTurnsRatios(topology, main, designSpec);
         pins.push({
-            what: `Turns ratio ${i + 1} of ${main.name}`,
-            read: (d) => (khMainMagnetic(d, topology).turnsRatios || [])[i],
-            value: n,
-            write: (spec, v) => {
-                const dr = spec.designRequirements;
-                dr.turnsRatios = Array.isArray(dr.turnsRatios) ? dr.turnsRatios.slice() : [];
-                dr.turnsRatios[i] = { nominal: v };
-            },
+            what: `Turns ratios of ${main.name}`,
+            read: (d) => khMainMagnetic(d, topology).turnsRatios,
+            value: windingRatios,
+            write: (spec) => { spec.designRequirements.turnsRatios = specRatios.map((n) => ({ nominal: n })); },
         });
-    });
+    }
     for (const [what, read, write] of (KH_EXTRA_DESIGN_PINS[topology] || [])) {
         const value = read(designDiag, designSpec);
         if (value == null) continue;

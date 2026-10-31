@@ -836,7 +836,7 @@ export const defaultWeinbergWizardInputs = {
     maximumSwitchCurrent: 5,
     currentRippleRatio: 0.4,
     efficiency: 0.9,
-    turnsRatio: 0.5,
+    turnsRatio: 0.6,
     designLevel: 'Help me with the design',
     inductance: 200e-6,
     outputsParameters: {
