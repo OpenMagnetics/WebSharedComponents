@@ -645,26 +645,114 @@ export function buildKhConverterSpec(topology, params, point = null) {
 // carries that design pinned. Pinned: the main magnetic's inductance and turns ratios, plus the
 // other parts each topology lets the spec pin. After every point the pinned values are checked
 // against the design; a point that comes back with another design throws.
-const khPinnedInductor = (name) => (diag) => (diag.computed?.extraInductors || []).find((x) => x.name === name)?.inductance;
-const khPinnedCapacitor = (name) => (diag) => (diag.capacitors || []).find((x) => x.name === name)?.capacitance;
+// The value of one named part in a diagnostics list (extraInductors / capacitors), or undefined when the
+// design has no such part. A part that IS listed without a positive, finite value is a broken report: it throws.
+function khPartValue(list, name, field, kind) {
+    const part = (list || []).find((x) => x.name === name);
+    if (!part) return undefined;
+    const v = part[field];
+    if (!(typeof v === 'number' && Number.isFinite(v) && v > 0)) {
+        throw new Error(`webKirchhoff: the design lists ${kind} ${name} with no ${field} (got ${JSON.stringify(v)})`);
+    }
+    return v;
+}
+const khInductorList = (diag) => diag.computed?.extraInductors;
+const khCapacitorList = (diag) => diag.capacitors;
+const khPinnedInductor = (name) => (diag) => khPartValue(khInductorList(diag), name, 'inductance', 'inductor');
+const khPinnedCapacitor = (name) => (diag) => khPartValue(khCapacitorList(diag), name, 'capacitance', 'capacitor');
+
+function khOutputCount(spec) {
+    const n = spec?.designRequirements?.outputs?.length;
+    if (!(n > 0)) throw new Error('webKirchhoff: the spec has no outputs, so its per-output parts cannot be pinned');
+    return n;
+}
+
+// One part per output, named <base>, <base>2, <base>3, ... in output order (Kirchhoff's Cout / Lout per rail).
+// Read as an array, one value per output, which is what Kirchhoff's per-output pins take. A design with the part
+// on some outputs only cannot be pinned output by output: it throws.
+const khPerOutputPart = (base, list, field, kind) => (diag, spec) => {
+    const n = khOutputCount(spec);
+    const names = Array.from({ length: n }, (_, i) => (i === 0 ? base : `${base}${i + 1}`));
+    const values = names.map((name) => khPartValue(list(diag), name, field, kind));
+    const found = values.filter((v) => v != null).length;
+    if (found === 0) return undefined;
+    if (found !== n) {
+        throw new Error(`webKirchhoff: the design reports ${kind}s ${names.filter((_, i) => values[i] != null).join(', ')} `
+            + `but has ${n} outputs; expected one ${base} per output`);
+    }
+    return values;
+};
+const khPerOutputCapacitor = (base) => khPerOutputPart(base, khCapacitorList, 'capacitance', 'capacitor');
+const khPerOutputInductor = (base) => khPerOutputPart(base, khInductorList, 'inductance', 'inductor');
+
+// The energy-budget snubbers (Kirchhoff cfg::snubber_cap). config.snubberCap pins every one of them to ONE value,
+// so the design's snubbers (the capacitors whose names match) must share one value, or the pin cannot hold them.
+const khSnubberCapacitance = (pattern) => (diag) => {
+    const found = (khCapacitorList(diag) || []).filter((c) => pattern.test(c.name))
+        .map((c) => [c.name, khPartValue(khCapacitorList(diag), c.name, 'capacitance', 'capacitor')]);
+    if (!found.length) return undefined;
+    if (found.some(([, v]) => !khSameValue(v, found[0][1]))) {
+        throw new Error(`webKirchhoff: the design's energy-budget snubbers differ (${found.map(([n, v]) => `${n} ${khFormatValue(v)}`).join(', ')}), `
+            + 'but config.snubberCap pins them all to one value');
+    }
+    return found[0][1];
+};
+
 const khSetDr = (key) => (spec, v) => { spec.designRequirements[key] = v; };
 const khSetConfig = (key) => (spec, v) => { spec.config = { ...(spec.config || {}), [key]: v }; };
 
-// topology -> [[what (as the diagnostics card names it), read(diagnostics), write(spec, value)]].
+// topology -> [[what (as the diagnostics card names it), read(diagnostics, spec), write(spec, value)]].
 // A part the design does not have (e.g. the AHB flyback variant has no output inductor) is not pinned.
+// Per-output parts are read and pinned as one value per output.
+const KH_FLYBACK_PINS = [
+    ['Output capacitors Cout', khPerOutputCapacitor('Cout'), khSetConfig('outputCapacitance')],
+    ['Snubber capacitor Cclmp', khSnubberCapacitance(/^Cclmp$/), khSetConfig('snubberCap')],
+];
+const KH_FORWARD_PINS = [['Output inductors Lout', khPerOutputInductor('Lout'), khSetConfig('outputInductance')]];
 const KH_EXTRA_DESIGN_PINS = {
+    flyback: KH_FLYBACK_PINS,
+    two_switch_flyback: KH_FLYBACK_PINS,
+    active_clamp_flyback: [['Output capacitors Cout', khPerOutputCapacitor('Cout'), khSetConfig('outputCapacitance')]],
+    boost: [['Capacitor Cout', khPinnedCapacitor('Cout'), khSetConfig('outputCapacitance')]],
+    weinberg: [['Capacitor Cout', khPinnedCapacitor('Cout'), khSetConfig('outputCapacitance')]],
+    forward: KH_FORWARD_PINS,
+    two_switch_forward: KH_FORWARD_PINS,
+    acf: KH_FORWARD_PINS,
+    sepic: [
+        ['Inductor L2', khPinnedInductor('L2'), khSetConfig('inductanceL2')],
+        ['Capacitor Cs', khPinnedCapacitor('Cs'), khSetConfig('couplingCapacitance')],
+    ],
+    zeta: [
+        ['Inductor L2', khPinnedInductor('L2'), khSetConfig('inductanceL2')],
+        ['Capacitor Cc', khPinnedCapacitor('Cc'), khSetConfig('couplingCapacitance')],
+    ],
+    cuk: [
+        ['Inductor L2', khPinnedInductor('L2'), khSetConfig('inductanceL2')],
+        ['Capacitor C1', khPinnedCapacitor('C1'), khSetConfig('couplingCapacitance')],
+    ],
+    push_pull: [['Snubber capacitors Csn', khSnubberCapacitance(/^Csn\d+$/), khSetConfig('snubberCap')]],
+    fsbb: [['Snubber capacitors Crc_sw', khSnubberCapacitance(/^Crc_sw[12](_\d+)?$/), khSetConfig('snubberCap')]],
+    src: [
+        ['Inductor Lr', khPinnedInductor('Lr'), khSetDr('desiredResonantInductance')],
+        ['Capacitor Cr', khPinnedCapacitor('Cr'), khSetDr('desiredResonantCapacitance')],
+    ],
     llc: [
         ['Inductor Lr', khPinnedInductor('Lr'), khSetDr('desiredResonantInductance')],
         ['Resonant capacitance', (d) => d.computed?.resonantCapacitance, khSetDr('desiredResonantCapacitance')],
     ],
-    dab: [['Inductor Lr', khPinnedInductor('Lr'), khSetDr('desiredSeriesInductance')]],
+    dab: [
+        ['Inductor Lr', khPinnedInductor('Lr'), khSetDr('desiredSeriesInductance')],
+        ['Snubber capacitors Csn / Crc_pri', khSnubberCapacitance(/^(Crc_pri|Csn[A-H]_(hi|lo)\w*)$/), khSetConfig('snubberCap')],
+    ],
     psfb: [
         ['Inductor Lr', khPinnedInductor('Lr'), khSetDr('desiredSeriesInductance')],
         ['Inductor Lout', khPinnedInductor('Lout'), khSetConfig('outputInductance')],
+        ['Snubber capacitor Crc_pri', khSnubberCapacitance(/^Crc_pri$/), khSetConfig('snubberCap')],
     ],
     pshb: [
         ['Inductor Lr', khPinnedInductor('Lr'), khSetDr('desiredSeriesInductance')],
         ['Inductor Lout', khPinnedInductor('Lout'), khSetConfig('outputInductance')],
+        ['Snubber capacitor Crc_pri', khSnubberCapacitance(/^Crc_pri$/), khSetConfig('snubberCap')],
     ],
     ahb: [
         ['Inductor Lout', khPinnedInductor('Lout'), khSetConfig('outputInductance')],
@@ -694,8 +782,8 @@ function khMainMagnetic(diag, topology) {
     return main;
 }
 
-// The design, read off the design call's diagnostics: [{what, value, write}].
-function khDesignPins(topology, designDiag) {
+// The design, read off the design call's diagnostics (and the spec it was designed from): [{what, value, write}].
+function khDesignPins(topology, designDiag, designSpec) {
     const main = khMainMagnetic(designDiag, topology);
     const pins = [{
         what: main.windings > 1 ? 'Magnetizing inductance' : 'Inductance',
@@ -717,7 +805,7 @@ function khDesignPins(topology, designDiag) {
         });
     });
     for (const [what, read, write] of (KH_EXTRA_DESIGN_PINS[topology] || [])) {
-        const value = read(designDiag);
+        const value = read(designDiag, designSpec);
         if (value == null) continue;
         pins.push({ what, read, value, write });
     }
@@ -730,17 +818,23 @@ function khPinDesign(spec, pins) {
     return pinned;
 }
 
-const khFormatValue = (v) => (typeof v === 'number' ? String(Number(v.toPrecision(5))) : 'missing');
+function khFormatValue(v) {
+    if (Array.isArray(v)) return `[${v.map(khFormatValue).join(', ')}]`;
+    return typeof v === 'number' ? String(Number(v.toPrecision(5))) : 'missing';
+}
 
 function khSameValue(a, b) {
+    if (Array.isArray(a) || Array.isArray(b)) {
+        return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((x, i) => khSameValue(x, b[i]));
+    }
     return typeof a === 'number' && typeof b === 'number'
         && Math.abs(a - b) <= 1e-6 * Math.max(Math.abs(a), Math.abs(b));
 }
 
 // Every pinned value must come back unchanged, or the point describes another converter.
-function khCheckPinnedDesign(topology, pins, point, diag) {
+function khCheckPinnedDesign(topology, pins, point, diag, spec) {
     for (const pin of pins) {
-        const got = pin.read(diag);
+        const got = pin.read(diag, spec);
         if (!khSameValue(got, pin.value)) {
             throw new Error(
                 `The converter changed between input voltages: ${pin.what} is ${khFormatValue(pin.value)} in the design but `
@@ -811,14 +905,14 @@ export async function khRunAtEachInputVoltage(callEngine, topology, params, engi
     const designRaw = await callEngine(topology, JSON.stringify(designSpec), 'analytical');
     if (typeof designRaw === 'string' && designRaw.startsWith('Exception')) throw new Error(designRaw);
     const design = khParse(designRaw, topology);
-    const pins = khDesignPins(topology, design.diagnostics);
+    const pins = khDesignPins(topology, design.diagnostics, designSpec);
     const results = [];
     for (const point of points) {
         const spec = khPinDesign(buildKhConverterSpec(topology, params, point), pins);
         const raw = await callEngine(topology, JSON.stringify(spec), engine);
         if (typeof raw === 'string' && raw.startsWith('Exception')) throw new Error(raw);
         const out = khParse(raw, topology);
-        khCheckPinnedDesign(topology, pins, point, out.diagnostics);
+        khCheckPinnedDesign(topology, pins, point, out.diagnostics, spec);
         khCheckAppliedDutyCycle(spec, point, out.diagnostics);
         results.push({ point, spec, out });
     }
@@ -933,9 +1027,10 @@ async function legacyConverterCall(workerProxy, name, args) {
                 if (!point) {
                     return `Exception: input voltage index ${index} is out of range; this design has ${points.length} input voltage(s)`;
                 }
-                const designRaw = await callEngine(topology, JSON.stringify(buildKhConverterSpec(topology, legacyParams)), 'analytical');
+                const designSpec = buildKhConverterSpec(topology, legacyParams);
+                const designRaw = await callEngine(topology, JSON.stringify(designSpec), 'analytical');
                 if (typeof designRaw === 'string' && designRaw.startsWith('Exception')) return designRaw;
-                const pins = khDesignPins(topology, khParse(designRaw, topology).diagnostics);
+                const pins = khDesignPins(topology, khParse(designRaw, topology).diagnostics, designSpec);
                 const pointSpec = khPinDesign(buildKhConverterSpec(topology, legacyParams, point), pins);
                 if (pointSpec.config?.[KH_DUTY_PIN_KEY] != null) {
                     // The deck must hold the typed duty too: confirm the engine applies it at this point.
