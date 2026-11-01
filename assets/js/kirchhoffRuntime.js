@@ -624,12 +624,27 @@ export function buildKhConverterSpec(topology, params, point = null) {
         config.tranStopTime = (params.numberOfSteadyStatePeriods + params.numberOfPeriods) / fswForStop;
     }
 
-    // Dead time: Kirchhoff takes config.forcedDeadTime for the ACF only. The Flyback and Isolated
-    // Buck-Boost wizards send desiredDeadTime, which no Kirchhoff topology reads: never drop it silently.
-    // A dead time of 0 (the wizards' default) asks for nothing and is not an error.
-    if ([].concat(params.desiredDeadTime ?? []).some((t) => t != null && Number(t) !== 0)) {
-        throw new Error('The Dead Time you entered cannot be applied: the converter engine takes a dead time only for the '
-            + 'Active Clamp Forward. Remove the Dead Time value.');
+    // Dead time: the wizards send desiredDeadTime (s). Kirchhoff takes it as config.forcedDeadTime
+    // (cfg::forced_dead_time, s >= 0) for the Isolated Buck, the dead time between its two switches.
+    // Any other topology here has none to set: a non-zero value is never dropped silently (a dead time of
+    // 0, the Flyback wizard's default, asks for nothing). The Isolated Buck-Boost has one switch and a
+    // diode, so its wizard sends none; a value that still arrives for it throws.
+    const deadTimes = [].concat(params.desiredDeadTime ?? []).filter((t) => t != null);
+    if (topology === 'isolated_buck') {
+        if (deadTimes.length > 1) {
+            throw new Error(`webKirchhoff: the Isolated Buck takes one dead time, got ${deadTimes.length} (${JSON.stringify(deadTimes)})`);
+        }
+        if (deadTimes.length === 1) {
+            config.forcedDeadTime = khFiniteNumber(deadTimes[0], 'desiredDeadTime', topology);
+        }
+    }
+    else if (deadTimes.some((t) => Number(t) !== 0)) {
+        if (topology === 'isolated_buck_boost') {
+            throw new Error('The Isolated Buck-Boost has no dead time to set: it has one switch and a diode. '
+                + 'Remove the Dead Time value.');
+        }
+        throw new Error('The Dead Time you entered cannot be applied: a dead time can be set only for the '
+            + 'Isolated Buck. Remove the Dead Time value.');
     }
     Object.assign(config, pointConfig);
     const spec = { designRequirements: dr, operatingPoints };

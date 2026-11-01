@@ -950,7 +950,7 @@ export const defaultIsolatedBuckBoostWizardInputs = {
     // dutyCycle: optional, empty by default (ABT #2160). Each row is the duty AT the input voltage of
     // the same row; an empty row lets the engine derive the duty from the turns ratio at that voltage.
     dutyCycle: { minimum: null, nominal: null, maximum: null },
-    deadTime: 100e-9,
+    // No dead time: one switch and a diode, nothing to keep apart.
     inductance: 10e-6,
     efficiency: 0.9,
     numberOutputs: 3,
