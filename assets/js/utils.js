@@ -1099,6 +1099,33 @@ export function withoutNulls(value) {
     return value;
 }
 
+// clean() for a document that holds core materials (a MAS, a magnetic, a core): the document is
+// cleaned as clean() does, except each core material record (the `material` object of a core's
+// functionalDescription) which loses only its nulls (withoutNulls). clean() would strip the
+// `volumetricLosses: {}` that MAS requires of a material whose losses are given per mass
+// (Nanoperm 2000, `massLosses`), and the exported file would not load again. Changes `document`
+// in place and returns it, as clean() does.
+export function cleanKeepingCoreMaterials(document) {
+    const materials = [];
+    const detach = (node) => {
+        if (node == null || typeof node !== 'object') {
+            return;
+        }
+        if (!Array.isArray(node) && node.shape != null && node.material != null
+            && typeof node.material === 'object' && !Array.isArray(node.material)) {
+            materials.push([node, node.material]);
+            delete node.material;
+        }
+        Object.values(node).forEach(detach);
+    };
+    detach(document);
+    clean(document);
+    materials.forEach(([functionalDescription, material]) => {
+        functionalDescription.material = withoutNulls(material);
+    });
+    return document;
+}
+
 // MAS coil.bobbin ARRAY form: per-column bobbins (element 0 = the centre/main
 // column part, later elements ad-hoc lateral parts — separate BOM items).
 // Returns the merged effective bobbin geometry consumers should read: element 0

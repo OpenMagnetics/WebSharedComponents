@@ -871,7 +871,7 @@ export const defaultClllcWizardInputs = {
     efficiency: 0.95,
     qualityFactor: 0.4,
     designLevel: 'Help me with the design',
-    magnetizingInductance: 500e-6,
+    magnetizingInductance: 350e-6,
     turnsRatio: 8,
     primarySeriesInductance: 50e-6,
     primaryResonantCapacitance: 33e-9,
