@@ -2,6 +2,7 @@ import * as Defaults from './defaults.js'
 import axios from "axios"
 import { recordExport } from './telemetry.js'
 import { formatInUnitSystem } from './units.js'
+import { waitForMkf } from './mkfRuntime.js'
 import * as MAS from '/WebSharedComponents/assets/ts/MAS.ts'
 const { ConnectionType, CoreType, MagneticCircuit, WiringTechnology } = MAS;
 
@@ -1340,34 +1341,33 @@ export async function checkAndFixMas(mas, mkf=null) {
 
     if (mas.magnetic.core.functionalDescription.material != "" && mas.magnetic.core.functionalDescription.material != null) {
         if (mkf != null && (mas.magnetic.coil.bobbin == null || mas.magnetic.coil.bobbin == "Dummy" || mas.magnetic.core.processedDescription == null)) {
-            try {
-                // Check if mkf is a taskQueueStore (has masAutocomplete method)
-                if (typeof mkf.masAutocomplete === 'function') {
-                    // Use taskQueueStore
-                    const masResult = await mkf.masAutocomplete(mas, false, {});
-                    mas.magnetic.core = masResult.magnetic.core;
-                    if (masResult.magnetic?.coil?.bobbin && masResult.magnetic.coil.bobbin !== 'Dummy') mas.magnetic.coil.bobbin = masResult.magnetic.coil.bobbin;
-                } else {
-                    // Legacy mkf direct usage
-                    await mkf.ready;
-                    const masJson = await mkf.mas_autocomplete(JSON.stringify(mas), false, "{}");
-                    if (masJson.startsWith("Exception")) {
-                        console.error(masJson);
-                        return mas;
-                    }
-                    else {
-                        const _masR = JSON.parse(masJson);
-                        mas.magnetic.core = _masR.magnetic.core;
-                        if (_masR.magnetic?.coil?.bobbin && _masR.magnetic.coil.bobbin !== 'Dummy') mas.magnetic.coil.bobbin = _masR.magnetic.coil.bobbin;
-                    }
+            // Only the core's processed description and a bobbin are wanted here. This used to run a
+            // full mas_autocomplete, which winds the coil: the placeholder coil above (1 turn of the
+            // "Dummy" wire, which MKF resolves to its thinnest 0.01 mm wire) cannot be wound with real
+            // winding geometry on, so a new two-winding magnetic threw COIL_WINDING_ERROR on Advise
+            // Core, and the error was logged and swallowed (Alf, 2026-11-05). The core and the bobbin
+            // are built directly, and any engine error propagates.
+            // The caller passes either a task-queue store or the engine itself.
+            const engine = typeof mkf.masAutocomplete === 'function' ? await waitForMkf() : mkf;
+            await engine.ready;
+            if (mas.magnetic.core.processedDescription == null) {
+                const coreJson = await engine.calculate_core_data(JSON.stringify(mas.magnetic.core), false);
+                if (coreJson.startsWith("Exception")) {
+                    throw new Error(`MKF could not process the core: ${coreJson}`);
                 }
-
-                return mas;
+                mas.magnetic.core = JSON.parse(coreJson);
             }
-            catch(error) {
-                console.error(error)
-                return mas;
+            if (mas.magnetic.coil.bobbin == null || mas.magnetic.coil.bobbin == "Dummy") {
+                // The bobbin mas_autocomplete builds for a "Dummy" one: the core's winding window with
+                // no walls (Bobbin::create_quick_bobbin(core, nullDimensions = true); the web never
+                // asks for synthesised pins).
+                const bobbinJson = await engine.create_simple_bobbin_from_core_with_custom_thickness(JSON.stringify(mas.magnetic.core), 0);
+                if (bobbinJson.startsWith("Exception")) {
+                    throw new Error(`MKF could not build a bobbin for the core: ${bobbinJson}`);
+                }
+                mas.magnetic.coil.bobbin = JSON.parse(bobbinJson);
             }
+            return mas;
         }
         else {
             return mas;
