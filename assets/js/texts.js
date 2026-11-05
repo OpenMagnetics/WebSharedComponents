@@ -25,6 +25,7 @@ export const tooltipsMagneticSynthesisOperatingPoints = {
     "coolingMode": "How heat leaves the magnetic. Natural convection is still air around the component. Forced air adds a fan, and needs the air speed over the component. Heatsink means the component is bolted to one, and needs its thermal resistance.",
     "airVelocity": "Speed of the air moving over the component, in metres per second. A typical small fan gives 1-3 m/s; 5 m/s and above is strong forced cooling.",
     "thermalResistance": "Bulk thermal resistance of the heatsink the component is mounted on, in kelvin per watt. Lower means a bigger heatsink and a cooler component.",
+    "interfaceThermalResistance": "Thermal resistance of the pad, grease or adhesive between the core and the heatsink, per unit of contact area (K·cm²/W, as pad datasheets give it). Pre-filled with 1 K·cm²/W, a typical silicone gap pad; enter your interface material's value.",
 }
 
 export const tooltipsMagneticBuilder = {

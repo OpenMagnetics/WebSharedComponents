@@ -549,6 +549,13 @@ export const defaultCore = {
     "processedDescription": null,
 }
 
+// The thermal interface between a core and its heatsink (MAS heatsinkCooling.interfaceThermalResistance).
+// MKF reads it as an area-specific resistance (K*m^2/W, over the face touching the heatsink) and, since
+// ABT #1611, refuses a heatsink without it. The web's Heatsink option writes it with this value, shown and
+// editable in Op. Points, and a design loaded without it gets it too (Alf, 2026-11-05, ABT #2276):
+// 1 K*cm^2/W, a typical silicone gap pad. The unit disagreement with PEAS (which documents K/W) is ABT #2278.
+export const heatsinkInterfaceThermalResistance = 1e-4;
+
 export const defaultOperatingConditions = {
     "ambientTemperature": 25,
 }
