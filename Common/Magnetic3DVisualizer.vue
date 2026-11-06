@@ -4,7 +4,7 @@ import { MeshPhysicalMaterial, Object3D, Group, Mesh, Box3, Vector3 } from 'thre
 import { Camera, Renderer, SpotLight, Scene, AmbientLight } from 'troisjs';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 import { deepCopy, hexToRgb } from '../assets/js/utils.js';
-import { initMvbWorker, buildCoreSTL, buildCoreShellSTL, buildSpacersSTL, buildBobbinSTL, buildTurnsSTL, buildFR4BoardSTL, terminateWorker } from '../assets/js/mvbRuntime.js';
+import { initMvbWorker, buildCoreSTL, buildCoreShellSTL, buildSpacersSTL, buildBobbinSTL, buildTurnsSTL, takeTurnsWarnings, buildFR4BoardSTL, terminateWorker } from '../assets/js/mvbRuntime.js';
 import { enrichMagnetic } from '../assets/js/mkfRuntime.js';
 import { reportNotice, noticesShownInline } from '../assets/js/notices.js';
 </script>
@@ -188,6 +188,8 @@ export default {
       // its place; the last one reported, so a rebuild does not log the same warning again.
       realWindingWarning: '',
       lastRealWindingWarning: '',
+      // The engine warnings of real-winding draws already in the Engine log (one entry each).
+      reportedTurnsWarnings: new Set(),
       // Internal visibility state (can be toggled by UI)
       internalShowCore: this.showCore,
       internalShowBobbin: this.showBobbin,
@@ -560,7 +562,18 @@ export default {
             this.realWindingWarning = '';
             if (this.realWinding) {
               try {
-                buf = await buildTurnsSTL(mag, { useRealWindingGeometry: true });
+                // The viewer draws colliding conductors as they are instead of refusing the
+                // winding; MVB++ reports each collision, and MKF each real-winding layout it
+                // had to keep although it does not clear, as a warning (Alf, 2026-11-06).
+                buf = await buildTurnsSTL(mag, { useRealWindingGeometry: true, skipCollisionCheck: true });
+                for (const warning of await takeTurnsWarnings()) {
+                  const message = `Real winding: ${warning.replace(/^Real winding:\s*/, '')}`;
+                  if (!this.reportedTurnsWarnings.has(message)) {
+                    this.reportedTurnsWarnings.add(message);
+                    console.warn(message);
+                    reportNotice('WARNING', '3D view', message);
+                  }
+                }
               } catch (err) {
                 // The 3D view never refuses over the real winding: when it cannot be
                 // routed (e.g. a layer whose bundles end up a few nm closer than a radial
