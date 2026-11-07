@@ -131,6 +131,19 @@ let workerGeneration = 0;
 let engineRestoreHandler = null;
 let lastSettingsJson = null;
 
+// Settings the web always runs the engine with, whatever a caller writes or a reset restores.
+// thermalNetworkStrictGeometry: a coil whose turns overlap its former or window (a stored or
+// hand-entered layout that no longer matches the core and bobbin) must still simulate. MKF then
+// logs every overlapping face as an error and leaves that face without a conduction path, instead
+// of throwing and stopping the whole simulation (losses, temperature, every panel).
+const WEB_ENGINE_SETTINGS = Object.freeze({ thermalNetworkStrictGeometry: false });
+
+function withWebEngineSettings(settingsJson) {
+    const settings = JSON.parse(settingsJson);
+    Object.assign(settings, WEB_ENGINE_SETTINGS);
+    return JSON.stringify(settings);
+}
+
 /**
  * Register how this app rebuilds the engine's loaded state after a watchdog restart. It is called
  * with the new worker's proxy, after the last settings have been replayed and before `ready`
@@ -303,10 +316,15 @@ export async function initWorker(wasmJsUrl, { restore = false } = {}) {
     const newMkf = createMkfProxy(mkfProxy, workerGeneration);
     newMkf.ready = Promise.resolve();
 
+    if (restore && lastSettingsJson != null) {
+        await newMkf.set_settings(lastSettingsJson);
+    }
+    else {
+        // A fresh engine starts from MKF's defaults: apply the web's own settings on top of them.
+        await newMkf.set_settings(await newMkf.get_settings());
+    }
+
     if (restore) {
-        if (lastSettingsJson != null) {
-            await newMkf.set_settings(lastSettingsJson);
-        }
         if (engineRestoreHandler) {
             await engineRestoreHandler(newMkf);
         }
@@ -491,6 +509,9 @@ function createMkfProxy(workerProxy, generation) {
             
             // Return an async function that calls the worker
             return async (...args) => {
+                if (prop === 'set_settings') {
+                    args[0] = withWebEngineSettings(args[0]);
+                }
                 // Use explicit worker method if defined, otherwise use generic callMethod
                 // (which handles any MKF method with automatic type conversion)
                 const invoke = workerExplicitMethods.has(prop)
@@ -500,6 +521,13 @@ function createMkfProxy(workerProxy, generation) {
                 if (prop === 'set_settings') {
                     // Replayed into a restarted worker (see lastSettingsJson).
                     lastSettingsJson = args[0];
+                }
+                if (prop === 'reset_settings') {
+                    // A reset restores MKF's defaults, which are not the web's (see WEB_ENGINE_SETTINGS).
+                    const current = await enqueueCall('get_settings', () => workerProxy.callMethod('get_settings'), generation);
+                    const settingsJson = withWebEngineSettings(current);
+                    await enqueueCall('set_settings', () => workerProxy.callMethod('set_settings', settingsJson), generation);
+                    lastSettingsJson = settingsJson;
                 }
                 return result;
             };
