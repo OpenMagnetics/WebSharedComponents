@@ -346,8 +346,30 @@ export function setMkf(newMkf) {
     if (useWorker) {
         return;
     }
+    applyWebEngineSettingsToModule(newMkf);
     mkf = newMkf;
     resolveReady(newMkf);
+}
+
+/**
+ * Main-thread mode: callers hold the module itself (CoreDataX keeps it as `$mkf`), so its own
+ * set_settings and reset_settings are wrapped to keep WEB_ENGINE_SETTINGS, and they are applied now.
+ * @param {Object} module - the initialized libMKF module
+ */
+function applyWebEngineSettingsToModule(module) {
+    if (module.__webEngineSettingsApplied) {
+        return;
+    }
+    const setSettings = module.set_settings;
+    const resetSettings = module.reset_settings;
+    module.set_settings = (settingsJson) => setSettings(withWebEngineSettings(settingsJson));
+    module.reset_settings = (...args) => {
+        const result = resetSettings(...args);
+        setSettings(withWebEngineSettings(module.get_settings()));
+        return result;
+    };
+    module.__webEngineSettingsApplied = true;
+    module.set_settings(module.get_settings());
 }
 
 /**
