@@ -239,6 +239,25 @@ export const designRequirementsOrdered = {
         "minimumImpedance",
         "maximumDimensions",
     ],
+    // The differential-mode choke (DMC wizard). Its windings carry the
+    // converter's power current, so it asks what a power magnetic asks.
+    "filter": [
+        "numberWindings",
+        "magnetizingInductance",
+        "minimumImpedance",
+        "turnsRatios",
+        "wiringTechnology",
+        "insulation",
+        "leakageInductance",
+        "strayCapacitance",
+        "isolationSides",
+        "operatingTemperature",
+        "maximumWeight",
+        "maximumDimensions",
+        "terminalType",
+        "topology",
+        "market",
+    ],
 }
 
 export const compulsoryRequirements = {
@@ -257,6 +276,11 @@ export const compulsoryRequirements = {
         "numberWindings",
         "magnetizingInductance",
         "minimumImpedance",
+    ],
+    "filter": [
+        "numberWindings",
+        "magnetizingInductance",
+        "turnsRatios"
     ],
 }
 
