@@ -1233,26 +1233,35 @@ export async function checkAndFixMas(mas, mkf=null) {
             // Utils.cpp. A drumRing is a closed circuit but not a toroid, so this
             // wrote "open" onto a core MKF had correctly marked "closed" — two
             // contradictory values in one payload.
-            if (mas.magnetic.core.functionalDescription.shape.family == 't') {
-                mas.magnetic.core.functionalDescription.type = CoreType.Toroidal;
+            // ABT #2372: the type follows the family through MKF's one rule (EI/UI/PQI -> pieceAndPlate,
+            // drum/rod -> openShape, molded -> closedShape, t -> toroidal, the rest -> twoPieceSet). This
+            // used to know only t and drum/rod and typed every other family twoPieceSet, so an EI was
+            // mirrored into an E+E. magneticCircuit and gapping follow the type, as in MKF's
+            // magnetic_autocomplete.
+            if (mkf == null) {
+                throw new Error('checkAndFixMas needs the engine to set the core type of shape family "' + mas.magnetic.core.functionalDescription.shape.family + '"');
+            }
+            const coreType = await mkf.getCoreTypeForShapeFamily(mas.magnetic.core.functionalDescription.shape.family);
+            mas.magnetic.core.functionalDescription.type = coreType;
+            if (coreType == CoreType.Toroidal) {
                 // magneticCircuit lives on the shape in current MAS (it was removed
                 // from coreFunctionalDescription, which is additionalProperties:false).
                 mas.magnetic.core.functionalDescription.shape.magneticCircuit = MagneticCircuit.Closed;
                 mas.magnetic.core.functionalDescription.gapping = [];
             }
-            else if (mas.magnetic.core.functionalDescription.shape.family == 'drum' ||
-                     mas.magnetic.core.functionalDescription.shape.family == 'rod') {
+            else if (coreType == CoreType.OpenShape) {
                 // Open-circuit single piece (drum ABT #331, rod ABT #933): the return path
                 // is air, so a gap carried over from the previous core is meaningless and
                 // MKF refuses it ("an open-circuit core cannot be gapped", ABT #1071).
-                // Mirrors MKF's magnetic_autocomplete.
-                mas.magnetic.core.functionalDescription.type = CoreType.OpenShape;
                 mas.magnetic.core.functionalDescription.shape.magneticCircuit = MagneticCircuit.Open;
                 mas.magnetic.core.functionalDescription.gapping = [];
             }
-            else {
-                mas.magnetic.core.functionalDescription.type = CoreType.TwoPieceSet;
+            else if (coreType == CoreType.TwoPieceSet) {
                 mas.magnetic.core.functionalDescription.shape.magneticCircuit = MagneticCircuit.Open;
+            }
+            else {
+                // pieceAndPlate and closedShape: the record describes the whole assembly.
+                mas.magnetic.core.functionalDescription.shape.magneticCircuit = MagneticCircuit.Closed;
             }
         }
         // Legacy migration: magneticCircuit moved from coreFunctionalDescription onto
