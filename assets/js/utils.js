@@ -1262,6 +1262,16 @@ export async function checkAndFixMas(mas, mkf=null) {
             else {
                 // pieceAndPlate and closedShape: the record describes the whole assembly.
                 mas.magnetic.core.functionalDescription.shape.magneticCircuit = MagneticCircuit.Closed;
+                // A shielded drum (drumRing, ABT #366) and a semi-shielded drum (drumSemishielded, ABT #362) carry
+                // no gap of the user's: MKF derives their structural clearances (or none, for a cast shell) from
+                // the shape and refuses any other gap. A gapping carried over from the previous core (a gapped
+                // PQ, say) made MKF refuse the drum outright (ABT #2410), so it is dropped here and MKF derives
+                // it again. Other piece-and-plate cores (EI, UI, ...) keep their gaps. MKF has no binding that
+                // answers "does this family take user gaps", so the two families are named here.
+                const family = mas.magnetic.core.functionalDescription.shape.family;
+                if (coreType == CoreType.PieceAndPlate && (family == 'drumRing' || family == 'drumSemishielded')) {
+                    mas.magnetic.core.functionalDescription.gapping = [];
+                }
             }
         }
         // Legacy migration: magneticCircuit moved from coreFunctionalDescription onto
