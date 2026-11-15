@@ -719,11 +719,16 @@ export function processCoreTexts(data) {
     const numberTurnsPrimary = data.magnetic.coil.functionalDescription[0].numberTurns;
     {
         let materialName;
-        if (typeof data.magnetic.core.functionalDescription.material === 'string' || data.magnetic.core.functionalDescription.material instanceof String) {
-            materialName = data.magnetic.core.functionalDescription.material;
+        // A material list ([drum, magnetic-epoxy shell] on a semi-shielded drum) names the core's own
+        // material first.
+        const coreMaterial = Array.isArray(data.magnetic.core.functionalDescription.material)
+            ? data.magnetic.core.functionalDescription.material[0]
+            : data.magnetic.core.functionalDescription.material;
+        if (typeof coreMaterial === 'string' || coreMaterial instanceof String) {
+            materialName = coreMaterial;
         }
         else {
-            materialName = data.magnetic.core.functionalDescription.material.name;
+            materialName = coreMaterial.name;
         }
         localTexts.coreDescription = `Core with shape ${data.magnetic.core.functionalDescription.shape.name} and material ${materialName}`
         if (data.magnetic.core.functionalDescription.gapping.length == 0) {

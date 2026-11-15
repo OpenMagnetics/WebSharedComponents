@@ -1,6 +1,6 @@
 {
  "source": {
-  "mas": "e1b2e4b579b7745e94763849ae10f7529226c3ad",
+  "mas": "f15658eb922fb81955daddef69f5e1163800c322",
   "peas": "aaa71c5c740615f97317bd9b248f001f0eff1ac0"
  },
  "schemas": [
@@ -3216,6 +3216,20 @@
       "leakageInductance": {
        "description": "Leakage inductance in Henries.",
        "$ref": "./utils.json#/$defs/dimensionWithTolerance"
+      },
+      "inductancePoints": {
+       "description": "Inductance vs. DC-bias current points (inductance roll-off / saturation curve), optionally per temperature, measured on the winding whose inductance is stated.",
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/magneticDatasheetInductancePoint"
+       }
+      },
+      "impedancePoints": {
+       "description": "Impedance vs. frequency points, measured on the winding whose inductance is stated.",
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/magneticDatasheetImpedancePoint"
+       }
       }
      },
      "required": [
@@ -5432,6 +5446,12 @@
        "description": "This is the product of the effective length by the effective area, and represents the equivalent volume that is magnetized by the field",
        "type": "number",
        "exclusiveMinimum": 0
+      },
+      "fillFactor": {
+       "description": "Fraction of the gross cross-section that is magnetic material: the stacking or lamination factor of a tape-wound or laminated core (MAS-RFC 0020). effectiveArea, minimumArea and effectiveVolume already include it, so it must not be applied to them again; the gross area is effectiveArea / fillFactor. Absent for solid cores (ferrite, powder), where it is 1 by construction.",
+       "type": "number",
+       "exclusiveMinimum": 0,
+       "maximum": 1
       }
      },
      "required": [
@@ -5665,7 +5685,7 @@
    "type": "object",
    "properties": {
     "type": {
-     "description": "The type of coating material applied to the core",
+     "description": "The type of coating material applied to the core. magneticEpoxy is DEPRECATED: the magnetic-epoxy shell of a semi-shielded drum (drumSemishielded) is a magnetic material, carried as the second entry of functionalDescription.material (material[1], a core material whose material type is magneticEpoxy). The value is kept so existing data stays valid.",
      "title": "coatingType",
      "type": "string",
      "enum": [
@@ -5786,7 +5806,8 @@
       "powder",
       "nanocrystalline",
       "amorphous",
-      "electricalSteel"
+      "electricalSteel",
+      "magneticEpoxy"
      ]
     },
     "materialComposition": {
